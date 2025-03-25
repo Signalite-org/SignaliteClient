@@ -1,0 +1,73 @@
+<div class="login-container">
+    <h2>Sign In</h2>
+    
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+    
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+    
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          formControlName="email" 
+          class="form-control"
+          [class.is-invalid]="loginForm.get('email')?.invalid && 
+                           (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)"
+        >
+        <div class="invalid-feedback" *ngIf="loginForm.get('email')?.errors?.['required'] && 
+                                              (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)">
+          Email is required
+        </div>
+        <div class="invalid-feedback" *ngIf="loginForm.get('email')?.errors?.['email'] && 
+                                              (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)">
+          Please enter a valid email address
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          formControlName="password" 
+          class="form-control"
+          [class.is-invalid]="loginForm.get('password')?.invalid && 
+                           (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)"
+        >
+        <div class="invalid-feedback" *ngIf="loginForm.get('password')?.errors?.['required'] && 
+                                              (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)">
+          Password is required
+        </div>
+      </div>
+      
+      <button 
+        type="submit" 
+        class="btn btn-primary" 
+        [disabled]="loginForm.invalid || isLoading"
+      >
+        <span *ngIf="!isLoading">Login</span>
+        <span *ngIf="isLoading">Signing in...</span>
+      </button>
+    </form>
+    
+    <!-- Online users display for testing -->
+    <div *ngIf="onlineUsers.length > 0" class="mt-4">
+      <h4>Online Users:</h4>
+      <ul class="list-group">
+        <li class="list-group-item" *ngFor="let user of onlineUsers">
+          {{ user }}
+        </li>
+      </ul>
+    </div>
+    
+    <!-- Instructions for testing -->
+    <div class="mt-4">
+      <p><strong>For Testing:</strong> After login, check your browser console to see presence hub events, including KeepAlive messages.</p>
+    </div>
+  </div>
