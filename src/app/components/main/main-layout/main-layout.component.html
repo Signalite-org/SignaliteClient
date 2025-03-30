@@ -1,0 +1,18 @@
+<div id="background">
+  <div id="content">
+
+    <app-top-left class="header {{leftColumnVisibility}}"></app-top-left>
+    <app-top-center class="header"></app-top-center>
+    <app-top-right class="header {{rightColumnVisibility}}"></app-top-right>
+
+    <div class="placeholder {{leftColumnVisibility}}"></div>
+    <div class="placeholder" (click)="testSwitchColumns()" id="placeholderChat"></div>
+    <div class="placeholder {{rightColumnVisibility}}"></div>
+
+    <div class="placeholder footer {{leftColumnVisibility}}"></div>
+    <div class="placeholder footer"></div>
+    <div class="placeholder footer {{rightColumnVisibility}}"></div>
+
+  </div>
+</div>
+

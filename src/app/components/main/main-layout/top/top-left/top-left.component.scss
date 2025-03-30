@@ -1,0 +1,29 @@
+@use '@angular/material' as mat;
+
+header {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.buttonIcon {
+  width: min(10vw, 3em);
+  height: min(10vw, 3em);
+  margin-left: 2%;
+  border: gray 1px solid;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  color: white !important;
+  padding: 0 !important;
+  @include mat.fab-overrides((
+    small-container-color: transparent,
+  ));
+}
+
+.buttonIcon:hover {
+  @include mat.fab-overrides((
+    small-container-color: rgba(255,255,255,0.2),
+  ));
+}
