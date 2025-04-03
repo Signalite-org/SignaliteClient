@@ -60,7 +60,7 @@ export class LoginComponent {
         
         // Delay navigation to see the success message and allow SignalR to connect
         setTimeout(() => {
-          this.router.navigateByUrl('/dashboard');
+          this.router.navigate(['/home'])
         }, 3000);
       },
       error: (error) => {
