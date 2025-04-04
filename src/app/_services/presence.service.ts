@@ -4,6 +4,11 @@ import { environment } from '../../environments/environment';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 
+export interface OnlineUserInfo {
+  username: string;
+  userId: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -11,14 +16,18 @@ export class PresenceService {
   private hubConnection?: HubConnection;
   private readonly hubUrl = environment.hubUrl;
 
-  private onlineUsersSource = new BehaviorSubject<string[]>([]);
-  onlineUsers$ = this.onlineUsersSource.asObservable();
+  // Simple BehaviorSubject for just the user IDs
+  private onlineUserIdsSource = new BehaviorSubject<number[]>([]);
+  onlineUserIds$ = this.onlineUserIdsSource.asObservable();
+
+  // Detailed BehaviorSubject for debugging
+  private onlineUsersDetailedSource = new BehaviorSubject<OnlineUserInfo[]>([]);
+  onlineUsersDetailed$ = this.onlineUsersDetailedSource.asObservable();
   
   constructor(private router: Router) {
     console.log('PresenceService constructed');
   }
 
-  // This method will be called from AccountService after login
   createHubConnection(token: string) {
     if (!token) {
       console.error('No token provided for hub connection');
@@ -53,29 +62,48 @@ export class PresenceService {
   private registerSignalRHandlers() {
     if (!this.hubConnection) return;
 
-    // Register hub methods
     console.log('Registering SignalR handlers...');
 
-    // Get current online users
-    this.hubConnection.on('GetOnlineUsers', (usernames: string[]) => {
-      console.log('📋 Received online users:', usernames);
-      this.onlineUsersSource.next(usernames);
+    // Get simple list of online user IDs
+    this.hubConnection.on('GetOnlineUserIds', (userIds: number[]) => {
+      console.log('📋 Received online user IDs:', userIds);
+      this.onlineUserIdsSource.next(userIds);
+    });
+
+    // Get detailed online user information (for debugging)
+    this.hubConnection.on('GetOnlineUsersDetailed', (users: OnlineUserInfo[]) => {
+      console.log('📋 Received detailed online users:', users);
+      this.onlineUsersDetailedSource.next(users);
     });
 
     // Handle user online
-    this.hubConnection.on('UserIsOnline', (username: string) => {
-      console.log(`👤 User connected: ${username}`);
-      const currentUsers = this.onlineUsersSource.value;
-      if (!currentUsers.includes(username)) {
-        this.onlineUsersSource.next([...currentUsers, username]);
+    this.hubConnection.on('UserIsOnline', (user: { username: string, userId: number }) => {
+      console.log(`👤 User connected: ${user.username} (ID: ${user.userId})`);
+      
+      // Update the simple ID list
+      const currentIds = this.onlineUserIdsSource.value;
+      if (!currentIds.includes(user.userId)) {
+        this.onlineUserIdsSource.next([...currentIds, user.userId]);
+      }
+      
+      // Update the detailed list
+      const currentDetailed = this.onlineUsersDetailedSource.value;
+      if (!currentDetailed.some(u => u.userId === user.userId)) {
+        this.onlineUsersDetailedSource.next([...currentDetailed, user]);
       }
     });
 
     // Handle user offline
-    this.hubConnection.on('UserIsOffline', (username: string) => {
-      console.log(`👤 User disconnected: ${username}`);
-      const currentUsers = this.onlineUsersSource.value;
-      this.onlineUsersSource.next([...currentUsers.filter(x => x !== username)]);
+    this.hubConnection.on('UserIsOffline', (user: { username: string, userId: number }) => {
+      console.log(`👤 User disconnected: ${user.username} (ID: ${user.userId})`);
+      
+      // Update the simple ID list
+      const currentIds = this.onlineUserIdsSource.value;
+      this.onlineUserIdsSource.next(currentIds.filter(id => id !== user.userId));
+      
+      // Update the detailed list
+      const currentDetailed = this.onlineUsersDetailedSource.value;
+      this.onlineUsersDetailedSource.next(currentDetailed.filter(u => u.userId !== user.userId));
     });
 
     // Handle KeepAlive requests from server
@@ -105,5 +133,10 @@ export class PresenceService {
   reconnect(token: string) {
     this.stopHubConnection();
     this.createHubConnection(token);
+  }
+  
+  // Helper method to check if a user is online
+  isUserOnline(userId: number): boolean {
+    return this.onlineUserIdsSource.value.includes(userId);
   }
 }
