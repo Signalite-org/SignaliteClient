@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
+import { FriendRequest } from '../_models/FriendRequest';
+import { GroupBasicInfoDTO } from '../_models/GroupBasicInfo';
+import { FriendRequestAccepted } from '../_models/FriendRequestAccepted';
 
 @Injectable({
   providedIn: 'root'
@@ -11,6 +15,17 @@ export class NotificationsService {
   private hubConnection?: HubConnection;
   private hubUrl = environment.hubUrl;
   
+  // New BehaviorSubjects to track notifications
+  private friendRequestsSource = new BehaviorSubject<FriendRequest[]>([]);
+  friendRequests$ = this.friendRequestsSource.asObservable();
+  
+  private friendRequestsAcceptedSource = new BehaviorSubject<FriendRequestAccepted[]>([]);
+  friendRequestsAccepted$ = this.friendRequestsAcceptedSource.asObservable();
+  
+  private addedToGroupSource = new BehaviorSubject<GroupBasicInfoDTO[]>([]);
+  addedToGroup$ = this.addedToGroupSource.asObservable();
+
+
   constructor(private router: Router) { 
     console.log('NotificationsService constructed');
   }
@@ -59,20 +74,27 @@ export class NotificationsService {
   
     console.log('Registering Notifications SignalR handlers...');
   
-    this.hubConnection.on('FriendRequest', (notification) => {
+    this.hubConnection.on('FriendRequest', (notification: FriendRequest) => {
       console.log('📬 Received friend request notification:', notification);
+      const currentFriendRequests = this.friendRequestsSource.value;
+      this.friendRequestsSource.next([...currentFriendRequests, notification]);
     });
     
-    this.hubConnection.on('FriendRequestAccepted', (notification) => {
+    this.hubConnection.on('FriendRequestAccepted', (notification: FriendRequestAccepted) => {
       console.log('📬 Received friend request accepted notification:', notification);
+      const currentAccepted = this.friendRequestsAcceptedSource.value;
+      this.friendRequestsAcceptedSource.next([...currentAccepted, notification]);
     });
     
     this.hubConnection.on('MessageReceived', (message) => {
       console.log('📬 Received message:', message);
+      
     });
 
-    this.hubConnection.on('AddedToGroup', (groupInfo) => {
+    this.hubConnection.on('AddedToGroup', (groupInfo: GroupBasicInfoDTO) => {
       console.log('📬 Received AddedToGroup notification:', groupInfo);
+      const currentGroups = this.addedToGroupSource.value;
+      this.addedToGroupSource.next([...currentGroups, groupInfo]);
     });
 
     this.hubConnection.on('UserAddedToGroup', (userInfo) => {
@@ -135,5 +157,18 @@ export class NotificationsService {
     console.log('Forcing reconnection of notifications hub...');
     this.reconnect(token);
     return 'Reconnection forced';
+  }
+
+  // Helper methods to clear notifications
+  clearFriendRequests() {
+    this.friendRequestsSource.next([]);
+  }
+  
+  clearFriendRequestsAccepted() {
+    this.friendRequestsAcceptedSource.next([]);
+  }
+  
+  clearAddedToGroup() {
+    this.addedToGroupSource.next([]);
   }
 }

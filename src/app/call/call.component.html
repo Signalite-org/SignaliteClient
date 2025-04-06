@@ -1,0 +1,79 @@
+<div class="call-container">
+    <!-- Online users section -->
+    <div class="user-list" *ngIf="callState === 'idle' && !incomingCallInfo">
+      <h2>Online Users</h2>
+      <div class="user-selection">
+        <select [(ngModel)]="selectedUserId">
+          <option [ngValue]="null">Select a user to call</option>
+          <option *ngFor="let user of onlineUsers" [value]="user.id">{{ user.username }}</option>
+        </select>
+        <button [disabled]="!selectedUserId" (click)="startCall()">Start Call</button>
+      </div>
+      <div class="call-options">
+        <label>
+          <input type="checkbox" [(ngModel)]="isAudioOnly">
+          Audio Only
+        </label>
+      </div>
+    </div>
+  
+    <!-- Incoming call notification -->
+    <div class="incoming-call" *ngIf="incomingCallInfo">
+      <h2>Incoming Call</h2>
+      <p>{{ incomingCallInfo.username }} is calling you</p>
+      <div class="call-actions">
+        <button (click)="acceptCall()">Accept</button>
+        <button (click)="rejectCall()">Reject</button>
+      </div>
+    </div>
+  
+    <!-- Calling status -->
+    <div class="calling-status" *ngIf="callState === 'offering'">
+      <h2>Calling {{ currentCallInfo?.username || 'user' }}...</h2>
+      <p>Waiting for answer...</p>
+      <button (click)="hangUp()">Cancel</button>
+    </div>
+    
+    <!-- Answering status -->
+    <div class="answering-status" *ngIf="callState === 'answering'">
+      <h2>Connecting with {{ currentCallInfo?.username || 'user' }}...</h2>
+      <p>Establishing connection...</p>
+      <button (click)="hangUp()">Cancel</button>
+    </div>
+  
+    <!-- Active call -->
+    <div class="active-call" *ngIf="callState === 'connected'">
+      <h2>Call with {{ currentCallInfo?.username || 'user' }}</h2>
+      
+      <div class="video-container">
+        <!-- Remote video (larger) -->
+        <div class="remote-video-container">
+          <video #remoteVideo autoplay playsinline></video>
+        </div>
+        
+        <!-- Local video (smaller) -->
+        <div class="local-video-container">
+          <video #localVideo autoplay playsinline muted></video>
+        </div>
+      </div>
+      
+      <div class="call-controls">
+        <button (click)="toggleMicrophone()">
+          {{ isMicMuted ? 'Unmute' : 'Mute' }}
+        </button>
+        
+        <button (click)="toggleCamera()" *ngIf="!isAudioOnly">
+          {{ isCameraOff ? 'Turn Camera On' : 'Turn Camera Off' }}
+        </button>
+        
+        <button (click)="hangUp()" class="hang-up-button">
+          End Call
+        </button>
+      </div>
+    </div>
+    
+    <!-- Hanging up -->
+    <div class="hanging-up" *ngIf="callState === 'hangingUp'">
+      <h2>Ending call...</h2>
+    </div>
+  </div>

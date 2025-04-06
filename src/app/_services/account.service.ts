@@ -63,10 +63,13 @@ export class AccountService {
     // Stop the notifications hub connection
     this.notificationsService.stopHubConnection();
     
+    // Clear user data
     localStorage.removeItem('user');
     this.currentUserSource.next(null);
-    this.router.navigateByUrl('/');
     this.stopRefreshTokenTimer();
+    
+    // Navigate directly to login page instead of home
+    this.router.navigateByUrl('/login');
   }
 
   refreshToken(): Observable<void> {
