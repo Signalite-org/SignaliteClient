@@ -59,9 +59,9 @@ export class LoginComponent {
         console.log('Login successful, waiting for SignalR connection...');
 
         // Delay navigation to see the success message and allow SignalR to connect
-        setTimeout(() => {
-          this.router.navigate(['/home'])
-        }, 3000);
+        //setTimeout(() => {
+          //this.router.navigate(['/home'])
+        //}, 3000);
       },
       error: (error) => {
         this.isLoading = false;
