@@ -57,7 +57,11 @@ export class LoginComponent {
         this.isLoading = false;
         this.successMessage = 'Login successful! Connected to presence hub. Check the console for hub events.';
         console.log('Login successful, waiting for SignalR connection...');
-        
+
+        // Delay navigation to see the success message and allow SignalR to connect
+        setTimeout(() => {
+          this.router.navigate(['/home'])
+        }, 3000);
       },
       error: (error) => {
         this.isLoading = false;
