@@ -20,7 +20,7 @@ export class LoginComponent {
   isLoading = false;
   
   // For testing purposes
-  onlineUsers: string[] = [];
+  onlineUsers: number[] = [];
 
   constructor(
     private fb: FormBuilder, 
@@ -34,7 +34,7 @@ export class LoginComponent {
     });
     
     // Subscribe to online users for testing
-    this.presenceService.onlineUsers$.subscribe(users => {
+    this.presenceService.onlineUserIds$.subscribe(users => {
       console.log('Online users updated:', users);
       this.onlineUsers = users;
     });
@@ -57,7 +57,7 @@ export class LoginComponent {
         this.isLoading = false;
         this.successMessage = 'Login successful! Connected to presence hub. Check the console for hub events.';
         console.log('Login successful, waiting for SignalR connection...');
-        
+
         // Delay navigation to see the success message and allow SignalR to connect
         setTimeout(() => {
           this.router.navigate(['/home'])
