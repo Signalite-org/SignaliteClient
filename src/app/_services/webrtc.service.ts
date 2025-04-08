@@ -49,6 +49,8 @@ export class WebRtcService {
       state: 'idle'
     };
 
+  // Online users
+  private onlineUsers: OnlineUser[] = [];
 
   // Event subjects
   private readonly callStateSubject = new BehaviorSubject<'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp'>('idle');
@@ -56,6 +58,7 @@ export class WebRtcService {
   private readonly callEstablishedSubject = new Subject<MediaStream>();
   private readonly callEndedSubject = new Subject<void>();
   private readonly connectionStateChangeSubject = new Subject<RTCPeerConnectionState>();
+  private readonly onlineUsersSubject = new BehaviorSubject<OnlineUser[]>([]);
   private readonly logsSubject = new BehaviorSubject<string[]>([]);
   private readonly connectionQualitySubject = new BehaviorSubject<'good' | 'medium' | 'poor' | 'unknown'>('unknown');
 
@@ -87,7 +90,9 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
     return this.connectionStateChangeSubject.asObservable();
   }
 
-
+  public get onlineUsers$(): Observable<OnlineUser[]> {
+    return this.onlineUsersSubject.asObservable();
+  }
 
   public get logs$(): Observable<string[]> {
     return this.logsSubject.asObservable();
@@ -167,6 +172,8 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
         this.log(`Online users: ${JSON.stringify(data.onlineUsers)}`);
 
         this.currentConnectionId = data.connectionId;
+        this.onlineUsers = data.onlineUsers;
+        this.onlineUsersSubject.next(this.onlineUsers);
       });
 
       await this.hubConnection.invoke('RegisterForSignaling');
@@ -466,6 +473,8 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
       throw error;
     }
   }
+
+
 
   public async checkAvailableDevices(): Promise<{ hasVideo: boolean, hasAudio: boolean }> {
     try {

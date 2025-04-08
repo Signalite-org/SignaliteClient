@@ -3,8 +3,11 @@ import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
-import { UserBasicInfo } from '../_models/UserBasicInfo';
 
+export interface OnlineUserInfo {
+  username: string;
+  userId: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +21,7 @@ export class PresenceService {
   onlineUserIds$ = this.onlineUserIdsSource.asObservable();
 
   // Detailed BehaviorSubject for debugging
-  private onlineUsersDetailedSource = new BehaviorSubject<UserBasicInfo[]>([]);
+  private onlineUsersDetailedSource = new BehaviorSubject<OnlineUserInfo[]>([]);
   onlineUsersDetailed$ = this.onlineUsersDetailedSource.asObservable();
   
   constructor(private router: Router) {
@@ -68,39 +71,39 @@ export class PresenceService {
     });
 
     // Get detailed online user information (for debugging)
-    this.hubConnection.on('GetOnlineUsersDetailed', (users: UserBasicInfo[]) => {
+    this.hubConnection.on('GetOnlineUsersDetailed', (users: OnlineUserInfo[]) => {
       console.log('📋 Received detailed online users:', users);
       this.onlineUsersDetailedSource.next(users);
     });
 
     // Handle user online
-    this.hubConnection.on('UserIsOnline', (user: UserBasicInfo) => {
-      console.log(`👤 User connected: ${user.username} (ID: ${user.id})`);
+    this.hubConnection.on('UserIsOnline', (user: { username: string, userId: number }) => {
+      console.log(`👤 User connected: ${user.username} (ID: ${user.userId})`);
       
       // Update the simple ID list
       const currentIds = this.onlineUserIdsSource.value;
-      if (!currentIds.includes(user.id)) {
-        this.onlineUserIdsSource.next([...currentIds, user.id]);
+      if (!currentIds.includes(user.userId)) {
+        this.onlineUserIdsSource.next([...currentIds, user.userId]);
       }
       
       // Update the detailed list
       const currentDetailed = this.onlineUsersDetailedSource.value;
-      if (!currentDetailed.some(u => u.id === user.id)) {
+      if (!currentDetailed.some(u => u.userId === user.userId)) {
         this.onlineUsersDetailedSource.next([...currentDetailed, user]);
       }
     });
 
     // Handle user offline
-    this.hubConnection.on('UserIsOffline', (user:UserBasicInfo) => {
-      console.log(`👤 User disconnected: ${user.username}(ID: ${user.id})`);
+    this.hubConnection.on('UserIsOffline', (user: { username: string, userId: number }) => {
+      console.log(`👤 User disconnected: ${user.username} (ID: ${user.userId})`);
       
       // Update the simple ID list
       const currentIds = this.onlineUserIdsSource.value;
-      this.onlineUserIdsSource.next(currentIds.filter(id => id !== user.id));
+      this.onlineUserIdsSource.next(currentIds.filter(id => id !== user.userId));
       
       // Update the detailed list
       const currentDetailed = this.onlineUsersDetailedSource.value;
-      this.onlineUsersDetailedSource.next(currentDetailed.filter(u => u.id !== user.id));
+      this.onlineUsersDetailedSource.next(currentDetailed.filter(u => u.userId !== user.userId));
     });
 
     // Handle KeepAlive requests from server
