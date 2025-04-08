@@ -1,55 +1,57 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AccountService } from './account.service';
-
-
-export interface IceServer {
-  urls: string;
-  username?: string;
-  credential?: string;
-}
-
-export interface CallInfo {
-  username: string;
-  userId: number;
-  connectionId: string;
-}
-
-export interface OnlineUser {
-  username: string;
-  id: number;
-}
+import { MediaDevice } from '../_models/WebRtc/MediaDevice';
+import { CallInfo } from '../_models/WebRtc/CallInfo';
+import { IceServer } from '../_models/WebRtc/IceServer';
+import { OnlineUser } from '../_models/WebRtc/OnlineUser';
+import { PresenceService } from './presence.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WebRtcService {
-  private hubConnection!: HubConnection; // Using definite assignment assertion
-  private peerConnection: RTCPeerConnection | null = null; // Initialize as null
-  private localStream: MediaStream | null = null; // Initialize as null
-  private remoteStream: MediaStream | null = null; // Initialize as null
-  
+  private audioInputDevices: MediaDevice[] = [];
+  private videoInputDevices: MediaDevice[] = [];
+  private selectedAudioDevice: string | null = null;
+  private selectedVideoDevice: string | null = null;
+  private readonly audioDevicesSubject = new BehaviorSubject<MediaDevice[]>([]);
+  private readonly videoDevicesSubject = new BehaviorSubject<MediaDevice[]>([]);
+
+  public get audioDevices$(): Observable<MediaDevice[]> {
+    return this.audioDevicesSubject.asObservable();
+  }
+
+  public get videoDevices$(): Observable<MediaDevice[]> {
+    return this.videoDevicesSubject.asObservable();
+  }
+
+
+  // Media streams 
+  private localStream: MediaStream | null = null; 
+  private remoteStream: MediaStream | null = null; 
+
   // Connection tracking
+  private hubConnection!: HubConnection; // Using definite assignment assertion
+  private peerConnection: RTCPeerConnection | null = null; 
   private currentConnectionId: string = ''; // Initialize with empty string
-  
   // Configuration
   private iceServers: IceServer[] | undefined = [];
-  
   // Call state
   private currentCall: {
     peer: CallInfo | null;
-    state: 'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp';
-  } = {
-    peer: null,
-    state: 'idle'
-  };
-  
+    state: 'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp'; } =
+    {
+      peer: null,
+      state: 'idle'
+    };
+
   // Online users
   private onlineUsers: OnlineUser[] = [];
-  
+
   // Event subjects
   private readonly callStateSubject = new BehaviorSubject<'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp'>('idle');
   private readonly incomingCallSubject = new Subject<CallInfo>();
@@ -58,30 +60,36 @@ export class WebRtcService {
   private readonly connectionStateChangeSubject = new Subject<RTCPeerConnectionState>();
   private readonly onlineUsersSubject = new BehaviorSubject<OnlineUser[]>([]);
   private readonly logsSubject = new BehaviorSubject<string[]>([]);
+  private readonly connectionQualitySubject = new BehaviorSubject<'good' | 'medium' | 'poor' | 'unknown'>('unknown');
 
-  constructor(private http: HttpClient, private accountService: AccountService) {}
+
+public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknown'> {
+  return this.connectionQualitySubject.asObservable();
+}
+
+  constructor(private http: HttpClient, private accountService: AccountService, private presenceService: PresenceService) { }
 
   // Public observables
   public get callState$(): Observable<'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp'> {
     return this.callStateSubject.asObservable();
   }
-  
+
   public get incomingCall$(): Observable<CallInfo> {
     return this.incomingCallSubject.asObservable();
   }
-  
+
   public get callEstablished$(): Observable<MediaStream> {
     return this.callEstablishedSubject.asObservable();
   }
-  
+
   public get callEnded$(): Observable<void> {
     return this.callEndedSubject.asObservable();
   }
-  
+
   public get connectionStateChange$(): Observable<RTCPeerConnectionState> {
     return this.connectionStateChangeSubject.asObservable();
   }
-  
+
   public get onlineUsers$(): Observable<OnlineUser[]> {
     return this.onlineUsersSubject.asObservable();
   }
@@ -95,7 +103,7 @@ export class WebRtcService {
     const currentLogs = this.logsSubject.value;
     const timestamp = new Date().toISOString().substring(11, 19); // HH:MM:SS format
     this.logsSubject.next([...currentLogs, `${timestamp} - ${message}`]);
-    
+
     // Keep only the last 100 logs
     if (this.logsSubject.value.length > 100) {
       this.logsSubject.next(this.logsSubject.value.slice(-100));
@@ -115,16 +123,16 @@ export class WebRtcService {
       if (!token) {
         throw new Error('No authentication token available');
       }
-      
+
       this.log('Fetching ICE server configuration...');
       // Get ICE server configuration from API
       this.iceServers = await this.http.get<IceServer[]>(`${environment.apiUrl}/api/webrtc/ice-servers`).toPromise();
-      if(this.iceServers)
+      if (this.iceServers)
         this.log(`Received ${this.iceServers.length} ICE servers`);
 
       else
         this.log(`ICE servers list is undefined`);
-      
+
       // Initialize SignalR connection
       this.log('Initializing SignalR connection...');
       this.hubConnection = new HubConnectionBuilder()
@@ -133,15 +141,15 @@ export class WebRtcService {
         })
         .withAutomaticReconnect()
         .build();
-      
+
       // Set up SignalR event handlers
       this.setupSignalREvents();
-      
+
       // Start the SignalR connection
       this.log('Starting SignalR connection...');
       await this.hubConnection.start();
       this.log('Connected to SignalR SignalingHub');
-      
+
       // Register for signaling
       await this.registerForSignaling();
     } catch (error) {
@@ -157,17 +165,17 @@ export class WebRtcService {
     try {
       // Invoke the registration method
       this.log('Registering for signaling...');
-      
+
       // Add more detailed logging
       this.hubConnection.on('SignalingRegistered', (data: any) => {
         this.log(`SignalingRegistered event received with connection ID: ${data.connectionId}`);
         this.log(`Online users: ${JSON.stringify(data.onlineUsers)}`);
-        
+
         this.currentConnectionId = data.connectionId;
         this.onlineUsers = data.onlineUsers;
         this.onlineUsersSubject.next(this.onlineUsers);
       });
-      
+
       await this.hubConnection.invoke('RegisterForSignaling');
       this.log('RegisterForSignaling method invoked successfully');
     } catch (error) {
@@ -175,6 +183,7 @@ export class WebRtcService {
       throw error;
     }
   }
+
 
   /**
    * Set up SignalR event handlers
@@ -187,66 +196,64 @@ export class WebRtcService {
     }) => {
       console.log('Registered for signaling with ID:', data.connectionId);
       this.currentConnectionId = data.connectionId;
-      this.onlineUsers = data.onlineUsers;
-      this.onlineUsersSubject.next(this.onlineUsers);
     });
-    
+
     // Handle incoming call offer
-    this.hubConnection.on('ReceiveOffer', (data: { 
-      callerUsername: string; 
-      callerId: number; 
-      offer: string; 
+    this.hubConnection.on('ReceiveOffer', (data: {
+      callerUsername: string;
+      callerId: number;
+      offer: string;
       sourceConnectionId: string;
     }) => {
       console.log('Received offer from', data.callerUsername, 'connection', data.sourceConnectionId);
-      
+
       // If already in a call, ignore this offer
       if (this.currentCall.state !== 'idle') {
         console.warn('Ignoring offer because already in a call');
         return;
       }
-      
+
       // Create caller info
       const callerInfo: CallInfo = {
         username: data.callerUsername,
         userId: data.callerId,
         connectionId: data.sourceConnectionId
       };
-      
+
       // Store the offer data for later
       (callerInfo as any).offer = data.offer;
-      
+
       // Notify about incoming call
       this.incomingCallSubject.next(callerInfo);
     });
-    
+
     // Handle incoming answer
-    this.hubConnection.on('ReceiveAnswer', (data: { 
-      calleeUsername: string; 
-      calleeId: number; 
-      answer: string; 
+    this.hubConnection.on('ReceiveAnswer', (data: {
+      calleeUsername: string;
+      calleeId: number;
+      answer: string;
       sourceConnectionId: string;
       targetConnectionId: string;
     }) => {
       console.log('Received answer from', data.calleeUsername, 'connection', data.sourceConnectionId);
-      
+
       // Only process if this answer is meant for our connection
-      if (this.currentConnectionId === data.targetConnectionId && 
-          this.currentCall.state === 'offering') {
+      if (this.currentConnectionId === data.targetConnectionId &&
+        this.currentCall.state === 'offering') {
         console.log('Processing answer meant for this connection');
-        
+
         if (!this.peerConnection) {
           console.error('Received answer but no peer connection exists');
           return;
         }
-        
+
         try {
           // Set the remote description (answer)
           const answerSdp = JSON.parse(data.answer);
           this.peerConnection.setRemoteDescription(new RTCSessionDescription(answerSdp))
             .then(() => {
               console.log('Set remote description successfully');
-              
+
               // Update the current call with callee info
               if (this.currentCall.peer) {
                 this.currentCall.peer.connectionId = data.sourceConnectionId;
@@ -263,28 +270,28 @@ export class WebRtcService {
         console.log('Ignoring answer intended for a different connection or not in offering state');
       }
     });
-    
+
     // Handle incoming ICE candidates
-    this.hubConnection.on('ReceiveIceCandidate', (data: { 
-      senderUsername: string; 
-      senderId: number; 
-      candidate: string; 
+    this.hubConnection.on('ReceiveIceCandidate', (data: {
+      senderUsername: string;
+      senderId: number;
+      candidate: string;
       sourceConnectionId: string;
       targetConnectionId: string;
     }) => {
       console.log('Received ICE candidate from', data.senderUsername, 'connection', data.sourceConnectionId);
-      
+
       // Only process if this ICE candidate is meant for our connection
       if (this.currentConnectionId === data.targetConnectionId &&
-          this.currentCall.state !== 'idle' && 
-          this.currentCall.state !== 'hangingUp') {
+        this.currentCall.state !== 'idle' &&
+        this.currentCall.state !== 'hangingUp') {
         console.log('Processing ICE candidate meant for this connection');
-        
+
         if (!this.peerConnection) {
           console.error('Received ICE candidate but no peer connection exists');
           return;
         }
-        
+
         try {
           // Add the ICE candidate
           const candidate = JSON.parse(data.candidate);
@@ -302,20 +309,20 @@ export class WebRtcService {
         console.log('Ignoring ICE candidate - not for this connection or not in active call');
       }
     });
-    
+
     // Handle call ended
-    this.hubConnection.on('CallEnded', (data: { 
-      username: string; 
+    this.hubConnection.on('CallEnded', (data: {
+      username: string;
       userId: number;
       sourceConnectionId: string;
       targetConnectionId: string;
     }) => {
       console.log('Call ended notification from', data.username, 'connection', data.sourceConnectionId);
-      
+
       // Only process if this hangup is meant for our connection
-      if (this.currentConnectionId === data.targetConnectionId && 
-          this.currentCall.state !== 'idle' && 
-          this.currentCall.state !== 'hangingUp') {
+      if (this.currentConnectionId === data.targetConnectionId &&
+        this.currentCall.state !== 'idle' &&
+        this.currentCall.state !== 'hangingUp') {
         console.log('Processing hangup meant for this connection');
         this.handleCallEnded();
       } else {
@@ -331,12 +338,12 @@ export class WebRtcService {
     if (this.peerConnection) {
       this.cleanupPeerConnection();
     }
-    
+
     // Create a new peer connection
-    this.peerConnection = new RTCPeerConnection({ 
-      iceServers: this.iceServers 
+    this.peerConnection = new RTCPeerConnection({
+      iceServers: this.iceServers
     });
-    
+
     // Set up event handlers
     this.peerConnection.onicecandidate = this.handleIceCandidate.bind(this);
     this.peerConnection.ontrack = this.handleTrack.bind(this);
@@ -347,7 +354,7 @@ export class WebRtcService {
     this.peerConnection.onsignalingstatechange = () => {
       console.log('Signaling state:', this.peerConnection?.signalingState);
     };
-    
+
     // Add local stream tracks to the peer connection if they exist
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => {
@@ -361,14 +368,39 @@ export class WebRtcService {
    */
   private handleIceCandidate(event: RTCPeerConnectionIceEvent): void {
     if (event.candidate && this.currentCall.peer) {
-      console.log('Generated ICE candidate', event.candidate);
+      this.log(`Generated ICE candidate: ${event.candidate.candidate.substring(0, 50)}...`);
+      
+      // Assess connection quality
+      this.assessConnectionQuality(event.candidate);
       
       this.hubConnection.invoke('SendIceCandidate', 
         this.currentCall.peer.username,
         this.currentCall.peer.connectionId,
         JSON.stringify(event.candidate)
-      ).catch(err => console.error('Error sending ICE candidate', err));
+      ).catch(err => this.log(`Error sending ICE candidate: ${err}`));
+    } else if (!event.candidate) {
+      this.log('ICE candidate gathering complete');
     }
+  }
+
+  private assessConnectionQuality(candidate: RTCIceCandidate): void {
+    if (!candidate.candidate) return;
+    
+    const candidateStr = candidate.candidate.toLowerCase();
+    let quality: 'good' | 'medium' | 'poor' | 'unknown' = 'unknown';
+    
+    // Check candidate type - host is best, reflexive is okay, relay is worst
+    if (candidateStr.includes('typ host')) {
+      quality = 'good';
+    } else if (candidateStr.includes('typ srflx')) {
+      quality = 'medium';
+    } else if (candidateStr.includes('typ relay')) {
+      quality = 'poor';
+    }
+    
+    // Update connection quality
+    this.connectionQualitySubject.next(quality);
+    this.log(`Connection quality assessed as: ${quality}`);
   }
 
   /**
@@ -376,7 +408,7 @@ export class WebRtcService {
    */
   private handleTrack(event: RTCTrackEvent): void {
     console.log('Received remote track', event.track.kind);
-    
+
     this.remoteStream = event.streams[0];
     this.callEstablishedSubject.next(this.remoteStream);
     this.updateCallState('connected');
@@ -387,14 +419,14 @@ export class WebRtcService {
    */
   private handleConnectionStateChange(): void {
     if (!this.peerConnection) return;
-    
+
     console.log('Connection state changed to', this.peerConnection.connectionState);
     this.connectionStateChangeSubject.next(this.peerConnection.connectionState);
-    
+
     // Handle disconnection
-    if (this.peerConnection.connectionState === 'disconnected' || 
-        this.peerConnection.connectionState === 'failed' ||
-        this.peerConnection.connectionState === 'closed') {
+    if (this.peerConnection.connectionState === 'disconnected' ||
+      this.peerConnection.connectionState === 'failed' ||
+      this.peerConnection.connectionState === 'closed') {
       this.handleCallEnded();
     }
   }
@@ -412,11 +444,15 @@ export class WebRtcService {
    */
   public async startLocalStream(audioOnly: boolean = false): Promise<MediaStream> {
     try {
-      const constraints = {
-        audio: true,
-        video: !audioOnly ? { width: 640, height: 480 } : false
+      const constraints: MediaStreamConstraints = {
+        audio: this.selectedAudioDevice ? { deviceId: { exact: this.selectedAudioDevice } } : true,
+        video: !audioOnly
+          ? (this.selectedVideoDevice
+            ? { width: 640, height: 480, deviceId: { exact: this.selectedVideoDevice } }
+            : { width: 640, height: 480 })
+          : false
       };
-      
+
       this.log('Requesting media with constraints: ' + JSON.stringify(constraints));
       this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
       this.log('Media access granted successfully');
@@ -425,36 +461,67 @@ export class WebRtcService {
       // Cast the error to an appropriate type to access its properties
       const mediaError = error as Error;
       const domError = error as DOMException;
-      
+
       this.log(`Error getting media: ${domError.name || 'Unknown'} - ${mediaError.message || 'No message'}`);
-      
+
       // Try with audio only if video failed and we weren't already audio-only
       if (!audioOnly && domError.name === 'NotFoundError') {
         this.log('Trying audio-only as fallback...');
         return this.startLocalStream(true);
       }
-      
+
       throw error;
     }
   }
 
 
-  public async checkAvailableDevices(): Promise<{hasVideo: boolean, hasAudio: boolean}> {
+
+  public async checkAvailableDevices(): Promise<{ hasVideo: boolean, hasAudio: boolean }> {
     try {
       this.log('Checking available media devices...');
       const devices = await navigator.mediaDevices.enumerateDevices();
-      
-      const hasVideo = devices.some(device => device.kind === 'videoinput');
-      const hasAudio = devices.some(device => device.kind === 'audioinput');
-      
-      this.log(`Available devices: ${devices.length} total, Video inputs: ${hasVideo ? 'YES' : 'NO'}, Audio inputs: ${hasAudio ? 'YES' : 'NO'}`);
-      
+
+      this.audioInputDevices = devices
+        .filter(device => device.kind === 'audioinput')
+        .map(device => ({
+          deviceId: device.deviceId,
+          label: device.label || `Microphone ${device.deviceId.slice(0, 5)}...`,
+          kind: device.kind
+        }));
+
+      this.videoInputDevices = devices
+        .filter(device => device.kind === 'videoinput')
+        .map(device => ({
+          deviceId: device.deviceId,
+          label: device.label || `Camera ${device.deviceId.slice(0, 5)}...`,
+          kind: device.kind
+        }));
+
+      this.audioDevicesSubject.next(this.audioInputDevices);
+      this.videoDevicesSubject.next(this.videoInputDevices);
+
+      const hasVideo = this.videoInputDevices.length > 0;
+      const hasAudio = this.audioInputDevices.length > 0;
+
+      this.log(`Available devices: ${devices.length} total, Video inputs: ${hasVideo ? this.videoInputDevices.length : 'NO'}, Audio inputs: ${hasAudio ? this.audioInputDevices.length : 'NO'}`);
+
       return { hasVideo, hasAudio };
     } catch (error) {
       const typedError = error as Error;
       this.log(`Error enumerating devices: ${typedError.message || 'Unknown error'}`);
       return { hasVideo: false, hasAudio: false };
     }
+  }
+
+  // Method to set selected devices
+  public setSelectedAudioDevice(deviceId: string): void {
+    this.selectedAudioDevice = deviceId;
+    this.log(`Selected audio device: ${deviceId}`);
+  }
+
+  public setSelectedVideoDevice(deviceId: string): void {
+    this.selectedVideoDevice = deviceId;
+    this.log(`Selected video device: ${deviceId}`);
   }
   /**
    * Start a call to a user
@@ -464,37 +531,39 @@ export class WebRtcService {
       if (this.currentCall.state !== 'idle') {
         throw new Error('Cannot start a call while already in a call');
       }
-      
+
       this.updateCallState('offering');
-      
-      // Find the user in online users
-      const targetUser = this.onlineUsers.find(u => u.id === userId);
+
+      const targetUser = this.presenceService.isUserOnline(userId)
+      ? { id: userId, username: 'Unknown' } // fallback
+      : null;
+
       if (!targetUser) {
         throw new Error(`User with ID ${userId} not found in online users`);
       }
-      
+
       // Create peer info
       this.currentCall.peer = {
         username: targetUser.username,
         userId: targetUser.id,
         connectionId: '' // Will be set when we get an answer
       };
-      
+
       // Initialize the peer connection
       this.initializePeerConnection();
-      
+
       // Create an offer
       const offer = await this.peerConnection!.createOffer({
         offerToReceiveAudio: true,
         offerToReceiveVideo: true
       });
-      
+
       // Set the local description
       await this.peerConnection!.setLocalDescription(offer);
-      
+
       // Send the offer to the target user
       await this.hubConnection.invoke('SendOffer', userId, JSON.stringify(offer));
-      
+
       console.log('Call started to', targetUser.username, 'ID:', userId);
     } catch (error) {
       console.error('Error starting call', error);
@@ -512,37 +581,37 @@ export class WebRtcService {
       if (this.currentCall.state !== 'idle') {
         throw new Error('Cannot accept a call while already in a call');
       }
-      
+
       // Get the offer from the call info
       const offer = (incomingCallInfo as any).offer;
       if (!offer) {
         throw new Error('No offer found in incoming call info');
       }
-      
+
       // Set current call info
       this.currentCall.peer = incomingCallInfo;
       this.updateCallState('answering');
-      
+
       // Initialize the peer connection
       this.initializePeerConnection();
-      
+
       // Set the remote description (offer)
       const offerSdp = JSON.parse(offer);
       await this.peerConnection!.setRemoteDescription(new RTCSessionDescription(offerSdp));
-      
+
       // Create an answer
       const answer = await this.peerConnection!.createAnswer();
-      
+
       // Set the local description
       await this.peerConnection!.setLocalDescription(answer);
-      
+
       // Send the answer to the caller
-      await this.hubConnection.invoke('SendAnswer', 
-        incomingCallInfo.username, 
-        incomingCallInfo.connectionId, 
+      await this.hubConnection.invoke('SendAnswer',
+        incomingCallInfo.username,
+        incomingCallInfo.connectionId,
         JSON.stringify(answer)
       );
-      
+
       console.log('Call accepted, answer sent to', incomingCallInfo.username);
     } catch (error) {
       console.error('Error accepting call', error);
@@ -560,10 +629,10 @@ export class WebRtcService {
       console.warn('Cannot reject call while already in a call');
       return;
     }
-    
+
     try {
       // Send hangup to the caller
-      await this.hubConnection.invoke('HangUp', 
+      await this.hubConnection.invoke('HangUp',
         incomingCallInfo.username,
         incomingCallInfo.connectionId
       );
@@ -581,16 +650,16 @@ export class WebRtcService {
       console.warn('No active call to hang up');
       return;
     }
-    
+
     try {
       this.updateCallState('hangingUp');
-      
+
       // Notify the peer that we're hanging up
-      await this.hubConnection.invoke('HangUp', 
+      await this.hubConnection.invoke('HangUp',
         this.currentCall.peer.username,
         this.currentCall.peer.connectionId
       );
-      
+
       this.handleCallEnded();
     } catch (error) {
       console.error('Error hanging up call', error);
@@ -605,13 +674,13 @@ export class WebRtcService {
   private handleCallEnded(): void {
     // Reset call state
     this.updateCallState('idle');
-    
+
     // Clean up peer connection
     this.cleanupPeerConnection();
-    
+
     // Reset current call peer
     this.currentCall.peer = null;
-    
+
     // Notify listeners
     this.callEndedSubject.next();
   }
@@ -628,12 +697,12 @@ export class WebRtcService {
         this.peerConnection.onicegatheringstatechange = null;
       if (this.peerConnection.onsignalingstatechange)
         this.peerConnection.onsignalingstatechange = null;
-      
+
       // Close the connection
       this.peerConnection.close();
       this.peerConnection = null;
     }
-    
+
     // Stop remote stream tracks
     if (this.remoteStream) {
       this.remoteStream.getTracks().forEach(track => track.stop());
@@ -649,16 +718,16 @@ export class WebRtcService {
     if (this.currentCall.state !== 'idle') {
       this.hangUp().catch(err => console.error('Error hanging up during dispose', err));
     }
-    
+
     // Clean up peer connection
     this.cleanupPeerConnection();
-    
+
     // Stop local stream tracks
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
       this.localStream = null;
     }
-    
+
     // Stop the hub connection
     if (this.hubConnection) {
       this.hubConnection.stop().catch(err => console.error('Error stopping hub connection', err));

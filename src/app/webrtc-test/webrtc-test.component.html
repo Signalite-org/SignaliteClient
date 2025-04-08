@@ -21,6 +21,29 @@
       </div>
     </div>
     
+    <!-- Add this to the actions-panel in webrtc-test.component.html -->
+<div class="device-selection">
+    <h4>Device Selection</h4>
+    
+    <div class="form-group">
+      <label for="audioDevice">Microphone:</label>
+      <select id="audioDevice" [(ngModel)]="selectedAudioDeviceId" (change)="onAudioDeviceChange($event)">
+        <option [value]="null">Default Microphone</option>
+        <option *ngFor="let device of audioDevices" [value]="device.deviceId">{{ device.label }}</option>
+      </select>
+    </div>
+    
+    <div class="form-group" *ngIf="videoDevices.length > 0">
+      <label for="videoDevice">Camera:</label>
+      <select id="videoDevice" [(ngModel)]="selectedVideoDeviceId" (change)="onVideoDeviceChange($event)">
+        <option [value]="null">Default Camera</option>
+        <option *ngFor="let device of videoDevices" [value]="device.deviceId">{{ device.label }}</option>
+      </select>
+    </div>
+  </div>
+
+  <button (click)="refreshDevices()" [disabled]="!initialized">Refresh Devices</button>
+
     <div class="actions-panel">
       <h3>Test Actions</h3>
       <label>
@@ -60,3 +83,5 @@
       </div>
     </div>
   </div>
+
+  

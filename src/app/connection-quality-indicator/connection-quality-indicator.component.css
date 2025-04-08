@@ -1,0 +1,58 @@
+
+.connection-quality {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .bar-container {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    height: 15px;
+  }
+  
+  .bar {
+    width: 4px;
+    background-color: #d0d0d0;
+    border-radius: 1px;
+  }
+  
+  .bar:nth-child(1) {
+    height: 5px;
+  }
+  
+  .bar:nth-child(2) {
+    height: 10px;
+  }
+  
+  .bar:nth-child(3) {
+    height: 15px;
+  }
+  
+  .bar.active {
+    background-color: currentColor;
+  }
+  
+  .quality-text {
+    font-size: 12px;
+    margin-left: 3px;
+  }
+  
+  :host {
+    color: #F44336;
+  }
+  
+  :host.medium {
+    color: #FF9800;
+  }
+  
+  :host.good {
+    color: #4CAF50;
+  }
+  
+  :host.unknown {
+    color: #9E9E9E;
+  }
+
+  

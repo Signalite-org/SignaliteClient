@@ -1,8 +1,11 @@
 import { Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { WebRtcService, CallInfo, OnlineUser } from '../_services/webrtc.service'
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CallInfo } from '../_models/WebRtc/CallInfo';
+import { OnlineUser } from '../_models/WebRtc/OnlineUser';
+import { WebRtcService } from '../_services/webrtc.service';
 
 @Component({
   standalone:true,

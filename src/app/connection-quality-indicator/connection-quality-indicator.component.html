@@ -1,0 +1,8 @@
+<div class="connection-quality" [title]="getTooltip()">
+    <div class="bar-container">
+      <div class="bar" [ngClass]="{ 'active': qualityLevel >= 1 }"></div>
+      <div class="bar" [ngClass]="{ 'active': qualityLevel >= 2 }"></div>
+      <div class="bar" [ngClass]="{ 'active': qualityLevel >= 3 }"></div>
+    </div>
+    <span class="quality-text" *ngIf="showText">{{ getQualityText() }}</span>
+  </div>

@@ -1,9 +1,11 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { OnlineUser, WebRtcService } from '../_services/webrtc.service';
+import { WebRtcService } from '../_services/webrtc.service';
 import { Subscription } from 'rxjs';
 import { PresenceService } from '../_services/presence.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MediaDevice } from '../_models/WebRtc/MediaDevice';
+import { OnlineUser } from '../_models/WebRtc/OnlineUser';
 
 @Component({
   selector: 'app-webrtc-test',
@@ -12,8 +14,15 @@ import { CommonModule } from '@angular/common';
   styleUrl: './webrtc-test.component.css'
 })
 export class WebrtcTestComponent implements OnInit, OnDestroy {
-  @ViewChild('localVideo', { static: true }) localVideoRef!: ElementRef<HTMLVideoElement>;
+@ViewChild('localVideo', { static: true }) localVideoRef!: ElementRef<HTMLVideoElement>;
 @ViewChild('remoteVideo', { static: true }) remoteVideoRef!: ElementRef<HTMLVideoElement>;
+
+// store found devices
+audioDevices: MediaDevice[] = [];
+videoDevices: MediaDevice[] = [];
+selectedAudioDeviceId: string | null = null;
+selectedVideoDeviceId: string | null = null;
+
   initialized = false;
   localStreamActive = false;
   rtcConnectionState: RTCPeerConnectionState | null = null;
@@ -71,6 +80,20 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
         this.logs = logs;
       })
     );
+
+    this.subscriptions.push(
+      this.webRtcService.audioDevices$.subscribe(devices => {
+        this.audioDevices = devices;
+        this.logs.push(`Found ${devices.length} audio input devices`);
+      })
+    );
+
+    this.subscriptions.push(
+      this.webRtcService.videoDevices$.subscribe(devices => {
+        this.videoDevices = devices;
+        this.logs.push(`Found ${devices.length} video input devices`);
+      })
+    );
     
     // Subscribe to connection state changes
     this.subscriptions.push(
@@ -88,8 +111,11 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
     
     // Subscribe to online users
     this.subscriptions.push(
-      this.webRtcService.onlineUsers$.subscribe(users => {
-        this.onlineUsers = users;
+      this.presenceService.onlineUsersDetailed$.subscribe(users => {
+        this.onlineUsers = users.map(u => ({
+          id: u.userId,
+          username: u.username
+        }));
       })
     );
     
@@ -125,11 +151,25 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
     );
   }
 
+  onAudioDeviceChange(event: Event): void {
+    const selectElement = event.target as HTMLSelectElement;
+    this.selectedAudioDeviceId = selectElement.value;
+    this.webRtcService.setSelectedAudioDevice(selectElement.value);
+    this.logs.push(`Selected audio device: ${selectElement.value}`);
+  }
+  
+  onVideoDeviceChange(event: Event): void {
+    const selectElement = event.target as HTMLSelectElement;
+    this.selectedVideoDeviceId = selectElement.value;
+    this.webRtcService.setSelectedVideoDevice(selectElement.value);
+    this.logs.push(`Selected video device: ${selectElement.value}`);
+  }
+
   async initialize(): Promise<void> {
     try {
       await this.webRtcService.initialize();
       this.initialized = true;
-      
+      await this.webRtcService.checkAvailableDevices();
       // Try to get video elements directly
       setTimeout(() => {
         if (!this.localVideo) {
@@ -154,6 +194,11 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
       console.error('Failed to initialize WebRTC:', error);
       this.logs.push(`Error initializing: ${error}`);
     }
+  }
+
+  async refreshDevices(): Promise<void> {
+    this.logs.push('Refreshing device list...');
+    await this.webRtcService.checkAvailableDevices();
   }
 
   async testMedia(): Promise<void> {
@@ -182,6 +227,20 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
       console.error('Failed to get media:', error);
       this.logs.push(`Error accessing media: ${error}`);
     }
+  }
+
+  private ensureVideoElements(): boolean {
+    if (!this.localVideo && this.localVideoRef) {
+      this.localVideo = this.localVideoRef.nativeElement;
+      this.logs.push('Retrieved local video element reference');
+    }
+    
+    if (!this.remoteVideo && this.remoteVideoRef) {
+      this.remoteVideo = this.remoteVideoRef.nativeElement;
+      this.logs.push('Retrieved remote video element reference');
+    }
+    
+    return !!this.localVideo;
   }
 
   stopMedia(): void {
