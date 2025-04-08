@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MediaDevice } from '../_models/WebRtc/MediaDevice';
 import { OnlineUser } from '../_models/WebRtc/OnlineUser';
+import { UserBasicInfo } from '../_models/UserBasicInfo';
 
 @Component({
   selector: 'app-webrtc-test',
@@ -28,7 +29,7 @@ selectedVideoDeviceId: string | null = null;
   rtcConnectionState: RTCPeerConnectionState | null = null;
   callState: 'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp' = 'idle';
   logs: string[] = [];
-  onlineUsers: OnlineUser[] = [];
+  onlineUsers: UserBasicInfo[] = [];
   audioOnly = false;
   
   private subscriptions: Subscription[] = [];
@@ -37,7 +38,7 @@ selectedVideoDeviceId: string | null = null;
 
   constructor(
     private webRtcService: WebRtcService,
-    private presenceService: PresenceService
+    public presenceService: PresenceService
   ) {}
 
   ngAfterViewInit() {
@@ -113,7 +114,7 @@ selectedVideoDeviceId: string | null = null;
     this.subscriptions.push(
       this.presenceService.onlineUsersDetailed$.subscribe(users => {
         this.onlineUsers = users.map(u => ({
-          id: u.userId,
+          id: u.id,
           username: u.username
         }));
       })
