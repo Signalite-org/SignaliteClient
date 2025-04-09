@@ -9,6 +9,7 @@ import { CallInfo } from '../_models/WebRtc/CallInfo';
 import { IceServer } from '../_models/WebRtc/IceServer';
 import { OnlineUser } from '../_models/WebRtc/OnlineUser';
 import { PresenceService } from './presence.service';
+import { IncomingCallData } from '../_models/WebRtc/IncomingCallData';
 
 @Injectable({
   providedIn: 'root'
@@ -49,8 +50,6 @@ export class WebRtcService {
       state: 'idle'
     };
 
-  // Online users
-  private onlineUsers: OnlineUser[] = [];
 
   // Event subjects
   private readonly callStateSubject = new BehaviorSubject<'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp'>('idle');
@@ -58,7 +57,6 @@ export class WebRtcService {
   private readonly callEstablishedSubject = new Subject<MediaStream>();
   private readonly callEndedSubject = new Subject<void>();
   private readonly connectionStateChangeSubject = new Subject<RTCPeerConnectionState>();
-  private readonly onlineUsersSubject = new BehaviorSubject<OnlineUser[]>([]);
   private readonly logsSubject = new BehaviorSubject<string[]>([]);
   private readonly connectionQualitySubject = new BehaviorSubject<'good' | 'medium' | 'poor' | 'unknown'>('unknown');
 
@@ -90,9 +88,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
     return this.connectionStateChangeSubject.asObservable();
   }
 
-  public get onlineUsers$(): Observable<OnlineUser[]> {
-    return this.onlineUsersSubject.asObservable();
-  }
+
 
   public get logs$(): Observable<string[]> {
     return this.logsSubject.asObservable();
@@ -111,7 +107,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
   }
 
   /**
-   * Initialize the WebRTC service
+   * Initialize the hub
    */
   public async initialize(): Promise<void> {
     try {
@@ -166,16 +162,6 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
       // Invoke the registration method
       this.log('Registering for signaling...');
 
-      // Add more detailed logging
-      this.hubConnection.on('SignalingRegistered', (data: any) => {
-        this.log(`SignalingRegistered event received with connection ID: ${data.connectionId}`);
-        this.log(`Online users: ${JSON.stringify(data.onlineUsers)}`);
-
-        this.currentConnectionId = data.connectionId;
-        this.onlineUsers = data.onlineUsers;
-        this.onlineUsersSubject.next(this.onlineUsers);
-      });
-
       await this.hubConnection.invoke('RegisterForSignaling');
       this.log('RegisterForSignaling method invoked successfully');
     } catch (error) {
@@ -192,39 +178,25 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
     // Handle signaling registration response
     this.hubConnection.on('SignalingRegistered', (data: {
       connectionId: string;
-      onlineUsers: OnlineUser[];
     }) => {
-      console.log('Registered for signaling with ID:', data.connectionId);
+      this.log(`SignalingRegistered event received with connection ID: ${data.connectionId}`);
       this.currentConnectionId = data.connectionId;
     });
 
-    // Handle incoming call offer
-    this.hubConnection.on('ReceiveOffer', (data: {
-      callerUsername: string;
-      callerId: number;
-      offer: string;
-      sourceConnectionId: string;
-    }) => {
-      console.log('Received offer from', data.callerUsername, 'connection', data.sourceConnectionId);
+    // Handle incoming call offer (has username, userId, SDP offer, connectionID that is calling you)
+    this.hubConnection.on('ReceiveOffer', (callData: CallInfo ) => {
+      console.log('Received offer from', callData.callerUsername, 'connection', callData.sourceConnectionId);
 
-      // If already in a call, ignore this offer
+      // If already in a call, ignore this offer (TODO: think about handling this differently when in a call)
       if (this.currentCall.state !== 'idle') {
         console.warn('Ignoring offer because already in a call');
         return;
       }
 
-      // Create caller info
-      const callerInfo: CallInfo = {
-        username: data.callerUsername,
-        userId: data.callerId,
-        connectionId: data.sourceConnectionId
-      };
 
-      // Store the offer data for later
-      (callerInfo as any).offer = data.offer;
 
       // Notify about incoming call
-      this.incomingCallSubject.next(callerInfo);
+      this.incomingCallSubject.next(callData);
     });
 
     // Handle incoming answer
@@ -256,7 +228,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
 
               // Update the current call with callee info
               if (this.currentCall.peer) {
-                this.currentCall.peer.connectionId = data.sourceConnectionId;
+                this.currentCall.peer.sourceConnectionId = data.sourceConnectionId;
                 this.updateCallState('connected');
               }
             })
@@ -374,8 +346,8 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
       this.assessConnectionQuality(event.candidate);
       
       this.hubConnection.invoke('SendIceCandidate', 
-        this.currentCall.peer.username,
-        this.currentCall.peer.connectionId,
+        this.currentCall.peer.callerUsername,
+        this.currentCall.peer.sourceConnectionId,
         JSON.stringify(event.candidate)
       ).catch(err => this.log(`Error sending ICE candidate: ${err}`));
     } else if (!event.candidate) {
@@ -474,8 +446,6 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
     }
   }
 
-
-
   public async checkAvailableDevices(): Promise<{ hasVideo: boolean, hasAudio: boolean }> {
     try {
       this.log('Checking available media devices...');
@@ -544,9 +514,9 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
 
       // Create peer info
       this.currentCall.peer = {
-        username: targetUser.username,
-        userId: targetUser.id,
-        connectionId: '' // Will be set when we get an answer
+        callerUsername: targetUser.username,
+        callerId: targetUser.id,
+        sourceConnectionId: '' // Will be set when we get an answer
       };
 
       // Initialize the peer connection
@@ -583,7 +553,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
       }
 
       // Get the offer from the call info
-      const offer = (incomingCallInfo as any).offer;
+      const offer = incomingCallInfo.offer;
       if (!offer) {
         throw new Error('No offer found in incoming call info');
       }
@@ -607,12 +577,12 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
 
       // Send the answer to the caller
       await this.hubConnection.invoke('SendAnswer',
-        incomingCallInfo.username,
-        incomingCallInfo.connectionId,
+        incomingCallInfo.callerUsername,
+        incomingCallInfo.sourceConnectionId,
         JSON.stringify(answer)
       );
 
-      console.log('Call accepted, answer sent to', incomingCallInfo.username);
+      console.log('Call accepted, answer sent to', incomingCallInfo.callerUsername);
     } catch (error) {
       console.error('Error accepting call', error);
       this.updateCallState('idle');
@@ -633,10 +603,10 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
     try {
       // Send hangup to the caller
       await this.hubConnection.invoke('HangUp',
-        incomingCallInfo.username,
-        incomingCallInfo.connectionId
+        incomingCallInfo.callerUsername,
+        incomingCallInfo.sourceConnectionId
       );
-      console.log('Call rejected, notification sent to', incomingCallInfo.username);
+      console.log('Call rejected, notification sent to', incomingCallInfo.callerUsername);
     } catch (error) {
       console.error('Error rejecting call', error);
     }
@@ -656,8 +626,8 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
 
       // Notify the peer that we're hanging up
       await this.hubConnection.invoke('HangUp',
-        this.currentCall.peer.username,
-        this.currentCall.peer.connectionId
+        this.currentCall.peer.callerUsername,
+        this.currentCall.peer.sourceConnectionId
       );
 
       this.handleCallEnded();

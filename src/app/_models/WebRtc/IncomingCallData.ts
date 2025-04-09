@@ -1,7 +1,7 @@
-export interface CallInfo {
+export interface IncomingCallData 
+{
     callerUsername: string;
     callerId: number;
-    offer?: string;
+    offer: string;
     sourceConnectionId: string;
-  }
-  
+}
