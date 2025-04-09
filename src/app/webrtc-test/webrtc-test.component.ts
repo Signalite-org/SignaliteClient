@@ -5,8 +5,8 @@ import { PresenceService } from '../_services/presence.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MediaDevice } from '../_models/WebRtc/MediaDevice';
-import { OnlineUser } from '../_models/WebRtc/OnlineUser';
 import { UserBasicInfo } from '../_models/UserBasicInfo';
+import { CallState } from '../_models/WebRtc/CallState';
 
 @Component({
   selector: 'app-webrtc-test',
@@ -27,7 +27,7 @@ selectedVideoDeviceId: string | null = null;
   initialized = false;
   localStreamActive = false;
   rtcConnectionState: RTCPeerConnectionState | null = null;
-  callState: 'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp' = 'idle';
+  callState: CallState = CallState.Idle;
   logs: string[] = [];
   onlineUsers: UserBasicInfo[] = [];
   audioOnly = false;

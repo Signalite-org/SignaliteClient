@@ -7,9 +7,9 @@ import { AccountService } from './account.service';
 import { MediaDevice } from '../_models/WebRtc/MediaDevice';
 import { CallInfo } from '../_models/WebRtc/CallInfo';
 import { IceServer } from '../_models/WebRtc/IceServer';
-import { OnlineUser } from '../_models/WebRtc/OnlineUser';
+
 import { PresenceService } from './presence.service';
-import { IncomingCallData } from '../_models/WebRtc/IncomingCallData';
+import { CallState } from '../_models/WebRtc/CallState';
 
 @Injectable({
   providedIn: 'root'
@@ -44,15 +44,15 @@ export class WebRtcService {
   // Call state
   private currentCall: {
     peer: CallInfo | null;
-    state: 'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp'; } =
+    state: CallState } =
     {
       peer: null,
-      state: 'idle'
+      state: CallState.Idle
     };
 
 
   // Event subjects
-  private readonly callStateSubject = new BehaviorSubject<'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp'>('idle');
+  private readonly callStateSubject = new BehaviorSubject<CallState>(CallState.Idle);
   private readonly incomingCallSubject = new Subject<CallInfo>();
   private readonly callEstablishedSubject = new Subject<MediaStream>();
   private readonly callEndedSubject = new Subject<void>();
@@ -68,7 +68,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
   constructor(private http: HttpClient, private accountService: AccountService, private presenceService: PresenceService) { }
 
   // Public observables
-  public get callState$(): Observable<'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp'> {
+  public get callState$(): Observable<CallState> {
     return this.callStateSubject.asObservable();
   }
 
@@ -229,7 +229,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
               // Update the current call with callee info
               if (this.currentCall.peer) {
                 this.currentCall.peer.sourceConnectionId = data.sourceConnectionId;
-                this.updateCallState('connected');
+                this.updateCallState(CallState.Connected);
               }
             })
             .catch(error => {
@@ -383,7 +383,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
 
     this.remoteStream = event.streams[0];
     this.callEstablishedSubject.next(this.remoteStream);
-    this.updateCallState('connected');
+    this.updateCallState(CallState.Connected);
   }
 
   /**
@@ -406,7 +406,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
   /**
    * Update the call state
    */
-  private updateCallState(state: 'idle' | 'offering' | 'answering' | 'connected' | 'hangingUp'): void {
+  private updateCallState(state: CallState): void {
     this.currentCall.state = state;
     this.callStateSubject.next(state);
   }
@@ -502,7 +502,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
         throw new Error('Cannot start a call while already in a call');
       }
 
-      this.updateCallState('offering');
+      this.updateCallState(CallState.Offering);
 
       const targetUser = this.presenceService.isUserOnline(userId)
       ? { id: userId, username: 'Unknown' } // fallback
@@ -537,7 +537,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
       console.log('Call started to', targetUser.username, 'ID:', userId);
     } catch (error) {
       console.error('Error starting call', error);
-      this.updateCallState('idle');
+      this.updateCallState(CallState.Idle);
       this.currentCall.peer = null;
       throw error;
     }
@@ -560,7 +560,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
 
       // Set current call info
       this.currentCall.peer = incomingCallInfo;
-      this.updateCallState('answering');
+      this.updateCallState(CallState.Offering);
 
       // Initialize the peer connection
       this.initializePeerConnection();
@@ -585,7 +585,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
       console.log('Call accepted, answer sent to', incomingCallInfo.callerUsername);
     } catch (error) {
       console.error('Error accepting call', error);
-      this.updateCallState('idle');
+      this.updateCallState(CallState.Idle);
       this.currentCall.peer = null;
       throw error;
     }
@@ -622,7 +622,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
     }
 
     try {
-      this.updateCallState('hangingUp');
+      this.updateCallState(CallState.HangingUp);
 
       // Notify the peer that we're hanging up
       await this.hubConnection.invoke('HangUp',
@@ -643,7 +643,7 @@ public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknow
    */
   private handleCallEnded(): void {
     // Reset call state
-    this.updateCallState('idle');
+    this.updateCallState(CallState.Idle);
 
     // Clean up peer connection
     this.cleanupPeerConnection();
