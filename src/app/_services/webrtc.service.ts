@@ -15,22 +15,10 @@ import { CallState } from '../_models/WebRtc/CallState';
   providedIn: 'root'
 })
 export class WebRtcService {
-  private audioInputDevices: MediaDevice[] = [];
-  private videoInputDevices: MediaDevice[] = [];
+
+  constructor(private http: HttpClient, private accountService: AccountService, private presenceService: PresenceService) { }
   private selectedAudioDevice: string | null = null;
   private selectedVideoDevice: string | null = null;
-  private readonly audioDevicesSubject = new BehaviorSubject<MediaDevice[]>([]);
-  private readonly videoDevicesSubject = new BehaviorSubject<MediaDevice[]>([]);
-
-  public get audioDevices$(): Observable<MediaDevice[]> {
-    return this.audioDevicesSubject.asObservable();
-  }
-
-  public get videoDevices$(): Observable<MediaDevice[]> {
-    return this.videoDevicesSubject.asObservable();
-  }
-
-
   // Media streams 
   private localStream: MediaStream | null = null; 
   private remoteStream: MediaStream | null = null; 
@@ -50,49 +38,57 @@ export class WebRtcService {
       state: CallState.Idle
     };
 
+  // audio input devices
+  private audioInputDevices: MediaDevice[] = [];
+  private readonly audioDevicesSubject = new BehaviorSubject<MediaDevice[]>([]);
+  public get audioDevices$(): Observable<MediaDevice[]> {
+    return this.audioDevicesSubject.asObservable();
+  }
 
-  // Event subjects
+  // video input devices
+  private videoInputDevices: MediaDevice[] = [];
+  private readonly videoDevicesSubject = new BehaviorSubject<MediaDevice[]>([]);
+  public get videoDevices$(): Observable<MediaDevice[]> {
+    return this.videoDevicesSubject.asObservable();
+  }
+
   private readonly callStateSubject = new BehaviorSubject<CallState>(CallState.Idle);
-  private readonly incomingCallSubject = new Subject<CallInfo>();
-  private readonly callEstablishedSubject = new Subject<MediaStream>();
-  private readonly callEndedSubject = new Subject<void>();
-  private readonly connectionStateChangeSubject = new Subject<RTCPeerConnectionState>();
-  private readonly logsSubject = new BehaviorSubject<string[]>([]);
-  private readonly connectionQualitySubject = new BehaviorSubject<'good' | 'medium' | 'poor' | 'unknown'>('unknown');
-
-
-public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknown'> {
-  return this.connectionQualitySubject.asObservable();
-}
-
-  constructor(private http: HttpClient, private accountService: AccountService, private presenceService: PresenceService) { }
-
-  // Public observables
   public get callState$(): Observable<CallState> {
     return this.callStateSubject.asObservable();
   }
 
+  private readonly incomingCallSubject = new Subject<CallInfo>();
   public get incomingCall$(): Observable<CallInfo> {
     return this.incomingCallSubject.asObservable();
   }
 
+
+  private readonly callEstablishedSubject = new Subject<MediaStream>();
   public get callEstablished$(): Observable<MediaStream> {
     return this.callEstablishedSubject.asObservable();
   }
 
+  private readonly callEndedSubject = new Subject<void>();
   public get callEnded$(): Observable<void> {
     return this.callEndedSubject.asObservable();
   }
 
+  private readonly connectionStateChangeSubject = new Subject<RTCPeerConnectionState>();
   public get connectionStateChange$(): Observable<RTCPeerConnectionState> {
     return this.connectionStateChangeSubject.asObservable();
   }
 
-
-
+  private readonly logsSubject = new BehaviorSubject<string[]>([]);
   public get logs$(): Observable<string[]> {
     return this.logsSubject.asObservable();
   }
+
+  private readonly connectionQualitySubject = new BehaviorSubject<'good' | 'medium' | 'poor' | 'unknown'>('unknown');
+  public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknown'> {
+    return this.connectionQualitySubject.asObservable();
+  }
+
+  
 
   private log(message: string) {
     console.log(`[WebRTC] ${message}`);
