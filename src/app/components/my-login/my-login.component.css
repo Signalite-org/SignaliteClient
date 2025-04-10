@@ -1,3 +1,7 @@
+*{
+    user-select: none;
+}
+
 :host {
     --bg-first-color: #424374;
     --bg-second-color: #1a1a2d;
@@ -6,6 +10,7 @@
     --title-first-color: #5a95fc;
     --title-second-color: #8659dd;
     --title-third-color: #aa2bc5;
+    --text-color: #eff2ff;
 }
 
 .background {
@@ -30,11 +35,11 @@
     top: -50px;
     width: 100%;
     font-size: 5em;
-
     background: linear-gradient(to right, var(--title-first-color) 0%, var(--title-second-color) 50%, var(--title-third-color) 100%);
     font-family: "Source Sans Pro", sans-serif;
     font-style: italic;
     font-weight: bold;
+
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -73,12 +78,13 @@
 }
 
 .content-login{
-    position: absolute;
+    position: relative;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 5% 10% 5% 10%;
 }
 
 .content-login h2{
@@ -87,16 +93,97 @@
     background: linear-gradient(to bottom, rgba(140, 167, 255, 1) 0%,rgba(189, 113, 255, 1) 100%);
     font-style: italic;
     font-weight: bold;
+    pointer-events: none;
     font-family: "Source Sans Pro", sans-serif;
+
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.line {
+    background-color: #c9c9c940;
+    width: 100%;
+    height: 4px;
+    margin-top: 10px;
+    margin-bottom: 50px;
+}
+
+.form-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 30px;
+    box-sizing: content-box;
 }
 
 .form-box input{
     background: #ffffff33;
     border: transparent;
-    border-radius: 10px 10px 10px 10px;
+    border-radius: 10px;
+    width: 400px;
     font-size: 1.5em;
-    color: rgb(0, 0, 0);
+    padding: 10px;
+    outline: none;
+    color: var(--text-color);
 }
 
+.placelabel {
+    position: absolute;
+    font-size: 1.5em;
+    padding: 10px;
+    color: var(--text-color);
+    pointer-events: none;
+    transition: 0.2s ease;
+}
+
+input:focus + .placelabel,
+input:valid + .placelabel,
+input:not(:placeholder-shown) + .placelabel{
+    height: 100px;
+    transform: translate(0,-20%);
+    font-size: 1em;
+}
+
+.button-box{
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.button-style{
+    padding: 5px;
+    height: 40px;
+    width: 150px;
+    border-radius: 20px;
+    border: 0;
+    font-size: 1.5em;
+    font-style: italic;
+    font-weight: bold;
+    box-shadow: 5px 5px 10px #00000038;
+    background: #465a99FF;
+    color: var(--text-color);
+}
+
+.button-style:hover{
+    background: rgb(54, 69, 119);
+}
+
+.button-style:active{
+    background: rgb(38, 51, 92);
+}
+
+.content-login .box-next{
+    position: absolute;
+    color: var(--text-color);
+    bottom: 20px;
+    font-size: 1.3em;
+    font-style: italic;
+    font-weight: bold;
+}
+
+.content-login .box-next a {
+    color: var(--text-color);
+    text-decoration: none;
+    
+}
