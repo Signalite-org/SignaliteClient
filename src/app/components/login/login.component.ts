@@ -18,14 +18,10 @@ export class LoginComponent {
   errorMessage: string | null = null;
   successMessage: string | null = null;
   isLoading = false;
-  
-  // For testing purposes
-  onlineUsers: number[] = [];
 
   constructor(
     private fb: FormBuilder, 
     private accountService: AccountService,
-    private presenceService: PresenceService,
     private router: Router
   ) {
     this.loginForm = this.fb.group({
@@ -33,11 +29,6 @@ export class LoginComponent {
       password: ['', [Validators.required, Validators.minLength(4)]]
     });
     
-    // Subscribe to online users for testing
-    this.presenceService.onlineUserIds$.subscribe(users => {
-      console.log('Online users updated:', users);
-      this.onlineUsers = users;
-    });
   }
 
   onSubmit() {

@@ -14,7 +14,7 @@ export class NotificationsService {
 
   private hubConnection?: HubConnection;
   private hubUrl = environment.hubUrl;
-  
+  private handlersRegistered = false;
   // New BehaviorSubjects to track notifications
   private friendRequestsSource = new BehaviorSubject<FriendRequest[]>([]);
   friendRequests$ = this.friendRequestsSource.asObservable();
@@ -36,6 +36,11 @@ export class NotificationsService {
       return;
     }
   
+    // If a connection already exists, just return
+  if (this.hubConnection) {
+    console.log('notifications hub connection already exists, not creating a new one');
+    return;
+  }
     console.log('Creating notifications hub connection...');
   
     // Create the connection
@@ -67,10 +72,8 @@ export class NotificationsService {
   }
 
   private registerSignalRHandlers() {
-    if (!this.hubConnection) {
-      console.error('Cannot register Notification handlers - hub connection is not initialized');
-      return;
-    }
+    if (!this.hubConnection || this.handlersRegistered) return;
+
   
     console.log('Registering Notifications SignalR handlers...');
   
@@ -128,11 +131,13 @@ export class NotificationsService {
     this.hubConnection.on('GroupDeleted', (notification) => {
       console.log('📬 Received GroupDeleted notification:', notification);
     });
-    console.log('✅ Notification handlers registered');
 
     this.hubConnection.on('AttachmentRemoved', (notification) => {
       console.log('📬 Received AttachmentRemoved notification:', notification);
     });
+
+    this.handlersRegistered = true;
+    console.log('✅ Notification handlers registered');
   }
 
   stopHubConnection() {

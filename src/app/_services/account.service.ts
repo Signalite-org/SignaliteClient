@@ -91,8 +91,8 @@ export class AccountService {
         this.startRefreshTokenTimer();
         
         // Reconnect the presence hub with the new token
-        this.presenceService.reconnect(updatedUser.accessToken);
-        this.notificationsService.reconnect(updatedUser.accessToken);
+        this.presenceService.createHubConnection(response.accessToken)
+        this.notificationsService.createHubConnection(response.accessToken);
       })
     );
   }

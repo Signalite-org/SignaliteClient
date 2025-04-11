@@ -12,6 +12,7 @@ import { UserBasicInfo } from '../_models/UserBasicInfo';
 export class PresenceService {
   private hubConnection?: HubConnection;
   private readonly hubUrl = environment.hubUrl;
+  private handlersRegistered = false;
 
   // Simple BehaviorSubject for just the user IDs
   private onlineUserIds = signal<number[]>([])
@@ -33,6 +34,11 @@ export class PresenceService {
       return;
     }
 
+    // If a connection already exists, just return
+  if (this.hubConnection) {
+    console.log('presence hub connection already exists, not creating a new one');
+    return;
+  }
     console.log('Creating presence hub connection...');
 
     this.hubConnection = new HubConnectionBuilder()
@@ -41,7 +47,7 @@ export class PresenceService {
       })
       .withAutomaticReconnect()
       .build();
-
+    this.registerSignalRHandlers();
     this.startHubConnection();
   }
 
@@ -51,7 +57,6 @@ export class PresenceService {
     this.hubConnection.start()
       .then(() => {
         console.log('✅ Successfully connected to presence hub');
-        this.registerSignalRHandlers();
       })
       .catch(error => {
         console.error('❌ Error starting presence hub connection:', error);
@@ -59,9 +64,9 @@ export class PresenceService {
   }
 
   private registerSignalRHandlers() {
-    if (!this.hubConnection) return;
+    if (!this.hubConnection || this.handlersRegistered) return;
 
-    console.log('Registering SignalR handlers...');
+    console.log('Registering presenceHub handlers...');
 
     // Get simple list of online user IDs
     this.hubConnection.on('GetOnlineUserIds', (userIds: number[]) => {
@@ -117,6 +122,9 @@ export class PresenceService {
         console.error('❌ Error sending keep-alive response:', error);
       });
     });
+
+    this.handlersRegistered = true;
+    console.log('✅ Presence handlers registered');
   }
 
   stopHubConnection() {
