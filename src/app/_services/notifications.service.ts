@@ -6,6 +6,8 @@ import { BehaviorSubject } from 'rxjs';
 import { FriendRequest } from '../_models/FriendRequest';
 import { GroupBasicInfoDTO } from '../_models/GroupBasicInfo';
 import { FriendRequestAccepted } from '../_models/FriendRequestAccepted';
+import { FriendRequestDTO } from '../_models/FriendRequestDTO';
+import { UserDTO } from '../_models/UserDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -16,10 +18,10 @@ export class NotificationsService {
   private hubUrl = environment.hubUrl;
   private handlersRegistered = false;
   // New BehaviorSubjects to track notifications
-  private friendRequestsSource = new BehaviorSubject<FriendRequest[]>([]);
+  private friendRequestsSource = new BehaviorSubject<FriendRequestDTO[]>([]);
   friendRequests$ = this.friendRequestsSource.asObservable();
   
-  private friendRequestsAcceptedSource = new BehaviorSubject<FriendRequestAccepted[]>([]);
+  private friendRequestsAcceptedSource = new BehaviorSubject<UserDTO[]>([]);
   friendRequestsAccepted$ = this.friendRequestsAcceptedSource.asObservable();
   
   private addedToGroupSource = new BehaviorSubject<GroupBasicInfoDTO[]>([]);
@@ -77,13 +79,13 @@ export class NotificationsService {
   
     console.log('Registering Notifications SignalR handlers...');
   
-    this.hubConnection.on('FriendRequest', (notification: FriendRequest) => {
+    this.hubConnection.on('FriendRequest', (notification: FriendRequestDTO) => {
       console.log('📬 Received friend request notification:', notification);
       const currentFriendRequests = this.friendRequestsSource.value;
       this.friendRequestsSource.next([...currentFriendRequests, notification]);
     });
     
-    this.hubConnection.on('FriendRequestAccepted', (notification: FriendRequestAccepted) => {
+    this.hubConnection.on('FriendRequestAccepted', (notification: UserDTO) => {
       console.log('📬 Received friend request accepted notification:', notification);
       const currentAccepted = this.friendRequestsAcceptedSource.value;
       this.friendRequestsAcceptedSource.next([...currentAccepted, notification]);

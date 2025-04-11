@@ -21,8 +21,6 @@ export class AccountService {
   public get currentUser() {
     return this._currentUser.asReadonly();
   }
-  
-
   constructor(
     private http: HttpClient,
     private presenceService: PresenceService,
@@ -44,8 +42,7 @@ export class AccountService {
         console.log('Login successful, response:', response);
         const user = this.setUserData(response);
         this.startRefreshTokenTimer();
-        this._currentUser.set(response);
-        
+        this._currentUser.set(user); 
         // Start the presence and notifications hub connections after login
         console.log('Starting connections after login');
         this.presenceService.createHubConnection(user.accessToken);
@@ -70,7 +67,6 @@ export class AccountService {
     localStorage.removeItem('user');
     this._currentUser.set(null);
     this.stopRefreshTokenTimer();
-    
     // Navigate directly to login page instead of home
     this.router.navigateByUrl('/login');
   }
@@ -81,7 +77,7 @@ export class AccountService {
       this.logout();
       throw new Error('No refresh token available');
     }
-
+  
     const payload = { refreshToken };
     return this.http.post<TokenResponseDTO>(`${this.baseUrl}/api/auth/refresh-token`, payload).pipe(
       map((response: TokenResponseDTO) => {
@@ -91,11 +87,12 @@ export class AccountService {
           ...user,
           ...response
         });
+        this._currentUser.set(updatedUser); // Make sure to update the current user
         this.startRefreshTokenTimer();
         
-        // Reconnect the presence hub with the new token
-        this.presenceService.createHubConnection(response.accessToken)
-        this.notificationsService.createHubConnection(response.accessToken);
+        // Always reconnect both services with the new token
+        this.presenceService.createHubConnection(user.accessToken);
+        this.notificationsService.createHubConnection(user.accessToken);
       })
     );
   }
