@@ -32,6 +32,15 @@ export class FriendsComponent implements OnInit {
     this.loadFriendRequests();
     this.loadFriends();
 
+    this.notificationService.friendRequests$.subscribe(requests => {
+      this.friendRequests = requests;
+    });
+    
+    this.notificationService.friendRequestsAccepted$.subscribe(accepted => {
+      this.friends = accepted;
+    });
+
+    /*
     // Notyfikacja otrzymania zaproszenia
     this.notificationService.friendRequest$.subscribe(notification => {
       const exists = this.friendRequests.some(req => req.id === notification.id);
@@ -52,6 +61,7 @@ export class FriendsComponent implements OnInit {
         console.log('⚠️ Duplikat znajomego – pomijam:', notification);
       } 
     });
+    */
   }
 
   loadFriends(): void {
