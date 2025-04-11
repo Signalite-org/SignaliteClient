@@ -11,10 +11,10 @@ export const tokenInterceptor: HttpInterceptorFn = (request, next) => {
     return next(request);
   }
 
-  let currentUser: any;
-  accountService.currentUser$.pipe(take(1)).subscribe(user => currentUser = user);
+  // Get current user directly from the signal
+  const currentUser = accountService.currentUser();
   
-  if (currentUser) {
+  if (currentUser && currentUser.accessToken) {
     request = request.clone({
       setHeaders: {
         Authorization: `Bearer ${currentUser.accessToken}`

@@ -20,8 +20,9 @@ export class HomeComponent implements OnInit {
     private presenceService: PresenceService
   ) 
   {
+    this.userId = this.accountService.currentUser()?.userId ?? null;
     effect(() => {
-      this.onlineUsers = this.presenceService.onlineUsersIds();
+      this.onlineUsers = this.presenceService.onlineUserIds();
       console.log('Online users updated in home component:', this.onlineUsers);
     });
   }

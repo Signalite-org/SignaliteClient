@@ -14,15 +14,17 @@ export class PresenceService {
   private readonly hubUrl = environment.hubUrl;
   private handlersRegistered = false;
 
-  // Simple BehaviorSubject for just the user IDs
-  private onlineUserIds = signal<number[]>([])
-  public get onlineUsersIds() {
-    return this.onlineUserIds.asReadonly()
+  // simple ids of online users
+  private _onlineUserIds = signal<number[]>([])
+  public get onlineUserIds() {
+    return this._onlineUserIds.asReadonly()
   }
 
-  // Detailed BehaviorSubject for debugging
-  private onlineUsersDetailedSource = new BehaviorSubject<UserBasicInfo[]>([]);
-  onlineUsersDetailed$ = this.onlineUsersDetailedSource.asObservable();
+  // Online users with their info
+  private _onlineUsers = signal<UserBasicInfo[]>([]);
+  public get onlineUsers() {
+    return this._onlineUsers.asReadonly();
+  }
   
   constructor(private router: Router) {
     console.log('PresenceService constructed');
@@ -68,51 +70,51 @@ export class PresenceService {
 
     console.log('Registering presenceHub handlers...');
 
-    // Get simple list of online user IDs
     this.hubConnection.on('GetOnlineUserIds', (userIds: number[]) => {
       console.log('📋 Received online user IDs:', userIds);
-      this.onlineUserIds.set(userIds)
+      this._onlineUserIds.set(userIds)
     });
 
-    // Get detailed online user information (for debugging)
     this.hubConnection.on('GetOnlineUsersDetailed', (users: UserBasicInfo[]) => {
       console.log('📋 Received detailed online users:', users);
-      this.onlineUsersDetailedSource.next(users);
+      this._onlineUsers.set(users);
     });
 
-    // Handle user online
+
     this.hubConnection.on('UserIsOnline', (user: UserBasicInfo) => {
       console.log(`👤 User connected: ${user.username} (ID: ${user.id})`);
       
-      // Update the simple ID list
-      this.onlineUserIds.update(ids => {
-        // Only add the ID if it's not already in the list
+      this._onlineUserIds.update(ids => {
         if (!ids.includes(user.id)) {
           return [...ids, user.id];
         }
         return ids;
       });
       
-      // Update the detailed list
-      const currentDetailed = this.onlineUsersDetailedSource.value;
-      if (!currentDetailed.some(u => u.id === user.id)) {
-        this.onlineUsersDetailedSource.next([...currentDetailed, user]);
-      }
+      this._onlineUserIds.update(ids => {
+        // Only add the ID if it's not already in the list
+        if (!ids.includes(user.id)) {
+          return [...ids, user.id];
+        }
+        return ids;
+      });
     });
 
-    // Handle user offline
+
     this.hubConnection.on('UserIsOffline', (user:UserBasicInfo) => {
       console.log(`👤 User disconnected: ${user.username}(ID: ${user.id})`);
       
-      // Update the simple ID list
-      this.onlineUserIds.update(ids => ids.filter(id => id !== user.id));
+      this._onlineUserIds.update(ids => ids.filter(id => id !== user.id));
       
-      // Update the detailed list
-      const currentDetailed = this.onlineUsersDetailedSource.value;
-      this.onlineUsersDetailedSource.next(currentDetailed.filter(u => u.id !== user.id));
+      this._onlineUsers.update(users => {
+        // Only add the user if they're not already in the list
+        if (!users.some(u => u.id === user.id)) {
+          return [...users, user];
+        }
+        return users;
+      });
     });
 
-    // Handle KeepAlive requests from server
     this.hubConnection.on('KeepAlive', (timestamp: Date) => {
       console.log('♥️ Received KeepAlive request at:', new Date().toISOString());
       // Immediately respond to keep-alive request

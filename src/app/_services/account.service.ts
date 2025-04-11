@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { LoginDTO } from '../_models/LoginDTO';
 
@@ -16,9 +16,12 @@ import { NotificationsService } from './notifications.service';
 })
 export class AccountService {
   private baseUrl = environment.apiUrl;
-  private refreshTokenTimeout: any;
-  private currentUserSource = new BehaviorSubject<any>(null);
-  currentUser$ = this.currentUserSource.asObservable();
+  private refreshTokenTimeout: any; 
+  private _currentUser = signal<LoginResponseDTO | null>(null);
+  public get currentUser() {
+    return this._currentUser.asReadonly();
+  }
+  
 
   constructor(
     private http: HttpClient,
@@ -41,7 +44,7 @@ export class AccountService {
         console.log('Login successful, response:', response);
         const user = this.setUserData(response);
         this.startRefreshTokenTimer();
-        this.currentUserSource.next(user);
+        this._currentUser.set(response);
         
         // Start the presence and notifications hub connections after login
         console.log('Starting connections after login');
@@ -65,7 +68,7 @@ export class AccountService {
     
     // Clear user data
     localStorage.removeItem('user');
-    this.currentUserSource.next(null);
+    this._currentUser.set(null);
     this.stopRefreshTokenTimer();
     
     // Navigate directly to login page instead of home
@@ -129,7 +132,7 @@ export class AccountService {
     console.log('Loading user from localStorage');
     const user = JSON.parse(userString);
     if (user) {
-      this.currentUserSource.next(user);
+      this._currentUser.set(user);
       this.startRefreshTokenTimer();
       
       // Start the presence hub connection if we have a stored user

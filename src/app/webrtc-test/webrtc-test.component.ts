@@ -31,6 +31,12 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
       if (devices.length > 0) {
         this.logs.push(`Found ${devices.length} audio input devices`);
       }
+
+      const users = this.presenceService.onlineUsers();
+      this.onlineUsers = users.map(u => ({
+        id: u.id,
+        username: u.username
+      }));
     });
   }
 
@@ -118,16 +124,6 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.webRtcService.callState$.subscribe(state => {
         this.callState = state;
-      })
-    );
-
-    // Subscribe to online users
-    this.subscriptions.push(
-      this.presenceService.onlineUsersDetailed$.subscribe(users => {
-        this.onlineUsers = users.map(u => ({
-          id: u.id,
-          username: u.username
-        }));
       })
     );
 
