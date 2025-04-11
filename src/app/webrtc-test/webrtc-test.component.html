@@ -1,0 +1,87 @@
+<div class="webrtc-test-container">
+    <h2>WebRTC Test Panel</h2>
+    
+    <div class="status-panel">
+      <h3>Connection Status</h3>
+      <div class="status-item">
+        <span class="label">SignalR Connection:</span>
+        <span class="status" [ngClass]="{'connected': initialized, 'disconnected': !initialized}">
+          {{initialized ? 'Connected' : 'Disconnected'}}
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="label">WebRTC Connection:</span>
+        <span class="status" [ngClass]="{'connected': rtcConnectionState === 'connected', 'connecting': rtcConnectionState === 'connecting' || rtcConnectionState === 'new', 'disconnected': !rtcConnectionState || rtcConnectionState === 'disconnected' || rtcConnectionState === 'failed' || rtcConnectionState === 'closed'}">
+          {{rtcConnectionState || 'Not initialized'}}
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="label">Call State:</span>
+        <span class="status">{{callState}}</span>
+      </div>
+    </div>
+    
+    <!-- Add this to the actions-panel in webrtc-test.component.html -->
+<div class="device-selection">
+    <h4>Device Selection</h4>
+    
+    <div class="form-group">
+      <label for="audioDevice">Microphone:</label>
+      <select id="audioDevice" [(ngModel)]="selectedAudioDeviceId" (change)="onAudioDeviceChange($event)">
+        <option [value]="null">Default Microphone</option>
+        <option *ngFor="let device of audioDevices" [value]="device.deviceId">{{ device.label }}</option>
+      </select>
+    </div>
+    
+    <div class="form-group" *ngIf="videoDevices.length > 0">
+      <label for="videoDevice">Camera:</label>
+      <select id="videoDevice" [(ngModel)]="selectedVideoDeviceId" (change)="onVideoDeviceChange($event)">
+        <option [value]="null">Default Camera</option>
+        <option *ngFor="let device of videoDevices" [value]="device.deviceId">{{ device.label }}</option>
+      </select>
+    </div>
+  </div>
+
+  <button (click)="refreshDevices()" [disabled]="!initialized">Refresh Devices</button>
+
+    <div class="actions-panel">
+      <h3>Test Actions</h3>
+      <label>
+        <input type="checkbox" [(ngModel)]="audioOnly"> Audio Only
+      </label>
+      <button (click)="initialize()" [disabled]="initialized">Initialize WebRTC</button>
+      <button (click)="testMedia()" [disabled]="!initialized || localStreamActive">Test Camera/Mic</button>
+      <button (click)="stopMedia()" [disabled]="!localStreamActive">Stop Media</button>
+    </div>
+    
+    <div class="online-users-panel">
+      <h3>Online Users</h3>
+      <p *ngIf="onlineUsers.length === 0">No online users available</p>
+      <div *ngFor="let user of onlineUsers" class="user-item">
+        <span>{{user.username}} (ID: {{user.id}})</span>
+        <button (click)="startCall(user.id)" [disabled]="callState !== 'idle'">Call</button>
+      </div>
+    </div>
+    
+    <div class="video-panel" [hidden]="!localStreamActive && callState !== 'connected'">
+        <div class="local-video-container">
+          <h4>Local {{audioOnly ? 'Audio' : 'Video'}}</h4>
+          <video #localVideo autoplay muted playsinline></video>
+        </div>
+        
+        <div class="remote-video-container" [hidden]="callState !== 'connected'">
+          <h4>Remote {{audioOnly ? 'Audio' : 'Video'}}</h4>
+          <video #remoteVideo autoplay playsinline></video>
+        </div>
+      </div>
+    
+    <div class="logs-panel">
+      <h3>Logs</h3>
+      <button (click)="clearLogs()">Clear Logs</button>
+      <div class="logs-container">
+        <div *ngFor="let log of logs" class="log-entry">{{log}}</div>
+      </div>
+    </div>
+  </div>
+
+  

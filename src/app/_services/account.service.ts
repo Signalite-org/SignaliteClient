@@ -21,7 +21,6 @@ export class AccountService {
   public get currentUser() {
     return this._currentUser.asReadonly();
   }
-
   constructor(
     private http: HttpClient,
     private presenceService: PresenceService,
@@ -43,8 +42,7 @@ export class AccountService {
         console.log('Login successful, response:', response);
         const user = this.setUserData(response);
         this.startRefreshTokenTimer();
-        this._currentUser.set(user);
-        
+        this._currentUser.set(user); 
         // Start the presence and notifications hub connections after login
         console.log('Starting connections after login');
         this.presenceService.createHubConnection(user.accessToken);
@@ -65,10 +63,12 @@ export class AccountService {
     // Stop the notifications hub connection
     this.notificationsService.stopHubConnection();
     
+    // Clear user data
     localStorage.removeItem('user');
     this._currentUser.set(null);
-    this.router.navigateByUrl('/');
     this.stopRefreshTokenTimer();
+    // Navigate directly to login page instead of home
+    this.router.navigateByUrl('/login');
   }
 
   refreshToken(): Observable<void> {
