@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
@@ -20,19 +20,20 @@ export class WebRtcService {
   private selectedAudioDevice: string | null = null;
   private selectedVideoDevice: string | null = null;
   // Media streams 
-  private localStream: MediaStream | null = null; 
-  private remoteStream: MediaStream | null = null; 
+  private localStream: MediaStream | null = null;
+  private remoteStream: MediaStream | null = null;
 
   // Connection tracking
   private hubConnection!: HubConnection; // Using definite assignment assertion
-  private peerConnection: RTCPeerConnection | null = null; 
+  private peerConnection: RTCPeerConnection | null = null;
   private currentConnectionId: string = ''; // Initialize with empty string
   // Configuration
   private iceServers: IceServer[] | undefined = [];
   // Call state
   private currentCall: {
     peer: CallInfo | null;
-    state: CallState } =
+    state: CallState
+  } =
     {
       peer: null,
       state: CallState.Idle
@@ -40,9 +41,9 @@ export class WebRtcService {
 
   // audio input devices
   private audioInputDevices: MediaDevice[] = [];
-  private readonly audioDevicesSubject = new BehaviorSubject<MediaDevice[]>([]);
-  public get audioDevices$(): Observable<MediaDevice[]> {
-    return this.audioDevicesSubject.asObservable();
+  private audioDevicesSignal = signal<MediaDevice[]>([]);
+  public get audioDevices() {
+    return this.audioDevicesSignal.asReadonly();
   }
 
   // video input devices
@@ -88,7 +89,7 @@ export class WebRtcService {
     return this.connectionQualitySubject.asObservable();
   }
 
-  
+
 
   private log(message: string) {
     console.log(`[WebRTC] ${message}`);
@@ -180,7 +181,7 @@ export class WebRtcService {
     });
 
     // Handle incoming call offer (has username, userId, SDP offer, connectionID that is calling you)
-    this.hubConnection.on('ReceiveOffer', (callData: CallInfo ) => {
+    this.hubConnection.on('ReceiveOffer', (callData: CallInfo) => {
       console.log('Received offer from', callData.callerUsername, 'connection', callData.sourceConnectionId);
 
       // If already in a call, ignore this offer (TODO: think about handling this differently when in a call)
@@ -337,11 +338,11 @@ export class WebRtcService {
   private handleIceCandidate(event: RTCPeerConnectionIceEvent): void {
     if (event.candidate && this.currentCall.peer) {
       this.log(`Generated ICE candidate: ${event.candidate.candidate.substring(0, 50)}...`);
-      
+
       // Assess connection quality
       this.assessConnectionQuality(event.candidate);
-      
-      this.hubConnection.invoke('SendIceCandidate', 
+
+      this.hubConnection.invoke('SendIceCandidate',
         this.currentCall.peer.callerUsername,
         this.currentCall.peer.sourceConnectionId,
         JSON.stringify(event.candidate)
@@ -353,10 +354,10 @@ export class WebRtcService {
 
   private assessConnectionQuality(candidate: RTCIceCandidate): void {
     if (!candidate.candidate) return;
-    
+
     const candidateStr = candidate.candidate.toLowerCase();
     let quality: 'good' | 'medium' | 'poor' | 'unknown' = 'unknown';
-    
+
     // Check candidate type - host is best, reflexive is okay, relay is worst
     if (candidateStr.includes('typ host')) {
       quality = 'good';
@@ -365,7 +366,7 @@ export class WebRtcService {
     } else if (candidateStr.includes('typ relay')) {
       quality = 'poor';
     }
-    
+
     // Update connection quality
     this.connectionQualitySubject.next(quality);
     this.log(`Connection quality assessed as: ${quality}`);
@@ -463,7 +464,7 @@ export class WebRtcService {
           kind: device.kind
         }));
 
-      this.audioDevicesSubject.next(this.audioInputDevices);
+      this.audioDevicesSignal.set(this.audioInputDevices);
       this.videoDevicesSubject.next(this.videoInputDevices);
 
       const hasVideo = this.videoInputDevices.length > 0;
@@ -501,8 +502,8 @@ export class WebRtcService {
       this.updateCallState(CallState.Offering);
 
       const targetUser = this.presenceService.isUserOnline(userId)
-      ? { id: userId, username: 'Unknown' } // fallback
-      : null;
+        ? { id: userId, username: 'Unknown' } // fallback
+        : null;
 
       if (!targetUser) {
         throw new Error(`User with ID ${userId} not found in online users`);

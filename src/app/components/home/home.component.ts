@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AccountService } from '../../_services/account.service';
 import { PresenceService } from '../../_services/presence.service';
@@ -18,22 +18,16 @@ export class HomeComponent implements OnInit {
   constructor(
     private accountService: AccountService,
     private presenceService: PresenceService
-  ) {}
+  ) 
+  {
+    effect(() => {
+      this.onlineUsers = this.presenceService.onlineUsersIds();
+      console.log('Online users updated in home component:', this.onlineUsers);
+    });
+  }
 
   ngOnInit(): void {
-    // Get current user ID
-    this.accountService.currentUser$.subscribe(user => {
-      if (user) {
-        this.userId = user.userId;
-        console.log('Home component loaded for user ID:', this.userId);
-      }
-    });
-
-    // Get online users
-    this.presenceService.onlineUserIds$.subscribe(users => {
-      this.onlineUsers = users;
-      console.log('Online users updated in home component:', users);
-    });
+    
   }
 
   logout(): void {

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { BehaviorSubject } from 'rxjs';
@@ -14,8 +14,10 @@ export class PresenceService {
   private readonly hubUrl = environment.hubUrl;
 
   // Simple BehaviorSubject for just the user IDs
-  private onlineUserIdsSource = new BehaviorSubject<number[]>([]);
-  onlineUserIds$ = this.onlineUserIdsSource.asObservable();
+  private onlineUserIds = signal<number[]>([])
+  public get onlineUsersIds() {
+    return this.onlineUserIds.asReadonly()
+  }
 
   // Detailed BehaviorSubject for debugging
   private onlineUsersDetailedSource = new BehaviorSubject<UserBasicInfo[]>([]);
@@ -64,7 +66,7 @@ export class PresenceService {
     // Get simple list of online user IDs
     this.hubConnection.on('GetOnlineUserIds', (userIds: number[]) => {
       console.log('📋 Received online user IDs:', userIds);
-      this.onlineUserIdsSource.next(userIds);
+      this.onlineUserIds.set(userIds)
     });
 
     // Get detailed online user information (for debugging)
@@ -78,10 +80,13 @@ export class PresenceService {
       console.log(`👤 User connected: ${user.username} (ID: ${user.id})`);
       
       // Update the simple ID list
-      const currentIds = this.onlineUserIdsSource.value;
-      if (!currentIds.includes(user.id)) {
-        this.onlineUserIdsSource.next([...currentIds, user.id]);
-      }
+      this.onlineUserIds.update(ids => {
+        // Only add the ID if it's not already in the list
+        if (!ids.includes(user.id)) {
+          return [...ids, user.id];
+        }
+        return ids;
+      });
       
       // Update the detailed list
       const currentDetailed = this.onlineUsersDetailedSource.value;
@@ -95,8 +100,7 @@ export class PresenceService {
       console.log(`👤 User disconnected: ${user.username}(ID: ${user.id})`);
       
       // Update the simple ID list
-      const currentIds = this.onlineUserIdsSource.value;
-      this.onlineUserIdsSource.next(currentIds.filter(id => id !== user.id));
+      this.onlineUserIds.update(ids => ids.filter(id => id !== user.id));
       
       // Update the detailed list
       const currentDetailed = this.onlineUsersDetailedSource.value;
@@ -134,6 +138,6 @@ export class PresenceService {
   
   // Helper method to check if a user is online
   isUserOnline(userId: number): boolean {
-    return this.onlineUserIdsSource.value.includes(userId);
+    return this.onlineUserIds().includes(userId);
   }
 }

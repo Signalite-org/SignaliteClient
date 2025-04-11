@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { WebRtcService } from '../_services/webrtc.service';
 import { Subscription } from 'rxjs';
 import { PresenceService } from '../_services/presence.service';
@@ -15,14 +15,70 @@ import { CallState } from '../_models/WebRtc/CallState';
   styleUrl: './webrtc-test.component.css'
 })
 export class WebrtcTestComponent implements OnInit, OnDestroy {
-@ViewChild('localVideo', { static: true }) localVideoRef!: ElementRef<HTMLVideoElement>;
-@ViewChild('remoteVideo', { static: true }) remoteVideoRef!: ElementRef<HTMLVideoElement>;
+  private effectRef: ReturnType<typeof effect> | null = null;
 
-// store found devices
-audioDevices: MediaDevice[] = [];
-videoDevices: MediaDevice[] = [];
-selectedAudioDeviceId: string | null = null;
-selectedVideoDeviceId: string | null = null;
+  constructor(
+    private webRtcService: WebRtcService,
+    public presenceService: PresenceService
+  ) 
+  { 
+    this.effectRef = effect(() => {
+      const devices = this.webRtcService.audioDevices();
+
+      console.log('Audio devices from signal:', devices); // Add this line
+      this.audioDevices = devices;
+      
+      if (devices.length > 0) {
+        this.logs.push(`Found ${devices.length} audio input devices`);
+      }
+    });
+  }
+
+
+  ngOnInit(): void {
+    this.subscribeToEvents();
+
+    
+  }
+
+  ngAfterViewInit() {
+    this.logs.push('View initialized, getting video element references');
+    this.localVideo = this.localVideoRef?.nativeElement;
+    this.remoteVideo = this.remoteVideoRef?.nativeElement;
+
+    if (this.localVideo) {
+      this.logs.push('Local video element reference obtained successfully');
+    } else {
+      this.logs.push('ERROR: Failed to get reference to local video element');
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.effectRef) {
+      this.effectRef.destroy();
+    }
+    
+    // Clean up subscriptions
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+
+    // Stop media streams
+    this.stopMedia();
+
+    // Dispose of WebRTC resources if initialized
+    if (this.initialized) {
+      this.webRtcService.dispose();
+    }
+  }
+
+  @ViewChild('localVideo', { static: true }) localVideoRef!: ElementRef<HTMLVideoElement>;
+  @ViewChild('remoteVideo', { static: true }) remoteVideoRef!: ElementRef<HTMLVideoElement>;
+
+  
+  // store found devices
+  audioDevices: MediaDevice[] = [];
+  videoDevices: MediaDevice[] = [];
+  selectedAudioDeviceId: string | null = null;
+  selectedVideoDeviceId: string | null = null;
 
   initialized = false;
   localStreamActive = false;
@@ -31,48 +87,10 @@ selectedVideoDeviceId: string | null = null;
   logs: string[] = [];
   onlineUsers: UserBasicInfo[] = [];
   audioOnly = false;
-  
+
   private subscriptions: Subscription[] = [];
   private localVideo: HTMLVideoElement | null = null;
   private remoteVideo: HTMLVideoElement | null = null;
-
-  constructor(
-    private webRtcService: WebRtcService,
-    public presenceService: PresenceService
-  ) {}
-
-  ngAfterViewInit() {
-    this.logs.push('View initialized, getting video element references');
-    this.localVideo = this.localVideoRef?.nativeElement;
-    this.remoteVideo = this.remoteVideoRef?.nativeElement;
-    
-    if (this.localVideo) {
-      this.logs.push('Local video element reference obtained successfully');
-    } else {
-      this.logs.push('ERROR: Failed to get reference to local video element');
-    }
-  }
-
-  ngOnInit(): void {
-    // Get references to video elements after view is initialized
-    
-    
-    // Subscribe to WebRTC service events
-    this.subscribeToEvents();
-  }
-
-  ngOnDestroy(): void {
-    // Clean up subscriptions
-    this.subscriptions.forEach(sub => sub.unsubscribe());
-    
-    // Stop media streams
-    this.stopMedia();
-    
-    // Dispose of WebRTC resources if initialized
-    if (this.initialized) {
-      this.webRtcService.dispose();
-    }
-  }
 
   subscribeToEvents(): void {
     // Subscribe to WebRTC logs
@@ -83,33 +101,26 @@ selectedVideoDeviceId: string | null = null;
     );
 
     this.subscriptions.push(
-      this.webRtcService.audioDevices$.subscribe(devices => {
-        this.audioDevices = devices;
-        this.logs.push(`Found ${devices.length} audio input devices`);
-      })
-    );
-
-    this.subscriptions.push(
       this.webRtcService.videoDevices$.subscribe(devices => {
         this.videoDevices = devices;
         this.logs.push(`Found ${devices.length} video input devices`);
       })
     );
-    
+
     // Subscribe to connection state changes
     this.subscriptions.push(
       this.webRtcService.connectionStateChange$.subscribe(state => {
         this.rtcConnectionState = state;
       })
     );
-    
+
     // Subscribe to call state changes
     this.subscriptions.push(
       this.webRtcService.callState$.subscribe(state => {
         this.callState = state;
       })
     );
-    
+
     // Subscribe to online users
     this.subscriptions.push(
       this.presenceService.onlineUsersDetailed$.subscribe(users => {
@@ -119,7 +130,7 @@ selectedVideoDeviceId: string | null = null;
         }));
       })
     );
-    
+
     // Subscribe to call established (remote stream)
     this.subscriptions.push(
       this.webRtcService.callEstablished$.subscribe(stream => {
@@ -128,7 +139,7 @@ selectedVideoDeviceId: string | null = null;
         }
       })
     );
-    
+
     // Subscribe to call ended
     this.subscriptions.push(
       this.webRtcService.callEnded$.subscribe(() => {
@@ -137,7 +148,7 @@ selectedVideoDeviceId: string | null = null;
         }
       })
     );
-    
+
     // Subscribe to incoming calls
     this.subscriptions.push(
       this.webRtcService.incomingCall$.subscribe(callInfo => {
@@ -158,7 +169,7 @@ selectedVideoDeviceId: string | null = null;
     this.webRtcService.setSelectedAudioDevice(selectElement.value);
     this.logs.push(`Selected audio device: ${selectElement.value}`);
   }
-  
+
   onVideoDeviceChange(event: Event): void {
     const selectElement = event.target as HTMLSelectElement;
     this.selectedVideoDeviceId = selectElement.value;
@@ -182,7 +193,7 @@ selectedVideoDeviceId: string | null = null;
             this.logs.push('WARNING: Could not find local video element');
           }
         }
-        
+
         if (!this.remoteVideo) {
           const remoteVideoElement = document.querySelector('video#remoteVideo') as HTMLVideoElement;
           if (remoteVideoElement) {
@@ -199,6 +210,15 @@ selectedVideoDeviceId: string | null = null;
 
   async refreshDevices(): Promise<void> {
     this.logs.push('Refreshing device list...');
+    
+    // Request temporary permission to get device labels
+    try {
+      const tempStream = await navigator.mediaDevices.getUserMedia({audio: true});
+      tempStream.getTracks().forEach(track => track.stop()); // Stop tracks immediately
+    } catch (error) {
+      // Ignore errors, just try to get device list anyway
+    }
+    
     await this.webRtcService.checkAvailableDevices();
   }
 
@@ -206,21 +226,21 @@ selectedVideoDeviceId: string | null = null;
     try {
       this.logs.push('Checking available devices...');
       const devices = await this.webRtcService.checkAvailableDevices();
-      
+
       if (!devices.hasVideo && !devices.hasAudio) {
         this.logs.push('ERROR: No camera or microphone detected on this device');
         return;
       }
-      
+
       // Ensure we have the video element
       if (!this.ensureVideoElements()) {
         this.logs.push('ERROR: Video elements not ready yet. Please try again.');
         return;
       }
-      
+
       this.logs.push(`Attempting to get ${this.audioOnly ? 'audio-only' : 'audio+video'} stream...`);
       const stream = await this.webRtcService.startLocalStream(this.audioOnly);
-      
+
       this.localVideo!.srcObject = stream;
       this.localStreamActive = true;
       this.logs.push('Local stream attached to video element');
@@ -235,12 +255,12 @@ selectedVideoDeviceId: string | null = null;
       this.localVideo = this.localVideoRef.nativeElement;
       this.logs.push('Retrieved local video element reference');
     }
-    
+
     if (!this.remoteVideo && this.remoteVideoRef) {
       this.remoteVideo = this.remoteVideoRef.nativeElement;
       this.logs.push('Retrieved remote video element reference');
     }
-    
+
     return !!this.localVideo;
   }
 
@@ -256,12 +276,12 @@ selectedVideoDeviceId: string | null = null;
   async startCall(userId: number): Promise<void> {
     try {
       this.logs.push(`Attempting to start call with user ID: ${userId}`);
-      
+
       // Get local stream first
       this.logs.push('Getting local stream...');
       const stream = await this.webRtcService.startLocalStream(this.audioOnly);
       this.logs.push(`Got local stream with ${stream.getTracks().length} tracks`);
-      
+
       // Even if we can't attach it to the video element, we can still proceed with the call
       if (this.localVideo) {
         this.localVideo.srcObject = stream;
@@ -269,9 +289,9 @@ selectedVideoDeviceId: string | null = null;
       } else {
         this.logs.push('WARNING: Local video element not available, but continuing with call');
       }
-      
+
       this.localStreamActive = true;
-      
+
       // Start the call
       this.logs.push('Initiating call...');
       await this.webRtcService.startCall(userId);
