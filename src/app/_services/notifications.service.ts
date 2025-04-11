@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { FriendRequestDTO } from '../_models/FriendRequestDTO';
+import { UserDTO } from '../_models/UserDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +17,12 @@ export class NotificationsService {
   constructor(private router: Router) { 
     console.log('NotificationsService constructed');
   }
+
+  private friendRequestSubject = new Subject<FriendRequestDTO>();
+  friendRequest$ = this.friendRequestSubject.asObservable();
+
+  private newFriendSubject = new Subject<UserDTO>
+  newFriend$ = this.newFriendSubject.asObservable(); 
   
   createHubConnection(token: string) {
     if (!token) {
@@ -59,12 +68,14 @@ export class NotificationsService {
   
     console.log('Registering Notifications SignalR handlers...');
   
-    this.hubConnection.on('FriendRequest', (notification) => {
+    this.hubConnection.on('FriendRequest', (notification: FriendRequestDTO) => {
       console.log('📬 Received friend request notification:', notification);
+      this.friendRequestSubject.next(notification)
     });
     
     this.hubConnection.on('FriendRequestAccepted', (notification) => {
       console.log('📬 Received friend request accepted notification:', notification);
+      this.newFriendSubject.next(notification)
     });
     
     this.hubConnection.on('MessageReceived', (message) => {
