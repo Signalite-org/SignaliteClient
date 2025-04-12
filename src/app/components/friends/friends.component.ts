@@ -2,11 +2,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FriendsService} from '../_services/friends.service';
+import { FriendsService} from '../../_services/friends.service';
 import { ToastrService } from 'ngx-toastr';
-import { UserDTO } from '../_models/UserDTO';
-import { FriendRequestDTO } from '../_models/FriendRequestDTO';
-import { NotificationsService } from '../_services/notifications.service';
+import { UserDTO } from '../../_models/UserDTO';
+import { FriendRequestDTO } from '../../_models/FriendRequestDTO';
+import { NotificationsService } from '../../_services/notifications.service';
+import { skip } from 'rxjs';
 
 @Component({
   selector: 'app-friends',
@@ -32,12 +33,18 @@ export class FriendsComponent implements OnInit {
     this.loadFriendRequests();
     this.loadFriends();
 
-    this.notificationService.friendRequests$.subscribe(requests => {
+    this.notificationService.friendRequests$.pipe(
+      skip(1)
+    ).subscribe(requests => {
       this.friendRequests = requests;
+      this.toastr.info('Nowe zaproszenie do znajomych!');
     });
     
-    this.notificationService.friendRequestsAccepted$.subscribe(accepted => {
+    this.notificationService.friendRequestsAccepted$.pipe(
+      skip(1) 
+    ).subscribe(accepted => {
       this.friends = accepted;
+      this.toastr.info('Nowy znajomy!');
     });
 
     /*
