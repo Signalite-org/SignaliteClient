@@ -15,36 +15,22 @@ import { CallState } from '../_models/WebRtc/CallState';
   styleUrl: './webrtc-test.component.css'
 })
 export class WebrtcTestComponent implements OnInit, OnDestroy {
-  private effectRef: ReturnType<typeof effect> | null = null;
-
   constructor(
     private webRtcService: WebRtcService,
     public presenceService: PresenceService
   ) 
   { 
-    this.effectRef = effect(() => {
-      const devices = this.webRtcService.audioDevices();
-
-      console.log('Audio devices from signal:', devices); // Add this line
-      this.audioDevices = devices;
-      
-      if (devices.length > 0) {
-        this.logs.push(`Found ${devices.length} audio input devices`);
-      }
-
-      const users = this.presenceService.onlineUsers();
-      this.onlineUsers = users.map(u => ({
-        id: u.id,
-        username: u.username
-      }));
+    effect(() => {
+      this.audioDevices = this.webRtcService.audioDevices();
+      this.videoDevices = this.webRtcService.videoDevices();
+      this.callState = this.webRtcService.callState();
+      this.onlineUsers = this.presenceService.onlineUsers();
     });
   }
 
 
   ngOnInit(): void {
     this.subscribeToEvents();
-
-    
   }
 
   ngAfterViewInit() {
@@ -60,9 +46,6 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.effectRef) {
-      this.effectRef.destroy();
-    }
     
     // Clean up subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
@@ -106,13 +89,6 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.subscriptions.push(
-      this.webRtcService.videoDevices$.subscribe(devices => {
-        this.videoDevices = devices;
-        this.logs.push(`Found ${devices.length} video input devices`);
-      })
-    );
-
     // Subscribe to connection state changes
     this.subscriptions.push(
       this.webRtcService.connectionStateChange$.subscribe(state => {
@@ -120,12 +96,6 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Subscribe to call state changes
-    this.subscriptions.push(
-      this.webRtcService.callState$.subscribe(state => {
-        this.callState = state;
-      })
-    );
 
     // Subscribe to call established (remote stream)
     this.subscriptions.push(

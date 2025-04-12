@@ -10,15 +10,23 @@ import { IceServer } from '../_models/WebRtc/IceServer';
 
 import { PresenceService } from './presence.service';
 import { CallState } from '../_models/WebRtc/CallState';
+import { ConnectionQuality } from '../_models/WebRtc/ConnectionQuality';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WebRtcService {
+  // api urls
+  private baseUrl = environment.apiUrl;
+  private hubUrl = environment.hubUrl;
 
-  constructor(private http: HttpClient, private accountService: AccountService, private presenceService: PresenceService) { }
+  // Initialization state
+  private _initialized = false;
+  private initializing = false;
+
   private selectedAudioDevice: string | null = null;
   private selectedVideoDevice: string | null = null;
+  
   // Media streams 
   private localStream: MediaStream | null = null;
   private remoteStream: MediaStream | null = null;
@@ -27,35 +35,34 @@ export class WebRtcService {
   private hubConnection!: HubConnection; // Using definite assignment assertion
   private peerConnection: RTCPeerConnection | null = null;
   private currentConnectionId: string = ''; // Initialize with empty string
+
   // Configuration
   private iceServers: IceServer[] | undefined = [];
+
   // Call state
   private currentCall: {
     peer: CallInfo | null;
     state: CallState
-  } =
+    } =
     {
       peer: null,
       state: CallState.Idle
     };
+    // TODO: getter for current call
 
-  // audio input devices
-  private audioInputDevices: MediaDevice[] = [];
-  private audioDevicesSignal = signal<MediaDevice[]>([]);
+  private _audioDevices = signal<MediaDevice[]>([]);
   public get audioDevices() {
-    return this.audioDevicesSignal.asReadonly();
+    return this._audioDevices.asReadonly();
   }
 
-  // video input devices
-  private videoInputDevices: MediaDevice[] = [];
-  private readonly videoDevicesSubject = new BehaviorSubject<MediaDevice[]>([]);
-  public get videoDevices$(): Observable<MediaDevice[]> {
-    return this.videoDevicesSubject.asObservable();
+  private _videoDevices = signal<MediaDevice[]>([]);
+  public get videoDevices() {
+    return this._videoDevices.asReadonly();
   }
 
-  private readonly callStateSubject = new BehaviorSubject<CallState>(CallState.Idle);
-  public get callState$(): Observable<CallState> {
-    return this.callStateSubject.asObservable();
+  private _callState = signal<CallState>(CallState.Idle);
+  public get callState() {
+    return this._callState.asReadonly();
   }
 
   private readonly incomingCallSubject = new Subject<CallInfo>();
@@ -84,12 +91,10 @@ export class WebRtcService {
     return this.logsSubject.asObservable();
   }
 
-  private readonly connectionQualitySubject = new BehaviorSubject<'good' | 'medium' | 'poor' | 'unknown'>('unknown');
-  public get connectionQuality$(): Observable<'good' | 'medium' | 'poor' | 'unknown'> {
-    return this.connectionQualitySubject.asObservable();
+  private _connectionQuality = signal<ConnectionQuality>(ConnectionQuality.Unknown);
+  public get connectionQuality() {
+    return this._connectionQuality.asReadonly();
   }
-
-
 
   private log(message: string) {
     console.log(`[WebRTC] ${message}`);
@@ -103,6 +108,8 @@ export class WebRtcService {
     }
   }
 
+  constructor(private http: HttpClient, private accountService: AccountService, private presenceService: PresenceService) { }
+  
   /**
    * Initialize the hub
    */
@@ -119,7 +126,7 @@ export class WebRtcService {
 
       this.log('Fetching ICE server configuration...');
       // Get ICE server configuration from API
-      this.iceServers = await this.http.get<IceServer[]>(`${environment.apiUrl}/api/webrtc/ice-servers`).toPromise();
+      this.iceServers = await this.http.get<IceServer[]>(`${this.baseUrl}/api/webrtc/ice-servers`).toPromise();
       if (this.iceServers)
         this.log(`Received ${this.iceServers.length} ICE servers`);
 
@@ -129,7 +136,7 @@ export class WebRtcService {
       // Initialize SignalR connection
       this.log('Initializing SignalR connection...');
       this.hubConnection = new HubConnectionBuilder()
-        .withUrl(`${environment.hubUrl}/signaling`, {
+        .withUrl(`${this.hubUrl}/signaling`, {
           accessTokenFactory: () => token
         })
         .withAutomaticReconnect()
@@ -337,7 +344,7 @@ export class WebRtcService {
    */
   private handleIceCandidate(event: RTCPeerConnectionIceEvent): void {
     if (event.candidate && this.currentCall.peer) {
-      this.log(`Generated ICE candidate: ${event.candidate.candidate.substring(0, 50)}...`);
+      this.log(`Generated ICE candidate: ${event.candidate.candidate}...`);
 
       // Assess connection quality
       this.assessConnectionQuality(event.candidate);
@@ -356,19 +363,19 @@ export class WebRtcService {
     if (!candidate.candidate) return;
 
     const candidateStr = candidate.candidate.toLowerCase();
-    let quality: 'good' | 'medium' | 'poor' | 'unknown' = 'unknown';
+    let quality: ConnectionQuality = ConnectionQuality.Unknown;
 
     // Check candidate type - host is best, reflexive is okay, relay is worst
     if (candidateStr.includes('typ host')) {
-      quality = 'good';
+      quality = ConnectionQuality.Good;
     } else if (candidateStr.includes('typ srflx')) {
-      quality = 'medium';
+      quality = ConnectionQuality.Medium;
     } else if (candidateStr.includes('typ relay')) {
-      quality = 'poor';
+      quality = ConnectionQuality.Poor;
     }
 
     // Update connection quality
-    this.connectionQualitySubject.next(quality);
+    this._connectionQuality.set(quality);
     this.log(`Connection quality assessed as: ${quality}`);
   }
 
@@ -405,7 +412,7 @@ export class WebRtcService {
    */
   private updateCallState(state: CallState): void {
     this.currentCall.state = state;
-    this.callStateSubject.next(state);
+    this._callState.set(state)
   }
 
   /**
@@ -447,8 +454,7 @@ export class WebRtcService {
     try {
       this.log('Checking available media devices...');
       const devices = await navigator.mediaDevices.enumerateDevices();
-
-      this.audioInputDevices = devices
+      const audioDevices = devices
         .filter(device => device.kind === 'audioinput')
         .map(device => ({
           deviceId: device.deviceId,
@@ -456,7 +462,7 @@ export class WebRtcService {
           kind: device.kind
         }));
 
-      this.videoInputDevices = devices
+      const videoDevices = devices
         .filter(device => device.kind === 'videoinput')
         .map(device => ({
           deviceId: device.deviceId,
@@ -464,13 +470,13 @@ export class WebRtcService {
           kind: device.kind
         }));
 
-      this.audioDevicesSignal.set(this.audioInputDevices);
-      this.videoDevicesSubject.next(this.videoInputDevices);
+      this._audioDevices.set(audioDevices);
+      this._videoDevices.set(videoDevices);
 
-      const hasVideo = this.videoInputDevices.length > 0;
-      const hasAudio = this.audioInputDevices.length > 0;
+      const hasVideo = this.videoDevices().length > 0;
+      const hasAudio = this._audioDevices().length > 0;
 
-      this.log(`Available devices: ${devices.length} total, Video inputs: ${hasVideo ? this.videoInputDevices.length : 'NO'}, Audio inputs: ${hasAudio ? this.audioInputDevices.length : 'NO'}`);
+      this.log(`Available devices: ${devices.length} total, Video inputs: ${hasVideo ? this.videoDevices().length : 'NO'}, Audio inputs: ${hasAudio ? this._audioDevices().length : 'NO'}`);
 
       return { hasVideo, hasAudio };
     } catch (error) {
