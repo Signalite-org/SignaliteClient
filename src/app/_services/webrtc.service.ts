@@ -1,7 +1,7 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AccountService } from './account.service';
 import { MediaDevice } from '../_models/WebRtc/MediaDevice';
@@ -32,12 +32,12 @@ export class WebRtcService {
   private remoteStream: MediaStream | null = null;
 
   // Connection tracking
-  private hubConnection!: HubConnection; // Using definite assignment assertion
+  private hubConnection!: HubConnection;
   private peerConnection: RTCPeerConnection | null = null;
-  private currentConnectionId: string = ''; // Initialize with empty string
+  private currentConnectionId: string = ''; 
 
   // Configuration
-  private iceServers: IceServer[] | undefined = [];
+  private iceServers: IceServer[]  = [];
 
   // Call state
   private currentCall: {
@@ -65,10 +65,11 @@ export class WebRtcService {
     return this._callState.asReadonly();
   }
 
-  private readonly incomingCallSubject = new Subject<CallInfo>();
-  public get incomingCall$(): Observable<CallInfo> {
-    return this.incomingCallSubject.asObservable();
+  private _incomingCall = signal<CallInfo | null>(null);
+  public get incomingCall(){
+    return this._incomingCall.asReadonly();
   }
+
 
 
   private readonly callEstablishedSubject = new Subject<MediaStream>();
@@ -108,30 +109,67 @@ export class WebRtcService {
     }
   }
 
-  constructor(private http: HttpClient, private accountService: AccountService, private presenceService: PresenceService) { }
+  constructor(
+    private http: HttpClient, 
+    private accountService: AccountService, 
+    private presenceService: PresenceService
+  ) {
+    this.log('WebRtcService constructed');
+    
+    // Try to initialize if we have a token already
+    if (this.accountService.currentUser()) {
+      this.log('User already logged in, initializing WebRTC service...');
+      this.initialize().catch(error => {
+        this.log(`Initial WebRTC setup failed: ${error}`);
+      });
+    }
+    
+    // Listen for user login/logout to initialize/dispose
+    this.setupAuthListeners();
+  }
   
   /**
    * Initialize the hub
    */
   public async initialize(): Promise<void> {
+    // Return immediately if already initialized or initializing
+    if (this._initialized) {
+      this.log('WebRTC service already initialized');
+      return;
+    }
+
+    if (this.initializing) {
+      this.log('WebRTC service initialization already in progress');
+      return;
+    }
+
     try {
+      this.initializing = true;
+      this.log('Initializing WebRTC service...');
+      
+      // Check for secure context
       if (!window.isSecureContext) {
         this.log('WARNING: Application is not running in a secure context. WebRTC may not work.');
       }
-      // Get auth token from account service
+      
+      // Get auth token
       const token = this.accountService.getToken();
       if (!token) {
         throw new Error('No authentication token available');
       }
 
+      // Get ICE servers
       this.log('Fetching ICE server configuration...');
-      // Get ICE server configuration from API
-      this.iceServers = await this.http.get<IceServer[]>(`${this.baseUrl}/api/webrtc/ice-servers`).toPromise();
-      if (this.iceServers)
+      try {
+        this.iceServers = await firstValueFrom(
+          this.http.get<IceServer[]>(`${this.baseUrl}/api/webrtc/ice-servers`)
+        );
         this.log(`Received ${this.iceServers.length} ICE servers`);
-
-      else
-        this.log(`ICE servers list is undefined`);
+      } catch (error) {
+        this.log(`Error fetching ICE servers: ${error}`);
+        // Use empty array as fallback
+        this.iceServers = [];
+      }
 
       // Initialize SignalR connection
       this.log('Initializing SignalR connection...');
@@ -152,9 +190,14 @@ export class WebRtcService {
 
       // Register for signaling
       await this.registerForSignaling();
+      
+      this._initialized = true;
+      this.log('WebRTC service initialized successfully');
     } catch (error) {
       this.log(`Error initializing WebRTC service: ${error}`);
       throw error;
+    } finally {
+      this.initializing = false;
     }
   }
 
@@ -162,10 +205,12 @@ export class WebRtcService {
    * Register for signaling to get connection ID and online users
    */
   private async registerForSignaling(): Promise<void> {
-    try {
-      // Invoke the registration method
-      this.log('Registering for signaling...');
+    if (!this.hubConnection) {
+      throw new Error('Hub connection not initialized');
+    }
 
+    try {
+      this.log('Registering for signaling...');
       await this.hubConnection.invoke('RegisterForSignaling');
       this.log('RegisterForSignaling method invoked successfully');
     } catch (error) {
@@ -196,12 +241,11 @@ export class WebRtcService {
         console.warn('Ignoring offer because already in a call');
         return;
       }
-
-
-
+      this.updateCallState(CallState.Incoming);
       // Notify about incoming call
-      this.incomingCallSubject.next(callData);
+      this._incomingCall.set(callData);
     });
+
 
     // Handle incoming answer
     this.hubConnection.on('ReceiveAnswer', (data: {
@@ -303,6 +347,32 @@ export class WebRtcService {
         this.handleCallEnded();
       } else {
         console.log('Ignoring hangup - not for this connection or not in active call');
+      }
+    });
+  }
+
+  private setupAuthListeners(): void {
+    // We need to track when the user logs in and initialize WebRTC
+    // and when the user logs out to dispose resources
+    
+    // Create an effect to watch for user changes
+    const authEffect = effect(() => {
+      const user = this.accountService.currentUser();
+      
+      if (user) {
+        // User logged in, initialize if not already
+        if (!this._initialized && !this.initializing) {
+          this.log('User logged in, initializing WebRTC service...');
+          this.initialize().catch(error => {
+            this.log(`WebRTC setup after login failed: ${error}`);
+          });
+        }
+      } else {
+        // User logged out, dispose resources
+        if (this._initialized) {
+          this.log('User logged out, disposing WebRTC resources...');
+          this.dispose();
+        }
       }
     });
   }
@@ -551,8 +621,8 @@ export class WebRtcService {
    */
   public async acceptCall(incomingCallInfo: CallInfo): Promise<void> {
     try {
-      if (this.currentCall.state !== 'idle') {
-        throw new Error('Cannot accept a call while already in a call');
+      if (this.currentCall.state !== CallState.Incoming) {
+        throw new Error('Cannot accept a call without incoming call');
       }
 
       // Get the offer from the call info
@@ -563,7 +633,7 @@ export class WebRtcService {
 
       // Set current call info
       this.currentCall.peer = incomingCallInfo;
-      this.updateCallState(CallState.Offering);
+      this.updateCallState(CallState.Answering);
 
       // Initialize the peer connection
       this.initializePeerConnection();
@@ -598,11 +668,6 @@ export class WebRtcService {
    * Reject an incoming call
    */
   public async rejectCall(incomingCallInfo: CallInfo): Promise<void> {
-    if (this.currentCall.state !== 'idle') {
-      console.warn('Cannot reject call while already in a call');
-      return;
-    }
-
     try {
       // Send hangup to the caller
       await this.hubConnection.invoke('HangUp',
@@ -610,8 +675,15 @@ export class WebRtcService {
         incomingCallInfo.sourceConnectionId
       );
       console.log('Call rejected, notification sent to', incomingCallInfo.callerUsername);
+      
+      // Reset call state
+      this.updateCallState(CallState.Idle);
+      this.currentCall.peer = null;
     } catch (error) {
       console.error('Error rejecting call', error);
+      // Reset state even on error
+      this.updateCallState(CallState.Idle);
+      this.currentCall.peer = null;
     }
   }
 
@@ -646,6 +718,7 @@ export class WebRtcService {
    */
   private handleCallEnded(): void {
     // Reset call state
+    this._incomingCall.set(null);
     this.updateCallState(CallState.Idle);
 
     // Clean up peer connection
@@ -653,7 +726,7 @@ export class WebRtcService {
 
     // Reset current call peer
     this.currentCall.peer = null;
-
+    this.connectionStateChangeSubject.next('closed' as RTCPeerConnectionState);
     // Notify listeners
     this.callEndedSubject.next();
   }
@@ -663,22 +736,47 @@ export class WebRtcService {
    */
   private cleanupPeerConnection(): void {
     if (this.peerConnection) {
+      // Remove all event handlers
       this.peerConnection.onicecandidate = null;
       this.peerConnection.ontrack = null;
       this.peerConnection.onconnectionstatechange = null;
+
       if (this.peerConnection.onicegatheringstatechange)
         this.peerConnection.onicegatheringstatechange = null;
+      
       if (this.peerConnection.onsignalingstatechange)
         this.peerConnection.onsignalingstatechange = null;
-
-      // Close the connection
-      this.peerConnection.close();
+      
+      try {
+        // Close all data channels
+        if (this.peerConnection.getSenders) {
+          this.peerConnection.getSenders().forEach(sender => {
+            if (sender.track) {
+              sender.track.stop();
+            }
+          });
+        }
+        
+        // Close the connection
+        this.peerConnection.close();
+        
+        // Log connection state after closure attempt
+        this.log(`Peer connection closed. Final state: ${this.peerConnection.connectionState || 'unknown'}`);
+      } catch (error) {
+        this.log(`Error closing peer connection: ${error}`);
+      }
+      
+      // Clear reference
       this.peerConnection = null;
     }
-
+  
     // Stop remote stream tracks
     if (this.remoteStream) {
-      this.remoteStream.getTracks().forEach(track => track.stop());
+      try {
+        this.remoteStream.getTracks().forEach(track => track.stop());
+      } catch (error) {
+        this.log(`Error stopping remote tracks: ${error}`);
+      }
       this.remoteStream = null;
     }
   }
