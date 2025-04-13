@@ -36,15 +36,24 @@ export class FriendsComponent implements OnInit {
     this.notificationService.friendRequests$.pipe(
       skip(1)
     ).subscribe(requests => {
-      this.friendRequests = requests;
-      this.toastr.info('Nowe zaproszenie do znajomych!');
+      const newRequest = requests[requests.length - 1];
+      const exists = this.friendRequests.some(req => req.id === newRequest.id);
+      if (!exists) {
+        this.friendRequests.push(newRequest);
+        this.toastr.info('Nowe zaproszenie do znajomych!');
+      }
     });
     
     this.notificationService.friendRequestsAccepted$.pipe(
-      skip(1) 
+      skip(1)
     ).subscribe(accepted => {
-      this.friends = accepted;
-      this.toastr.info('Nowy znajomy!');
+      const newFriend = accepted[accepted.length - 1]; // Get the newest friend
+      const exists = this.friends.some(friend => friend.id === newFriend.id);
+      
+      if (!exists) {
+        this.friends.push(newFriend);
+        this.toastr.info('Nowy znajomy!');
+      }
     });
 
     /*

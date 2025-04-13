@@ -80,15 +80,21 @@ export class NotificationsService {
     console.log('Registering Notifications SignalR handlers...');
   
     this.hubConnection.on('FriendRequest', (notification: FriendRequestDTO) => {
-      console.log('📬 Received friend request notification:', notification);
+      console.log('📬 Received friend request notification:', notification); 
       const currentFriendRequests = this.friendRequestsSource.value;
-      this.friendRequestsSource.next([...currentFriendRequests, notification]);
+      const exists = currentFriendRequests.some(req => req.id === notification.id);
+      if (!exists) {
+        this.friendRequestsSource.next([...currentFriendRequests, notification]);
+      }
     });
     
     this.hubConnection.on('FriendRequestAccepted', (notification: UserDTO) => {
       console.log('📬 Received friend request accepted notification:', notification);
       const currentAccepted = this.friendRequestsAcceptedSource.value;
-      this.friendRequestsAcceptedSource.next([...currentAccepted, notification]);
+      const exists = currentAccepted.some(req => req.id == notification.id)
+      if (!exists) {
+        this.friendRequestsAcceptedSource.next([...currentAccepted, notification]);
+      }
     });
     
     this.hubConnection.on('MessageReceived', (message) => {
