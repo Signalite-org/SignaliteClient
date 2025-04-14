@@ -12,7 +12,7 @@
       <h4>Friend Requests <button (click)="clearFriendRequests()" class="clear-btn">Clear</button></h4>
       <div *ngFor="let request of friendRequests" class="notification-item friend-request">
         <div class="notification-content">
-          <strong>{{ request.Sender.username }}</strong> sent you a friend request
+          <strong>{{ request.senderUsername }}</strong> sent you a friend request
         </div>
       </div>
     </div>
@@ -22,7 +22,7 @@
       <h4>Accepted Friend Requests <button (click)="clearFriendRequestsAccepted()" class="clear-btn">Clear</button></h4>
       <div *ngFor="let accepted of friendRequestsAccepted" class="notification-item friend-accepted">
         <div class="notification-content">
-          <strong>{{ accepted.Sender.username }}</strong> accepted your friend request
+          <strong>{{ accepted.username }}</strong> accepted your friend request
         </div>
       </div>
     </div>
