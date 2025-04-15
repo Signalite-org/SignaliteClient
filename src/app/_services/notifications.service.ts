@@ -3,11 +3,10 @@ import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
-import { FriendRequest } from '../_models/FriendRequest';
-import { GroupBasicInfoDTO } from '../_models/GroupBasicInfo';
+import { GroupBasicInfoDTO } from '../_models/GroupBasicInfoDTO';
 import { FriendRequestAccepted } from '../_models/FriendRequestAccepted';
 import { FriendRequestDTO } from '../_models/FriendRequestDTO';
-import { UserDTO } from '../_models/UserDTO';
+import { UserBasicInfo } from '../_models/UserBasicInfo';
 
 @Injectable({
   providedIn: 'root'
@@ -21,12 +20,14 @@ export class NotificationsService {
   private friendRequestsSource = new BehaviorSubject<FriendRequestDTO[]>([]);
   friendRequests$ = this.friendRequestsSource.asObservable();
   
-  private friendRequestsAcceptedSource = new BehaviorSubject<UserDTO[]>([]);
+  private friendRequestsAcceptedSource = new BehaviorSubject<UserBasicInfo[]>([]);
   friendRequestsAccepted$ = this.friendRequestsAcceptedSource.asObservable();
   
   private addedToGroupSource = new BehaviorSubject<GroupBasicInfoDTO[]>([]);
   addedToGroup$ = this.addedToGroupSource.asObservable();
 
+  private userAddedToGroupSource = new BehaviorSubject<UserBasicInfo[]>([]);
+  userAddedToGroup$ = this.userAddedToGroupSource.asObservable();
 
   constructor(private router: Router) { 
     console.log('NotificationsService constructed');
@@ -88,10 +89,10 @@ export class NotificationsService {
       }
     });
     
-    this.hubConnection.on('FriendRequestAccepted', (notification: UserDTO) => {
+    this.hubConnection.on('FriendRequestAccepted', (notification: UserBasicInfo) => {
       console.log('📬 Received friend request accepted notification:', notification);
       const currentAccepted = this.friendRequestsAcceptedSource.value;
-      const exists = currentAccepted.some(req => req.id == notification.id)
+      const exists = currentAccepted.some(req => req.id === notification.id)
       if (!exists) {
         this.friendRequestsAcceptedSource.next([...currentAccepted, notification]);
       }
@@ -105,14 +106,22 @@ export class NotificationsService {
     this.hubConnection.on('AddedToGroup', (groupInfo: GroupBasicInfoDTO) => {
       console.log('📬 Received AddedToGroup notification:', groupInfo);
       const currentGroups = this.addedToGroupSource.value;
-      this.addedToGroupSource.next([...currentGroups, groupInfo]);
+      const exists = currentGroups.some(req => req.id === groupInfo.id)
+      if (!exists) {
+        this.addedToGroupSource.next([...currentGroups, groupInfo]);
+      }
     });
 
-    this.hubConnection.on('UserAddedToGroup', (userInfo) => {
+    this.hubConnection.on('UserAddedToGroup', (userInfo: UserBasicInfo) => {
       console.log('📬 Received UserAddedToGroup notification:', userInfo);
+      const currentUsers = this.userAddedToGroupSource.value;
+      const exists = currentUsers.some(req => req.id === userInfo.id)
+      if (!exists) {
+        this.userAddedToGroupSource.next([...currentUsers, userInfo]);
+      }
     });
 
-    this.hubConnection.on('GroupUpdated', (groupInfo) => {
+    this.hubConnection.on('GroupUpdated', (groupInfo: GroupBasicInfoDTO) => {
       console.log('📬 Received GroupUpdated notification:', groupInfo);
     });
 
@@ -120,8 +129,8 @@ export class NotificationsService {
       console.log('📬 Received UserRemovedFromGroup notification:', notification);
     });
 
-    this.hubConnection.on('GroupUpdated', (notification) => {
-      console.log('📬 Received GroupUpdated notification:', notification);
+    this.hubConnection.on('GroupDeleted', (notification) => {
+      console.log('📬 Received GroupDeleted notification:', notification);
     });
 
     this.hubConnection.on('UserUpdated', (notification) => {
@@ -134,10 +143,6 @@ export class NotificationsService {
 
     this.hubConnection.on('MessageDeleted', (notification) => {
       console.log('📬 Received MessageDeleted notification:', notification);
-    });
-
-    this.hubConnection.on('GroupDeleted', (notification) => {
-      console.log('📬 Received GroupDeleted notification:', notification);
     });
 
     this.hubConnection.on('AttachmentRemoved', (notification) => {

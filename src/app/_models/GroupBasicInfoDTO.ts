@@ -3,4 +3,5 @@ export interface GroupBasicInfoDTO {
     name: string;
     photoUrl: string;
     isPrivate: boolean;
+    lastMessage?: string;
   }

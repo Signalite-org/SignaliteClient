@@ -8,6 +8,7 @@ import { UserDTO } from '../../_models/UserDTO';
 import { FriendRequestDTO } from '../../_models/FriendRequestDTO';
 import { NotificationsService } from '../../_services/notifications.service';
 import { skip } from 'rxjs';
+import { UserBasicInfo } from '../../_models/UserBasicInfo';
 
 @Component({
   selector: 'app-friends',
@@ -17,7 +18,7 @@ import { skip } from 'rxjs';
   styleUrls: ['./friends.component.scss']
 })
 export class FriendsComponent implements OnInit {
-  friends: UserDTO[] = [];
+  friends: UserBasicInfo[] = [];
   friendRequests: FriendRequestDTO[] = [];
   isLoading = false;
   errorMessage = '';
