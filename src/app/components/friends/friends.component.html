@@ -50,7 +50,12 @@
             <div class="d-flex align-items-center">
               <div>
                 <h5 class="mb-0">{{ request.senderUsername }}</h5>
-                <img [src]="request.profilePhotoUrl" alt="Sender Photo" class="img-fluid rounded my-2" style="max-width: 100px;">
+                @if (request.profilePhotoUrl === null) {
+                  <img src="assets/images/default-user.jpg" alt="Sender Photo" class="img-fluid rounded my-2" style="max-width: 100px;">
+                }
+                @else {
+                  <img [src]="request.profilePhotoUrl" alt="Sender Photo" class="img-fluid rounded my-2" style="max-width: 100px;">
+                }
                 <small class="text-muted">ID: {{ request.senderId }}</small>
               </div>
             </div>
