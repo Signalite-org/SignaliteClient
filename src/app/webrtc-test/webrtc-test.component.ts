@@ -1,4 +1,4 @@
-import { Component, effect, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, DestroyRef, effect, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { WebRtcService } from '../_services/webrtc.service';
 import { Subscription } from 'rxjs';
 import { PresenceService } from '../_services/presence.service';
@@ -7,79 +7,22 @@ import { CommonModule } from '@angular/common';
 import { MediaDevice } from '../_models/WebRtc/MediaDevice';
 import { UserBasicInfo } from '../_models/UserBasicInfo';
 import { CallState } from '../_models/WebRtc/CallState';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CallInfo } from '../_models/WebRtc/CallInfo';
 
 @Component({
   selector: 'app-webrtc-test',
+  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './webrtc-test.component.html',
   styleUrl: './webrtc-test.component.css'
 })
 export class WebrtcTestComponent implements OnInit, OnDestroy {
-  private effectRef: ReturnType<typeof effect> | null = null;
-
-  constructor(
-    private webRtcService: WebRtcService,
-    public presenceService: PresenceService
-  ) 
-  { 
-    this.effectRef = effect(() => {
-      const devices = this.webRtcService.audioDevices();
-
-      console.log('Audio devices from signal:', devices); // Add this line
-      this.audioDevices = devices;
-      
-      if (devices.length > 0) {
-        this.logs.push(`Found ${devices.length} audio input devices`);
-      }
-
-      const users = this.presenceService.onlineUsers();
-      this.onlineUsers = users.map(u => ({
-        id: u.id,
-        username: u.username
-      }));
-    });
-  }
-
-
-  ngOnInit(): void {
-    this.subscribeToEvents();
-
-    
-  }
-
-  ngAfterViewInit() {
-    this.logs.push('View initialized, getting video element references');
-    this.localVideo = this.localVideoRef?.nativeElement;
-    this.remoteVideo = this.remoteVideoRef?.nativeElement;
-
-    if (this.localVideo) {
-      this.logs.push('Local video element reference obtained successfully');
-    } else {
-      this.logs.push('ERROR: Failed to get reference to local video element');
-    }
-  }
-
-  ngOnDestroy(): void {
-    if (this.effectRef) {
-      this.effectRef.destroy();
-    }
-    
-    // Clean up subscriptions
-    this.subscriptions.forEach(sub => sub.unsubscribe());
-
-    // Stop media streams
-    this.stopMedia();
-
-    // Dispose of WebRTC resources if initialized
-    if (this.initialized) {
-      this.webRtcService.dispose();
-    }
-  }
+  private destroyRef = inject(DestroyRef);
 
   @ViewChild('localVideo', { static: true }) localVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('remoteVideo', { static: true }) remoteVideoRef!: ElementRef<HTMLVideoElement>;
 
-  
   // store found devices
   audioDevices: MediaDevice[] = [];
   videoDevices: MediaDevice[] = [];
@@ -98,65 +41,91 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
   private localVideo: HTMLVideoElement | null = null;
   private remoteVideo: HTMLVideoElement | null = null;
 
+  constructor(
+    private webRtcService: WebRtcService,
+    public presenceService: PresenceService
+  ) {
+    // Create an effect to track signals from the services
+    effect(() => {
+      this.audioDevices = this.webRtcService.audioDevices();
+      this.videoDevices = this.webRtcService.videoDevices();
+      this.callState = this.webRtcService.callState();
+      this.onlineUsers = this.presenceService.onlineUsers();
+
+      // Update initialization status based on having data
+      if (this.audioDevices.length > 0 || this.videoDevices.length > 0) {
+        this.initialized = true;
+      }
+
+
+    });
+
+    effect(() => {
+      const incomingCall = this.webRtcService.incomingCall();
+      if (incomingCall)
+        this.showIncomingCall(incomingCall)
+    })
+  }
+
+  ngOnInit(): void {
+    this.subscribeToEvents();
+    this.initialize();
+  }
+
+  ngAfterViewInit() {
+    this.logs.push('View initialized, getting video element references');
+    this.localVideo = this.localVideoRef?.nativeElement;
+    this.remoteVideo = this.remoteVideoRef?.nativeElement;
+
+    if (this.localVideo) {
+      this.logs.push('Local video element reference obtained successfully');
+    } else {
+      this.logs.push('ERROR: Failed to get reference to local video element');
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Clean up subscriptions
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+
+    // Stop media streams
+    this.stopMedia();
+  }
+
   subscribeToEvents(): void {
     // Subscribe to WebRTC logs
-    this.subscriptions.push(
-      this.webRtcService.logs$.subscribe(logs => {
+    this.webRtcService.logs$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(logs => {
         this.logs = logs;
-      })
-    );
-
-    this.subscriptions.push(
-      this.webRtcService.videoDevices$.subscribe(devices => {
-        this.videoDevices = devices;
-        this.logs.push(`Found ${devices.length} video input devices`);
-      })
-    );
+      });
 
     // Subscribe to connection state changes
-    this.subscriptions.push(
-      this.webRtcService.connectionStateChange$.subscribe(state => {
+    this.webRtcService.connectionStateChange$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(state => {
         this.rtcConnectionState = state;
-      })
-    );
-
-    // Subscribe to call state changes
-    this.subscriptions.push(
-      this.webRtcService.callState$.subscribe(state => {
-        this.callState = state;
-      })
-    );
+      });
 
     // Subscribe to call established (remote stream)
-    this.subscriptions.push(
-      this.webRtcService.callEstablished$.subscribe(stream => {
+    this.webRtcService.callEstablished$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(stream => {
         if (this.remoteVideo) {
           this.remoteVideo.srcObject = stream;
         }
-      })
-    );
+      });
 
     // Subscribe to call ended
-    this.subscriptions.push(
-      this.webRtcService.callEnded$.subscribe(() => {
+    this.webRtcService.callEnded$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
         if (this.remoteVideo) {
           this.remoteVideo.srcObject = null;
         }
-      })
-    );
+        this.localStreamActive = false;
+      });
 
-    // Subscribe to incoming calls
-    this.subscriptions.push(
-      this.webRtcService.incomingCall$.subscribe(callInfo => {
-        // If using a dialog, open it here
-        const confirmCall = window.confirm(`Incoming call from ${callInfo.callerUsername}. Answer?`);
-        if (confirmCall) {
-          this.answerCall(callInfo);
-        } else {
-          this.rejectCall(callInfo);
-        }
-      })
-    );
   }
 
   onAudioDeviceChange(event: Event): void {
@@ -175,10 +144,12 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
 
   async initialize(): Promise<void> {
     try {
-      await this.webRtcService.initialize();
-      this.initialized = true;
+      this.logs.push('Initializing WebRTC...');
       await this.webRtcService.checkAvailableDevices();
-      // Try to get video elements directly
+      this.logs.push('WebRTC initialized');
+      this.initialized = true;
+
+      // Try to get video elements directly if needed
       setTimeout(() => {
         if (!this.localVideo) {
           const localVideoElement = document.querySelector('video#localVideo') as HTMLVideoElement;
@@ -206,18 +177,26 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
 
   async refreshDevices(): Promise<void> {
     this.logs.push('Refreshing device list...');
-    
+
     // Request temporary permission to get device labels
     try {
-      const tempStream = await navigator.mediaDevices.getUserMedia({audio: true});
+      const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       tempStream.getTracks().forEach(track => track.stop()); // Stop tracks immediately
     } catch (error) {
       // Ignore errors, just try to get device list anyway
     }
-    
+
     await this.webRtcService.checkAvailableDevices();
   }
 
+  async showIncomingCall(call: CallInfo) {
+    const confirmCall = window.confirm(`Incoming call from ${call.callerUsername}. Answer?`);
+    if (confirmCall) {
+      this.answerCall(call);
+    } else {
+      this.rejectCall(call);
+    }
+  }
   async testMedia(): Promise<void> {
     try {
       this.logs.push('Checking available devices...');
@@ -273,20 +252,22 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
     try {
       this.logs.push(`Attempting to start call with user ID: ${userId}`);
 
-      // Get local stream first
-      this.logs.push('Getting local stream...');
-      const stream = await this.webRtcService.startLocalStream(this.audioOnly);
-      this.logs.push(`Got local stream with ${stream.getTracks().length} tracks`);
+      // Get local stream first if not already active
+      if (!this.localStreamActive) {
+        this.logs.push('Getting local stream...');
+        const stream = await this.webRtcService.startLocalStream(this.audioOnly);
+        this.logs.push(`Got local stream with ${stream.getTracks().length} tracks`);
 
-      // Even if we can't attach it to the video element, we can still proceed with the call
-      if (this.localVideo) {
-        this.localVideo.srcObject = stream;
-        this.logs.push('Attached stream to local video element');
-      } else {
-        this.logs.push('WARNING: Local video element not available, but continuing with call');
+        // Even if we can't attach it to the video element, we can still proceed with the call
+        if (this.localVideo) {
+          this.localVideo.srcObject = stream;
+          this.logs.push('Attached stream to local video element');
+        } else {
+          this.logs.push('WARNING: Local video element not available, but continuing with call');
+        }
+
+        this.localStreamActive = true;
       }
-
-      this.localStreamActive = true;
 
       // Start the call
       this.logs.push('Initiating call...');
@@ -320,10 +301,26 @@ export class WebrtcTestComponent implements OnInit, OnDestroy {
 
   async hangUp(): Promise<void> {
     try {
+      this.logs.push('Hanging up call...');
+      this.stopMedia();
+
+      if (this.remoteVideo && this.remoteVideo.srcObject) {
+        this.remoteVideo.srcObject = null;
+      }
+
       await this.webRtcService.hangUp();
+      this.rtcConnectionState = null;
+      this.logs.push('Call ended');
+
     } catch (error) {
       console.error('Failed to hang up:', error);
       this.logs.push(`Error hanging up: ${error}`);
+
+      this.stopMedia();
+      this.rtcConnectionState = null;
+      if (this.remoteVideo) {
+        this.remoteVideo.srcObject = null;
+      }
     }
   }
 
