@@ -1,0 +1,25 @@
+:host {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+section {
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items:  flex-start;
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) transparent;
+
+
+  /* Enables native lazy rendering */
+  content-visibility: auto;
+  contain-intrinsic-size: 200px; /* Simulated height while loading */
+}

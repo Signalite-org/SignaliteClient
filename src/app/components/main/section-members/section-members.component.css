@@ -1,0 +1,26 @@
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+
+  /* Enables native lazy rendering */
+  content-visibility: auto;
+  contain-intrinsic-size: 200px; /* Simulated height while loading */
+}
+
+header {
+  all: unset;
+  font-size: clamp(1.5rem, 1.5vw, 1.6rem);
+}

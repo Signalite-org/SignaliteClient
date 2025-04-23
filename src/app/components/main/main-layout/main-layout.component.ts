@@ -1,75 +1,89 @@
-import { Component, Renderer2, ElementRef } from '@angular/core';
-import {TopLeftComponent} from './top/top-left/top-left.component';
-import {TopCenterComponent} from './top/top-center/top-center.component';
-import {TopRightComponent} from './top/top-right/top-right.component';
+import {Component, Renderer2, ElementRef, OnInit, OnDestroy, signal} from '@angular/core';
+import { TopLeftComponent } from './top/top-left/top-left.component';
+import { GroupFriendHeaderComponent } from '../header-group-friend/group-friend-header.component';
+import { NotificationsLayout } from '../section-notifications/notifications-layout';
+import { GroupFriendsLayoutComponent } from '../section-group-friends/group-friends-layout.component';
+import {CardCurrentUserComponent} from '../card-current-user/card-current-user.component';
+import {BarMessageSendComponent} from '../bar-message-send/bar-message-send.component';
+import {SectionChatComponent} from '../section-chat/section-chat.component';
+import {SectionMembersComponent} from '../section-members/section-members.component';
 
 @Component({
   selector: 'app-main-layout',
-  imports: [TopLeftComponent, TopCenterComponent, TopRightComponent],
+  imports: [TopLeftComponent, GroupFriendHeaderComponent, NotificationsLayout, GroupFriendsLayoutComponent, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit, OnDestroy {
   constructor(private renderer: Renderer2, private el: ElementRef) {}
 
-  hideRightColumn: boolean = false;
-  hideLeftColumn: boolean = false;
-  private visibleClass: string = '';
-  private hiddenClass: string = 'hidden';
+  hideRightColumn = signal(false);
+  hideLeftColumn= signal(false);
+  private resizeObserver: ResizeObserver | null = null;
   private testSwitch: number = -1;
+
+  ngOnInit() {
+    this.setupResizeListener();
+  }
+
+  ngOnDestroy() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+  }
 
   private updateLayout() {
     const content = this.el.nativeElement.querySelector('#content');
-    if(this.hideLeftColumn && this.hideRightColumn){
-      this.renderer.setStyle(content, 'grid-template-columns','1fr');
-    } else if(this.hideRightColumn) {
-      this.renderer.setStyle(content, 'grid-template-columns', 'max-content minmax(0, 1fr)');
-    } else {
-      this.renderer.setStyle(content, 'grid-template-columns', 'max-content minmax(0, 1fr) min-content');
+    if(this.hideLeftColumn() && this.hideRightColumn()){ // only center
+      this.renderer.setStyle(content, 'grid-template-columns','100%');
+    } else if(this.hideRightColumn()) { // right hidden
+      this.renderer.setStyle(content, 'grid-template-columns', 'minmax(6em, 30%) minmax(50%, 1fr)');
+    } else { // both visible
+      this.renderer.setStyle(content, 'grid-template-columns', 'max-content minmax(0, 1fr) 15%');
     }
   }
 
-  get rightColumnVisibility() {
-    if(this.hideRightColumn) {
-      return this.hiddenClass;
-    }
-    return this.visibleClass;
-  }
+  private setupResizeListener() {
+    this.resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        const width = entry.contentRect.width;
+        if (width < 700) {
+          this.layoutRightHidden();
+        } else {
+          this.layoutAllVisible();
+        }
+        this.updateLayout();
+      }
+    });
 
-  get leftColumnVisibility() {
-    if(this.hideLeftColumn) {
-      return this.hiddenClass;
-    }
-    return this.visibleClass;
+    this.resizeObserver.observe(document.body); // Observe changes to the body width
   }
 
   private switchRightColumn(): void {
-    this.hideRightColumn = !this.hideRightColumn;
+    this.hideRightColumn.set(!this.hideRightColumn());
   }
 
   private layoutAllVisible() {
-    this.hideRightColumn = false;
-    this.hideLeftColumn = false;
+    this.hideRightColumn.set(false);
+    this.hideLeftColumn.set(false);
   }
 
   private layoutRightHidden() {
-    this.hideRightColumn = true;
-    this.hideLeftColumn = false;
+    this.hideRightColumn.set(true);
+    this.hideLeftColumn.set(false);
   }
 
   private layoutCenterOnly() {
-    this.hideRightColumn = true;
-    this.hideLeftColumn = true;
+    this.hideRightColumn.set(true);
+    this.hideLeftColumn.set(true);
   }
 
   testSwitchColumns(): void {
-    this.testSwitch = (this.testSwitch + 1) % 3;
+    this.testSwitch = (this.testSwitch + 1) % 2;
     if(this.testSwitch == 0) {
       this.layoutRightHidden();
     } else if(this.testSwitch == 1) {
       this.layoutCenterOnly();
-    } else {
-      this.layoutAllVisible();
     }
     this.updateLayout();
   }

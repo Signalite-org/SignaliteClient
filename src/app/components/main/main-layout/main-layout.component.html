@@ -1,18 +1,21 @@
 <div id="background">
   <div id="content">
 
-    <app-top-left class="header {{leftColumnVisibility}}"></app-top-left>
+    <!-- main layout is 3x3 grid -->
+
+    <app-top-left class="header left" [class.hidden]="hideLeftColumn()"></app-top-left>
     <app-top-center class="header"></app-top-center>
-    <app-top-right class="header {{rightColumnVisibility}}"></app-top-right>
+    <app-top-right class="header" [class.hidden]="hideRightColumn()"></app-top-right>
 
-    <div class="placeholder {{leftColumnVisibility}}"></div>
-    <div class="placeholder" (click)="testSwitchColumns()" id="placeholderChat"></div>
-    <div class="placeholder {{rightColumnVisibility}}"></div>
+    <app-center-left class="left" [class.hidden]="hideLeftColumn()"></app-center-left>
+    <app-section-chat (click)="testSwitchColumns()"></app-section-chat>
+    <app-section-members [class.hidden]="hideRightColumn()"></app-section-members>
 
-    <div class="placeholder footer {{leftColumnVisibility}}"></div>
-    <div class="placeholder footer"></div>
-    <div class="placeholder footer {{rightColumnVisibility}}"></div>
-
+    <div class="footer left" [class.hidden]="hideLeftColumn()">
+      <app-card-current-user></app-card-current-user>
+    </div>
+    <app-bar-message-send class="footer"></app-bar-message-send>
+    <div class="footer" [class.hidden]="hideRightColumn()"></div>
   </div>
 </div>
 
