@@ -1,5 +1,5 @@
 import {Component, Renderer2, ElementRef, OnInit, OnDestroy, signal} from '@angular/core';
-import { TopLeftComponent } from './top/top-left/top-left.component';
+import { NavigationFriendsGroups } from '../navigation-friends-groups/navigation-friends-groups';
 import { GroupFriendHeaderComponent } from '../header-group-friend/group-friend-header.component';
 import { NotificationsLayout } from '../section-notifications/notifications-layout';
 import { GroupFriendsLayoutComponent } from '../section-group-friends/group-friends-layout.component';
@@ -10,7 +10,7 @@ import {SectionMembersComponent} from '../section-members/section-members.compon
 
 @Component({
   selector: 'app-main-layout',
-  imports: [TopLeftComponent, GroupFriendHeaderComponent, NotificationsLayout, GroupFriendsLayoutComponent, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent],
+  imports: [NavigationFriendsGroups, GroupFriendHeaderComponent, NotificationsLayout, GroupFriendsLayoutComponent, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })

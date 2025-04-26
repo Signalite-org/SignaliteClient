@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import {GroupFriendsSwitchComponent} from '../../../switch-group-friends/group-friends-switch.component';
+import {GroupFriendsSwitchComponent} from '../switch-group-friends/group-friends-switch.component';
 import {MatMiniFabButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
 
@@ -9,9 +9,9 @@ import {MatIcon} from '@angular/material/icon';
     GroupFriendsSwitchComponent,
     MatIcon,
   ],
-  templateUrl: './top-left.component.html',
-  styleUrl: './top-left.component.scss'
+  templateUrl: './navigation-friends-groups.html',
+  styleUrl: './navigation-friends-groups.scss'
 })
-export class TopLeftComponent {
+export class NavigationFriendsGroups {
 
 }
