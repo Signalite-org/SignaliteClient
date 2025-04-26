@@ -2,6 +2,12 @@ import { Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
+import { FriendRequest } from '../_models/FriendRequest';
+import { GroupBasicInfoDTO } from '../_models/GroupBasicInfo';
+import { FriendRequestAccepted } from '../_models/FriendRequestAccepted';
+import { FriendRequestDTO } from '../_models/FriendRequestDTO';
+import { UserDTO } from '../_models/UserDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +16,18 @@ export class NotificationsService {
 
   private hubConnection?: HubConnection;
   private hubUrl = environment.hubUrl;
+  private handlersRegistered = false;
+  // New BehaviorSubjects to track notifications
+  private friendRequestsSource = new BehaviorSubject<FriendRequestDTO[]>([]);
+  friendRequests$ = this.friendRequestsSource.asObservable();
   
+  private friendRequestsAcceptedSource = new BehaviorSubject<UserDTO[]>([]);
+  friendRequestsAccepted$ = this.friendRequestsAcceptedSource.asObservable();
+  
+  private addedToGroupSource = new BehaviorSubject<GroupBasicInfoDTO[]>([]);
+  addedToGroup$ = this.addedToGroupSource.asObservable();
+
+
   constructor(private router: Router) { 
     console.log('NotificationsService constructed');
   }
@@ -21,6 +38,11 @@ export class NotificationsService {
       return;
     }
   
+    // If a connection already exists, just return
+  if (this.hubConnection) {
+    console.log('notifications hub connection already exists, not creating a new one');
+    return;
+  }
     console.log('Creating notifications hub connection...');
   
     // Create the connection
@@ -52,27 +74,38 @@ export class NotificationsService {
   }
 
   private registerSignalRHandlers() {
-    if (!this.hubConnection) {
-      console.error('Cannot register Notification handlers - hub connection is not initialized');
-      return;
-    }
+    if (!this.hubConnection || this.handlersRegistered) return;
+
   
     console.log('Registering Notifications SignalR handlers...');
   
-    this.hubConnection.on('FriendRequest', (notification) => {
-      console.log('📬 Received friend request notification:', notification);
+    this.hubConnection.on('FriendRequest', (notification: FriendRequestDTO) => {
+      console.log('📬 Received friend request notification:', notification); 
+      const currentFriendRequests = this.friendRequestsSource.value;
+      const exists = currentFriendRequests.some(req => req.id === notification.id);
+      if (!exists) {
+        this.friendRequestsSource.next([...currentFriendRequests, notification]);
+      }
     });
     
-    this.hubConnection.on('FriendRequestAccepted', (notification) => {
+    this.hubConnection.on('FriendRequestAccepted', (notification: UserDTO) => {
       console.log('📬 Received friend request accepted notification:', notification);
+      const currentAccepted = this.friendRequestsAcceptedSource.value;
+      const exists = currentAccepted.some(req => req.id == notification.id)
+      if (!exists) {
+        this.friendRequestsAcceptedSource.next([...currentAccepted, notification]);
+      }
     });
     
     this.hubConnection.on('MessageReceived', (message) => {
       console.log('📬 Received message:', message);
+      
     });
 
-    this.hubConnection.on('AddedToGroup', (groupInfo) => {
+    this.hubConnection.on('AddedToGroup', (groupInfo: GroupBasicInfoDTO) => {
       console.log('📬 Received AddedToGroup notification:', groupInfo);
+      const currentGroups = this.addedToGroupSource.value;
+      this.addedToGroupSource.next([...currentGroups, groupInfo]);
     });
 
     this.hubConnection.on('UserAddedToGroup', (userInfo) => {
@@ -106,11 +139,13 @@ export class NotificationsService {
     this.hubConnection.on('GroupDeleted', (notification) => {
       console.log('📬 Received GroupDeleted notification:', notification);
     });
-    console.log('✅ Notification handlers registered');
 
     this.hubConnection.on('AttachmentRemoved', (notification) => {
       console.log('📬 Received AttachmentRemoved notification:', notification);
     });
+
+    this.handlersRegistered = true;
+    console.log('✅ Notification handlers registered');
   }
 
   stopHubConnection() {
@@ -135,5 +170,18 @@ export class NotificationsService {
     console.log('Forcing reconnection of notifications hub...');
     this.reconnect(token);
     return 'Reconnection forced';
+  }
+
+  // Helper methods to clear notifications
+  clearFriendRequests() {
+    this.friendRequestsSource.next([]);
+  }
+  
+  clearFriendRequestsAccepted() {
+    this.friendRequestsAcceptedSource.next([]);
+  }
+  
+  clearAddedToGroup() {
+    this.addedToGroupSource.next([]);
   }
 }
