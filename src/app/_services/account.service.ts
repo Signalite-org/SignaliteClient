@@ -9,6 +9,7 @@ import { LoginResponseDTO } from '../_models/LoginResponseDTO';
 import { TokenResponseDTO } from '../_models/TokenResponseDTO';
 import { RegisterDTO } from '../_models/RegisterDTO';
 import { PresenceService } from './presence.service';
+import { NotificationsService } from './notifications.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +23,7 @@ export class AccountService {
   constructor(
     private http: HttpClient,
     private presenceService: PresenceService,
+    private notificationsService: NotificationsService,
     private router: Router
   ) {
     console.log('AccountService constructed');
@@ -41,9 +43,10 @@ export class AccountService {
         this.startRefreshTokenTimer();
         this.currentUserSource.next(user);
         
-        // Start the presence hub connection after login
-        console.log('Starting presence connection after login');
+        // Start the presence and notifications hub connections after login
+        console.log('Starting connections after login');
         this.presenceService.createHubConnection(user.accessToken);
+        this.notificationsService.createHubConnection(user.accessToken);
       })
     );
   }
@@ -57,6 +60,8 @@ export class AccountService {
     console.log('Logging out');
     // Stop the presence hub connection
     this.presenceService.stopHubConnection();
+    // Stop the notifications hub connection
+    this.notificationsService.stopHubConnection();
     
     localStorage.removeItem('user');
     this.currentUserSource.next(null);
@@ -84,6 +89,7 @@ export class AccountService {
         
         // Reconnect the presence hub with the new token
         this.presenceService.reconnect(updatedUser.accessToken);
+        this.notificationsService.reconnect(updatedUser.accessToken);
       })
     );
   }
@@ -125,6 +131,7 @@ export class AccountService {
       
       // Start the presence hub connection if we have a stored user
       this.presenceService.createHubConnection(user.accessToken);
+      this.notificationsService.createHubConnection(user.accessToken);
     }
   }
 

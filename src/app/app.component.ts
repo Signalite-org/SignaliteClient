@@ -2,7 +2,7 @@ import {Component, inject, OnInit} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { MainLayoutComponent} from './components/main/main-layout/main-layout.component';
-import {HeroiconService} from './_services/heroicons.service';
+import { HeroiconService } from './_services/heroicons.service';
 
 @Component({
   selector: 'app-root',
