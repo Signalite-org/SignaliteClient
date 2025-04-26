@@ -1,1 +1,21 @@
-<p>home works!</p>
+<div class="home-container">
+    <h2>Welcome to Signalite</h2>
+    
+    <div class="user-info">
+      <p>You are logged in with User ID: <strong>{{ userId }}</strong></p>
+    </div>
+    
+    <div class="notifications-panel">
+      <app-notifications></app-notifications>
+    </div>
+    
+    <div class="online-users">
+      <h4>Online Users:</h4>
+      <ul class="user-list">
+        <li *ngFor="let user of onlineUsers">User ID: {{ user }}</li>
+      </ul>
+      <p *ngIf="onlineUsers.length === 0">No users are currently online.</p>
+    </div>
+    
+    <button (click)="logout()" class="btn btn-primary">Logout</button>
+  </div>

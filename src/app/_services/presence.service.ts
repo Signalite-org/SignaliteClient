@@ -1,13 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
+import { UserBasicInfo } from '../_models/UserBasicInfo';
 
-export interface OnlineUserInfo {
-  username: string;
-  userId: number;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -15,14 +12,19 @@ export interface OnlineUserInfo {
 export class PresenceService {
   private hubConnection?: HubConnection;
   private readonly hubUrl = environment.hubUrl;
+  private handlersRegistered = false;
 
-  // Simple BehaviorSubject for just the user IDs
-  private onlineUserIdsSource = new BehaviorSubject<number[]>([]);
-  onlineUserIds$ = this.onlineUserIdsSource.asObservable();
+  // simple ids of online users
+  private _onlineUserIds = signal<number[]>([])
+  public get onlineUserIds() {
+    return this._onlineUserIds.asReadonly()
+  }
 
-  // Detailed BehaviorSubject for debugging
-  private onlineUsersDetailedSource = new BehaviorSubject<OnlineUserInfo[]>([]);
-  onlineUsersDetailed$ = this.onlineUsersDetailedSource.asObservable();
+  // Online users with their info
+  private _onlineUsers = signal<UserBasicInfo[]>([]);
+  public get onlineUsers() {
+    return this._onlineUsers.asReadonly();
+  }
   
   constructor(private router: Router) {
     console.log('PresenceService constructed');
@@ -34,6 +36,11 @@ export class PresenceService {
       return;
     }
 
+    // If a connection already exists, just return
+  if (this.hubConnection) {
+    console.log('presence hub connection already exists, not creating a new one');
+    return;
+  }
     console.log('Creating presence hub connection...');
 
     this.hubConnection = new HubConnectionBuilder()
@@ -42,7 +49,7 @@ export class PresenceService {
       })
       .withAutomaticReconnect()
       .build();
-
+    this.registerSignalRHandlers();
     this.startHubConnection();
   }
 
@@ -52,7 +59,6 @@ export class PresenceService {
     this.hubConnection.start()
       .then(() => {
         console.log('✅ Successfully connected to presence hub');
-        this.registerSignalRHandlers();
       })
       .catch(error => {
         console.error('❌ Error starting presence hub connection:', error);
@@ -60,53 +66,55 @@ export class PresenceService {
   }
 
   private registerSignalRHandlers() {
-    if (!this.hubConnection) return;
+    if (!this.hubConnection || this.handlersRegistered) return;
 
-    console.log('Registering SignalR handlers...');
+    console.log('Registering presenceHub handlers...');
 
-    // Get simple list of online user IDs
     this.hubConnection.on('GetOnlineUserIds', (userIds: number[]) => {
       console.log('📋 Received online user IDs:', userIds);
-      this.onlineUserIdsSource.next(userIds);
+      this._onlineUserIds.set(userIds)
     });
 
-    // Get detailed online user information (for debugging)
-    this.hubConnection.on('GetOnlineUsersDetailed', (users: OnlineUserInfo[]) => {
+    this.hubConnection.on('GetOnlineUsersDetailed', (users: UserBasicInfo[]) => {
       console.log('📋 Received detailed online users:', users);
-      this.onlineUsersDetailedSource.next(users);
+      this._onlineUsers.set(users);
     });
 
-    // Handle user online
-    this.hubConnection.on('UserIsOnline', (user: { username: string, userId: number }) => {
-      console.log(`👤 User connected: ${user.username} (ID: ${user.userId})`);
+
+    this.hubConnection.on('UserIsOnline', (user: UserBasicInfo) => {
+      console.log(`👤 User connected: ${user.username} (ID: ${user.id})`);
       
-      // Update the simple ID list
-      const currentIds = this.onlineUserIdsSource.value;
-      if (!currentIds.includes(user.userId)) {
-        this.onlineUserIdsSource.next([...currentIds, user.userId]);
-      }
+      this._onlineUserIds.update(ids => {
+        if (!ids.includes(user.id)) {
+          return [...ids, user.id];
+        }
+        return ids;
+      });
       
-      // Update the detailed list
-      const currentDetailed = this.onlineUsersDetailedSource.value;
-      if (!currentDetailed.some(u => u.userId === user.userId)) {
-        this.onlineUsersDetailedSource.next([...currentDetailed, user]);
-      }
+      this._onlineUserIds.update(ids => {
+        // Only add the ID if it's not already in the list
+        if (!ids.includes(user.id)) {
+          return [...ids, user.id];
+        }
+        return ids;
+      });
     });
 
-    // Handle user offline
-    this.hubConnection.on('UserIsOffline', (user: { username: string, userId: number }) => {
-      console.log(`👤 User disconnected: ${user.username} (ID: ${user.userId})`);
+
+    this.hubConnection.on('UserIsOffline', (user:UserBasicInfo) => {
+      console.log(`👤 User disconnected: ${user.username}(ID: ${user.id})`);
       
-      // Update the simple ID list
-      const currentIds = this.onlineUserIdsSource.value;
-      this.onlineUserIdsSource.next(currentIds.filter(id => id !== user.userId));
+      this._onlineUserIds.update(ids => ids.filter(id => id !== user.id));
       
-      // Update the detailed list
-      const currentDetailed = this.onlineUsersDetailedSource.value;
-      this.onlineUsersDetailedSource.next(currentDetailed.filter(u => u.userId !== user.userId));
+      this._onlineUsers.update(users => {
+        // Only add the user if they're not already in the list
+        if (!users.some(u => u.id === user.id)) {
+          return [...users, user];
+        }
+        return users;
+      });
     });
 
-    // Handle KeepAlive requests from server
     this.hubConnection.on('KeepAlive', (timestamp: Date) => {
       console.log('♥️ Received KeepAlive request at:', new Date().toISOString());
       // Immediately respond to keep-alive request
@@ -116,6 +124,9 @@ export class PresenceService {
         console.error('❌ Error sending keep-alive response:', error);
       });
     });
+
+    this.handlersRegistered = true;
+    console.log('✅ Presence handlers registered');
   }
 
   stopHubConnection() {
@@ -137,6 +148,6 @@ export class PresenceService {
   
   // Helper method to check if a user is online
   isUserOnline(userId: number): boolean {
-    return this.onlineUserIdsSource.value.includes(userId);
+    return this.onlineUserIds().includes(userId);
   }
 }
