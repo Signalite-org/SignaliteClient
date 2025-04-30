@@ -7,7 +7,7 @@ import {SVG_ICONS} from '../components/local-icons';
 @Injectable({
   providedIn: 'root',
 })
-export class HeroiconService {
+export class IconRegistrator {
   constructor(
     private matIconRegistry: MatIconRegistry = inject(MatIconRegistry),
     private domSanitizer: DomSanitizer = inject(DomSanitizer),
