@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import {CardMemberComponent} from '../card-member/card-member.component';
+import {FriendsService} from '../../../_services/friends.service';
 
 @Component({
   selector: 'app-section-members',

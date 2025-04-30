@@ -1,7 +1,7 @@
 <div class="imageContainer">
-  <div class="activity online "></div>
-  <img fill sizes="10vw" class="userImage" alt="user/group image" ngSrc="https://www.jmndesign.be/wp-content/uploads/2023/09/logo47.png#3376">
+  <div class="activity" [class.online]="isOnline()" [class.offline]="!isOnline()"></div>
+  <img fill sizes="10vw" class="userImage" alt="user/group image" [ngSrc]="profileImageURL()">
 </div>
 <section>
-  <div id="userName" data-fulltext="Bob Konstantypolitaliczowny">Bob Konstantypolitaliczowny</div>
+  <div id="userName">{{ userName() }}</div>
 </section>

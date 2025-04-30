@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, input, Input, signal, WritableSignal} from '@angular/core';
 import {NgOptimizedImage} from "@angular/common";
 
 @Component({
@@ -10,5 +10,7 @@ import {NgOptimizedImage} from "@angular/common";
   styleUrl: './card-member.component.css'
 })
 export class CardMemberComponent {
-
+  isOnline = input(false);
+  userName = input('loading...');
+  profileImageURL = input('../../../../assets/images/default-user.jpg');
 }

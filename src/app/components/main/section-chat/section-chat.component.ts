@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, input} from '@angular/core';
 import {ChatMessageComponent} from '../chat-message/chat-message.component';
 
 @Component({

@@ -15,15 +15,19 @@
 
 img {
   border-radius: 50%;
-  object-fit: cover;
+
+  object-fit: scale-down;
   aspect-ratio: 1/1;
 }
 
 .imageContainer {
+  display: flex;
   position: relative;
   border-radius: 50%;
-  height: clamp(3rem, 4vw, 4.2rem);;
+  height: clamp(3rem, 3vw, 3rem);
   aspect-ratio: 1/1;
+  margin-right: 4px;
+
 }
 
 p {

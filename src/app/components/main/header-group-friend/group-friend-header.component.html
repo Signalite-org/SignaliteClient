@@ -1,3 +1,7 @@
 <header>
-  <p>Nazwa grupyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy</p>
+  <p>{{groupFriendName()}} </p>
+
+  @if(isInFullChatMode()) {
+    <mat-icon (click)="returnToNormalModeEvent.emit()" svgIcon="return"></mat-icon>
+  }
 </header>

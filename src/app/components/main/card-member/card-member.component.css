@@ -47,7 +47,9 @@ img {
   margin-left: 5%;
   position: relative;
   border-radius: 50%;
-  height: 50%;
+
+
+  height: 70%;
   aspect-ratio: 1/1;
 }
 
@@ -63,6 +65,7 @@ img {
 
   z-index: 10;
   border-radius: 50%;
+  border:  2px solid white;
   height: 30%;
 
   aspect-ratio: 1/1;
@@ -73,5 +76,5 @@ img {
 }
 
 .offline {
-  background-color: dimgray;
+  background-color: #c31d1d;
 }

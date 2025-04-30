@@ -22,7 +22,7 @@ export class GroupsComponent implements OnInit {
   groupMembers: GroupMembersDTO | null = null;
   isLoading = false;
   errorMessage = '';
-  
+
   groupNameControl = new FormControl('');
   userIdToAddControl = new FormControl('');
   selectedFile: File | null = null;
@@ -37,14 +37,14 @@ export class GroupsComponent implements OnInit {
     this.loadGroups();
 
     this.notificationService.addedToGroup$.pipe(
-          skip(1)
-        ).subscribe(requests => {
-          const newGroup = requests[requests.length - 1];
-          const exists = this.groups.some(req => req.id === newGroup.id);
-          if (!exists) {
-            this.groups.push(newGroup);
-            this.toastr.info('Dodano cie do nowej grupy!');
-          }
+      skip(1)
+    ).subscribe(requests => {
+      const newGroup = requests[requests.length - 1];
+      const exists = this.groups.some(req => req.id === newGroup.id);
+      if (!exists) {
+        this.groups.push(newGroup);
+        this.toastr.info('Dodano cie do nowej grupy!');
+      }
     });
 
     this.notificationService.userAddedToGroup$.pipe(
@@ -56,7 +56,7 @@ export class GroupsComponent implements OnInit {
         this.groupMembers?.members.push(newUser);
         this.toastr.info('Nowy uzytkownik dodany do grupy');
       }
-  });
+    });
 
   }
 

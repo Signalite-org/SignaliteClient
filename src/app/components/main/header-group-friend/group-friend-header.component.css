@@ -3,7 +3,7 @@ header {
   width: 100%;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   align-content: center;
   overflow: hidden;
@@ -20,4 +20,14 @@ p {
 }
 p::-webkit-scrollbar {
   display: none;
+}
+
+svg, mat-icon {
+  height: 100%;
+  margin-left: auto;
+}
+
+svg:hover, mat-icon:hover {
+  cursor: pointer;
+  filter: drop-shadow(0px 0px 2px rgba(255, 255, 255, 1));
 }

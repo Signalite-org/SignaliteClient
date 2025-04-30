@@ -5,12 +5,10 @@
   max-width: 5em;
 }
 
-svg{
-  display: block;
-  flex-shrink: 0;
-  aspect-ratio: 1/1;
+svg, mat-icon {
+  display: flex;
+  width: 70%;
   height: 70%;
-  float: left;
 }
 
 .switch {

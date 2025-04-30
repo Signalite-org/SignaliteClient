@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {NgOptimizedImage} from '@angular/common';
 
 @Component({
@@ -8,5 +8,7 @@ import {NgOptimizedImage} from '@angular/common';
   styleUrl: './card-friend.component.css'
 })
 export class CardFriendComponent {
-
+  @Input() userName:string = "loading...";
+  @Input() lastMessage:string = "no last messages";
+  @Input() profileImageURL:string = "../../../../assets/images/default-user.jpg";
 }

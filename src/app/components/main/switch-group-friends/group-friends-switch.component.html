@@ -1,5 +1,5 @@
 <div class="switch">
-  <input id="toggle" name="toggle" type="checkbox" value="1"/>
+  <input id="toggle" name="toggle" type="checkbox" [(ngModel)]="isInGroupView" (ngModelChange)="onValChange($event)"/>
   <label for="toggle">
     <mat-icon svgIcon="user" class="toggler-off" />
     <mat-icon svgIcon="userGroup" class="toggler-on" />

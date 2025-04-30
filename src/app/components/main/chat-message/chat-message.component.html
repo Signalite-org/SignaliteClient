@@ -1,49 +1,92 @@
-<header class="headerLeft">
+<header [class.headerLeft]="!isOwnMessage" [class.headerRight]="isOwnMessage">
   <div class="userName">
-    Dawid Paciaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    {{ userName() }}
   </div>
-  <mat-icon svgIcon="trash"></mat-icon>
-  <mat-icon svgIcon="edit"></mat-icon>
 </header>
 
-<div class="message">
-  <div class="userImageContainer userImageContainerLeft">
-    <img class="userImage" fill sizes="10vw" alt="user image" ngSrc="https://www.jmndesign.be/wp-content/uploads/2023/09/logo47.png#3376">
-  </div>
+<div class="message" [class.message-right]="isOwnMessage" [class.message-left]="!isOwnMessage">
 
-  <!-- ------------ -->
-  <!-- TEXT MESSAGE -->
-  <!-- ------------ -->
-  <div class="message-text message-textLeft">
-    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
-  </div>
 
-  <div> <!-- Empty div for correct grid layout --> </div>
+  @if(isOwnMessage) {
+    <!-- ----------- -->
+    <!-- PROFILE PIC -->
+    <!-- ----------- -->
+    <div class="message-text" [class.message-textRight]="isOwnMessage" [class.message-textLeft]="!isOwnMessage">
+      {{ message() }}
+    </div>
+
+    <!-- ------------ -->
+    <!-- TEXT MESSAGE -->
+    <!-- ------------ -->
+    <div class="userImageContainer" [class.userImageContainerRight]="isOwnMessage" [class.userImageContainerLeft]="!isOwnMessage">
+      <img class="userImage" fill sizes="10vw" alt="user image" [ngSrc]="profileImageURL()">
+    </div>
+
+  } @else {
+
+    <!-- ----------- -->
+    <!-- PROFILE PIC -->
+    <!-- ----------- -->
+    <div class="userImageContainer" [class.userImageContainerRight]="isOwnMessage" [class.userImageContainerLeft]="!isOwnMessage">
+      <img class="userImage" fill sizes="10vw" alt="user image" [ngSrc]="profileImageURL()">
+    </div>
+
+    <!-- ------------ -->
+    <!-- TEXT MESSAGE -->
+    <!-- ------------ -->
+    <div class="message-text" [class.message-textRight]="isOwnMessage" [class.message-textLeft]="!isOwnMessage">
+      {{ message() }}
+    </div>
+  }
 
   <!-- -------------- -->
   <!-- ATTACHED IMAGE -->
   <!-- -------------- -->
-  <img class="displayedImage displayedImageLeft" sizes="100%, auto" fill alt="user image" ngSrc="https://puszcza.tv/storage/park/May2018/mD0qMaTrl84A1ieDLD08.jpg" >
-
-  <div> <!-- Empty div for correct grid layout --> </div>
+  @if (attachmentImage() != null) {
+    @if(!isOwnMessage) {
+      <div> <!-- Empty div for correct grid layout --> </div>
+    }
+    <img class="displayedImage" [class.displayedImageRight]="isOwnMessage" [class.displayedImageLeft]="!isOwnMessage"
+         sizes="100%, auto" fill alt="user image" [ngSrc]='attachmentImage() ?? ""' >
+    @if(isOwnMessage) {
+      <div> <!-- Empty div for correct grid layout --> </div>
+    }
+  }
 
   <!-- ---------------------- -->
   <!-- ATTACHMENT TO DOWNLOAD -->
   <!-- ---------------------- -->
-  <div class="attachments">
-    <a href="">
-      <mat-icon id="fileDownload" svgIcon="fileDownload"></mat-icon>
-      AttachmentName.bat
-    </a>
-  </div>
-
-  <div> <!-- Empty div for correct grid layout --> </div>
+  @if(hasAttachment()) {
+    @if(!isOwnMessage) {
+      <div> <!-- Empty div for correct grid layout --> </div>
+    }
+    <div class="attachments">
+      <a href="">
+        <mat-icon id="fileDownload" svgIcon="fileDownload"></mat-icon>
+        {{ attachmentName() }}
+      </a>
+    </div>
+    @if(isOwnMessage) {
+      <div> <!-- Empty div for correct grid layout --> </div>
+    }
+  }
 
   <!-- ------------------- -->
   <!-- DATE OF THE MESSAGE -->
   <!-- ------------------- -->
-  <div class="date dateLeft">
-    22/02/2023, 21:37
+  @if(!isOwnMessage) {
+    <div> <!-- Empty div for correct grid layout --> </div>
+  }
+
+  <div class="date" [class.dateRight]="isOwnMessage" [class.dateLeft]="!isOwnMessage">
+    {{ date() }}
+  </div>
+
+  <div id="edit">
+    @if (isOwnMessage) {
+      <mat-icon svgIcon="edit"></mat-icon>
+      <mat-icon svgIcon="trash"></mat-icon>
+    }
   </div>
 </div>
 

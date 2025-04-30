@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, Input, signal} from '@angular/core';
 import {NgOptimizedImage} from "@angular/common";
 
 @Component({
@@ -10,5 +10,6 @@ import {NgOptimizedImage} from "@angular/common";
   styleUrl: './card-current-user.component.css'
 })
 export class CardCurrentUserComponent {
-
+  @Input() userName = "";
+  @Input() userImageURL: string = "../../../../assets/images/default-user.jpg";
 }

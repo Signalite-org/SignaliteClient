@@ -4,17 +4,17 @@
     <!-- main layout is 3x3 grid -->
 
     <app-top-left class="header left" [class.hidden]="hideLeftColumn()"></app-top-left>
-    <app-top-center class="header"></app-top-center>
+    <app-top-center class="header" (returnToNormalModeEvent)="returnToNormalChatLayout()" [isInFullChatMode]="currentChatLayout() == ChatLayoutStyle.CENTER_ONLY"></app-top-center>
     <app-top-right class="header" [class.hidden]="hideRightColumn()"></app-top-right>
 
     <app-center-left class="left" [class.hidden]="hideLeftColumn()"></app-center-left>
-    <app-section-chat (click)="testSwitchColumns()"></app-section-chat>
+    <app-section-chat></app-section-chat>
     <app-section-members [class.hidden]="hideRightColumn()"></app-section-members>
 
     <div class="footer left" [class.hidden]="hideLeftColumn()">
-      <app-card-current-user></app-card-current-user>
+      <app-card-current-user [userName]='fullName()' [userImageURL]='currentUserProfileImageURL()'></app-card-current-user>
     </div>
-    <app-bar-message-send class="footer"></app-bar-message-send>
+    <app-bar-message-send class="footer" (click)="switchToFullChatMode()"></app-bar-message-send>
     <div class="footer" [class.hidden]="hideRightColumn()"></div>
   </div>
 </div>
