@@ -1,17 +1,17 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AccountService } from '../../_services/account.service';
-import { Router } from '@angular/router';
+import {Router, RouterOutlet} from '@angular/router';
 import { LoginDTO } from '../../_models/LoginDTO';
 import { CommonModule } from '@angular/common';
 import { PresenceService } from '../../_services/presence.service';
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterOutlet],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
-  standalone: true 
+  standalone: true
 })
 export class LoginComponent {
   loginForm: FormGroup;
@@ -20,7 +20,7 @@ export class LoginComponent {
   isLoading = false;
 
   constructor(
-    private fb: FormBuilder, 
+    private fb: FormBuilder,
     private accountService: AccountService,
     private router: Router
   ) {
@@ -28,7 +28,7 @@ export class LoginComponent {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(4)]]
     });
-    
+
   }
 
   onSubmit() {
@@ -48,8 +48,8 @@ export class LoginComponent {
         this.isLoading = false;
         this.successMessage = 'Login successful! Connected to presence hub. Check the console for hub events.';
         console.log('Login successful, waiting for SignalR connection...');
-        this.router.navigate(['/home'])
-     
+        this.router.navigate(['main'])
+
       },
       error: (error) => {
         this.isLoading = false;

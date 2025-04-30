@@ -2,9 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { UserDTO } from '../_models/UserDTO';
 import { FriendRequestDTO } from '../_models/FriendRequestDTO';
 import { handleError } from '../_utils/error.handler';
+import { UserBasicInfo } from '../_models/UserBasicInfo';
 
 @Injectable({
     providedIn: 'root'
@@ -16,8 +16,8 @@ import { handleError } from '../_utils/error.handler';
       private http: HttpClient,
     ) { }
     // Pobieranie znajomych użytkownika
-    getUserFriends(): Observable<UserDTO[]> {
-      return this.http.get<UserDTO[]>(this.baseUrl).pipe(
+    getUserFriends(): Observable<UserBasicInfo[]> {
+      return this.http.get<UserBasicInfo[]>(this.baseUrl).pipe(
         catchError(handleError)
       );
     }

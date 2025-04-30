@@ -1,0 +1,13 @@
+<app-friend-group-search></app-friend-group-search>
+<section>
+  @if(groupsViewEnabled) {
+
+  } @else {
+    @if(friendsList().length == 0) {
+      <app-user-card userName="No friends :(" lastMessage="Add friends bro"></app-user-card>
+    }
+    @for(friend of friendsList(); track friend.id) {
+      <app-user-card [userName]="friend.username" [profileImageURL]='friend.profilePhotoUrl ?? "../../../../assets/images/default-user.jpg"'></app-user-card>
+    }
+  }
+</section>

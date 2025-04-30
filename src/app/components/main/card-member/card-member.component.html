@@ -1,0 +1,7 @@
+<div class="imageContainer">
+  <div class="activity" [class.online]="isOnline()" [class.offline]="!isOnline()"></div>
+  <img fill sizes="10vw" class="userImage" alt="user/group image" [ngSrc]="profileImageURL()">
+</div>
+<section>
+  <div id="userName">{{ userName() }}</div>
+</section>
