@@ -14,6 +14,5 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([tokenInterceptor])),
     importProvidersFrom(ToastrModule.forRoot())
-    provideAnimations()
   ]
 };
