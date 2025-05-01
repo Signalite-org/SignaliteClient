@@ -1,7 +1,12 @@
 <app-friend-group-search></app-friend-group-search>
 <section>
   @if(filteredGroups().length == 0) {
-    <app-user-card userName="No friends :(" lastMessage="Add friends bro"></app-user-card>
+    @if(groupsViewEnabled()) {
+      <p>You don't have any groups :(</p>
+    } @else {
+      <p>No friends :( Add friends bro</p>
+    }
+
   }
   @for(friendOrGroup of filteredGroups(); track friendOrGroup.id) {
     <app-user-card

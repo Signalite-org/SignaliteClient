@@ -1,9 +1,7 @@
-import {Component, input, InputSignal, signal, WritableSignal} from '@angular/core';
+import {Component, input, signal, WritableSignal, effect} from '@angular/core';
 import {CardFriendComponent} from '../card-friend/card-friend.component';
 import {GroupFriendSearchComponent} from '../search-group-friend/group-friend-search.component';
-import {FriendsService} from '../../../_services/friends.service';
 import {UserBasicInfo} from '../../../_models/UserBasicInfo';
-import {SIGNAL} from '@angular/core/primitives/signals';
 import {GroupBasicInfoDTO} from '../../../_models/GroupBasicInfoDTO';
 import {GroupService} from '../../../_services/group.service';
 
@@ -35,6 +33,9 @@ export class SectionGroupFriends {
       this.updateFilteredGroups();
     }
    );
+    effect(() => {
+      this.updateFilteredGroups();
+    });
   }
 
   updateFilteredGroups() {

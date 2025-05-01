@@ -3,19 +3,53 @@
 
     <!-- main layout is 3x3 grid -->
 
-    <navigation-friends-groups class="header left" [class.hidden]="hideLeftColumn()"></navigation-friends-groups>
-    <app-header-group-friend class="header" (returnToNormalModeEvent)="returnToNormalChatLayout()" [isInFullChatMode]="currentChatLayout() == ChatLayoutStyle.CENTER_ONLY"></app-header-group-friend>
-    <app-section-notifications class="header" [class.hidden]="hideRightColumn()"></app-section-notifications>
+    <!-- ROW 1 -->
+    <navigation-friends-groups
+      (isGroupsViewEnabledEvent)="isGroupsViewEnabled.set($event)"
+      class="header left" [class.hidden]="hideLeftColumn()">
+    </navigation-friends-groups>
 
-    <section-group-friends class="left" [class.hidden]="hideLeftColumn()"></section-group-friends>
+    <app-header-group-friend
+      (returnToNormalModeEvent)="returnToNormalChatLayout()"
+      [isInFullChatMode]="currentChatLayout() == ChatLayoutStyle.CENTER_ONLY"
+      class="header">
+    </app-header-group-friend>
+
+    <app-section-notifications
+      class="header" [class.hidden]="hideRightColumn()">
+    </app-section-notifications>
+
+    <!-- ROW 2 -->
+    <section-group-friends
+      [groupsViewEnabled]="isGroupsViewEnabled()"
+      class="left" [class.hidden]="hideLeftColumn()">
+    </section-group-friends>
+
     <app-section-chat></app-section-chat>
-    <app-section-members [class.hidden]="hideRightColumn()"></app-section-members>
 
-    <div class="footer left" [class.hidden]="hideLeftColumn()">
-      <app-card-current-user [userName]='fullName()' [userImageURL]='currentUserProfileImageURL()'></app-card-current-user>
+    <app-section-members
+      [class.hidden]="hideRightColumn()">
+    </app-section-members>
+
+    <!-- ROW 3 -->
+    <div
+      class="footer left" [class.hidden]="hideLeftColumn()">
+      <app-card-current-user
+        [userName]='fullName()'
+        [userImageURL]='currentUserProfileImageURL()'>
+      </app-card-current-user>
     </div>
-    <app-bar-message-send class="footer" (click)="switchToFullChatMode()"></app-bar-message-send>
-    <div class="footer" [class.hidden]="hideRightColumn()"></div>
+
+    <app-bar-message-send
+      class="footer"
+      (click)="switchToFullChatMode()">
+    </app-bar-message-send>
+
+    <div
+      class="footer"
+      [class.hidden]="hideRightColumn()">
+    </div>
+
   </div>
 </div>
 

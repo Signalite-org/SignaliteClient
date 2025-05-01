@@ -18,8 +18,22 @@ section {
   scrollbar-width: thin;
   scrollbar-color: rgba(0,0,0,0.3) transparent;
 
-
   /* Enables native lazy rendering */
   content-visibility: auto;
   contain-intrinsic-size: 200px; /* Simulated height while loading */
+
+
+}
+p {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1rem, 1vw, 1.5rem);
+  width: 100%;
+  word-wrap: anywhere;
+  text-wrap: balance;
+  white-space: break-spaces;
+  text-align: center;
 }

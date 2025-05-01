@@ -44,7 +44,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-
     this.userInfo$ = this.userService.getUserInfo(this.userId());
     this.userInfo$.subscribe( info => {
           this.userInfo.set(info);
@@ -70,8 +69,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   protected userInfo : WritableSignal<UserDTO | null> = signal(null);
   protected userId : WritableSignal<number> = signal(-1);
   protected fullName : WritableSignal<string> = signal("");
-  protected currentUserProfileImageURL : WritableSignal<string>  = signal("../../../../assets/images/default-user.jpg")
-
+  protected currentUserProfileImageURL : WritableSignal<string>  = signal("../../../../assets/images/default-user.jpg");
+  protected isGroupsViewEnabled : WritableSignal<boolean> = signal(false);
 
   /////////////////////
   // LAYOUT HANDLING //
