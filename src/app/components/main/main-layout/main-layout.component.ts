@@ -19,6 +19,9 @@ import {AccountService} from '../../../_services/account.service';
 import {UserService} from '../../../_services/user.service';
 import {UserDTO} from '../../../_models/UserDTO';
 import {Observable} from 'rxjs';
+import {
+  DialogAddFriendCreateGroupComponent
+} from '../dialog-add-friend-create-group/dialog-add-friend-create-group.component';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -28,7 +31,7 @@ enum ChatLayoutStyle {
 
 @Component({
   selector: 'app-main-layout',
-  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent],
+  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, DialogAddFriendCreateGroupComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
