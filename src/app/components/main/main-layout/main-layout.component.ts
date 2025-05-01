@@ -8,9 +8,9 @@ import {
   WritableSignal, numberAttribute,
 } from '@angular/core';
 import { NavigationFriendsGroups } from '../navigation-friends-groups/navigation-friends-groups';
-import { GroupFriendHeaderComponent } from '../header-group-friend/group-friend-header.component';
-import { NotificationsLayout } from '../section-notifications/notifications-layout';
-import { GroupFriendsLayoutComponent } from '../section-group-friends/group-friends-layout.component';
+import { HeaderGroupFriend } from '../header-group-friend/header-group-friend';
+import { SectionNotifications } from '../section-notifications/section-notifications';
+import { SectionGroupFriends } from '../section-group-friends/section-group-friends';
 import {CardCurrentUserComponent} from '../card-current-user/card-current-user.component';
 import {BarMessageSendComponent} from '../bar-message-send/bar-message-send.component';
 import {SectionChatComponent} from '../section-chat/section-chat.component';
@@ -28,7 +28,7 @@ enum ChatLayoutStyle {
 
 @Component({
   selector: 'app-main-layout',
-  imports: [NavigationFriendsGroups, GroupFriendHeaderComponent, NotificationsLayout, GroupFriendsLayoutComponent, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent],
+  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
@@ -44,6 +44,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+
     this.userInfo$ = this.userService.getUserInfo(this.userId());
     this.userInfo$.subscribe( info => {
           this.userInfo.set(info);
@@ -70,6 +71,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   protected userId : WritableSignal<number> = signal(-1);
   protected fullName : WritableSignal<string> = signal("");
   protected currentUserProfileImageURL : WritableSignal<string>  = signal("../../../../assets/images/default-user.jpg")
+
 
   /////////////////////
   // LAYOUT HANDLING //

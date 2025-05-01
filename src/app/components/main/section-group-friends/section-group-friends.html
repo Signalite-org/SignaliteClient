@@ -1,0 +1,13 @@
+<app-friend-group-search></app-friend-group-search>
+<section>
+  @if(filteredGroups().length == 0) {
+    <app-user-card userName="No friends :(" lastMessage="Add friends bro"></app-user-card>
+  }
+  @for(friendOrGroup of filteredGroups(); track friendOrGroup.id) {
+    <app-user-card
+      [userName]="friendOrGroup.name"
+      [profileImageURL]='friendOrGroup.photoUrl ?? "../../../../assets/images/default-user.jpg"'
+      [lastMessage]='friendOrGroup.lastMessage ?? "no last messages"'
+    ></app-user-card>
+  }
+</section>

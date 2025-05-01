@@ -3,7 +3,7 @@ import {MatIcon, MatIconModule} from '@angular/material/icon';
 import {FormsModule} from '@angular/forms';
 import {IconRegistrator} from '../../../_utils/icon-registrator.service';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
-import {GroupFriendsLayoutComponent} from '../section-group-friends/group-friends-layout.component';
+import {SectionGroupFriends} from '../section-group-friends/section-group-friends';
 
 @Component({
   selector: 'app-group-friends-switch',

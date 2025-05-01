@@ -2,14 +2,14 @@ import {Component, EventEmitter, input, Output} from '@angular/core';
 import {MatIcon} from '@angular/material/icon';
 
 @Component({
-  selector: 'app-top-center',
+  selector: 'app-header-group-friend',
   imports: [
     MatIcon,
   ],
-  templateUrl: './group-friend-header.component.html',
-  styleUrl: './group-friend-header.component.css'
+  templateUrl: './header-group-friend.html',
+  styleUrl: './header-group-friend.css'
 })
-export class GroupFriendHeaderComponent {
+export class HeaderGroupFriend {
   groupFriendName = input("Loading name...")
   isInFullChatMode= input(true)
 
