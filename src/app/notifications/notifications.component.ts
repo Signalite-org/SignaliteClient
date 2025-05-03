@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { NotificationsService } from '../_services/notifications.service';
-import { GroupBasicInfoDTO } from '../_models/GroupBasicInfo';
+import { GroupBasicInfoDTO } from '../_models/GroupBasicInfoDTO';
 import { CommonModule } from '@angular/common';
 import { FriendRequestDTO } from '../_models/FriendRequestDTO';
-import { UserDTO } from '../_models/UserDTO';
+import { UserBasicInfo } from '../_models/UserBasicInfo';
 
 @Component({
   selector: 'app-notifications',
@@ -14,7 +14,7 @@ import { UserDTO } from '../_models/UserDTO';
 })
 export class NotificationsComponent implements OnInit {
   friendRequests: FriendRequestDTO[] = [];
-  friendRequestsAccepted: UserDTO[] = [];
+  friendRequestsAccepted: UserBasicInfo[] = [];
   addedToGroups: GroupBasicInfoDTO[] = [];
   
   constructor(private notificationsService: NotificationsService) {}

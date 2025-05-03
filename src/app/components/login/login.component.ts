@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import {Router, RouterOutlet} from '@angular/router';
 import { LoginDTO } from '../../_models/LoginDTO';
 import { RegisterDTO } from '../../_models/RegisterDTO';
 import { CommonModule } from '@angular/common';
@@ -138,7 +138,7 @@ export class LoginComponent {
         this.loginForm.enable();
 
         console.log('Login successful, waiting for SignalR connection...');
-        this.router.navigate(['/home'])
+        this.router.navigate(['main'])
       },
       error: (error) => {
         this.isLoading = false;

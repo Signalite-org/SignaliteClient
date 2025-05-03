@@ -1,0 +1,225 @@
+:host {
+  display: flex;
+
+  flex-direction: column;
+  align-self: flex-start;  /* todo change when its our message */
+
+  width: 90%;
+  height: fit-content;
+
+  margin-left: 1%;
+  margin-right: 1%;
+  margin-bottom: 10px;
+  max-width: 120rem;
+}
+
+header {
+  all: unset;
+  width: 100%;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  color: rgb(230,230,230);
+  margin-bottom: 5px;
+
+}
+
+header svg:hover, header mat-icon:hover {
+  color: lightgray;
+}
+
+.userName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: lightgray;
+  text-shadow: rebeccapurple 0 2px 2px;
+}
+
+.headerLeft {
+  text-align: left;
+}
+
+.headerRight {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+.message-right {
+  justify-content: flex-end;
+}
+
+.message-left {
+  justify-content: flex-start;
+}
+
+.message {
+  display: grid;
+  grid-column-gap: 0.1rem;
+  grid-template-rows: auto auto auto auto;
+  grid-template-columns: auto max-content;
+  grid-auto-rows: auto;
+  align-items: flex-start;
+  align-content: flex-start;
+
+  font-size: clamp(1rem, 2.1vw, 1.5rem);
+  color: rgba(240, 240, 240, 0.9);
+
+
+  height: fit-content;
+
+  word-break: break-word;
+  line-break: normal;
+}
+
+.message-textRight {
+  place-self: flex-start;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.message-textLeft {
+  place-self: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.message-text, .displayedImage, .attachments {
+  background: #3b3b67FF;
+  border-radius: 5px;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  display: flex;
+}
+
+.attachments {
+  max-width: 20rem;
+}
+
+.message-text {
+  position: relative;
+  display: flex;
+
+  width: 100%;
+  min-height: calc(clamp(3.2rem, 4.4vw, 5.7rem));
+
+  align-items: center;
+}
+
+.userImage {
+  border-radius: 10px;
+  object-fit: cover;
+  aspect-ratio: 1/1;
+}
+
+.userImageContainerLeft {
+  margin-right: 2px;
+}
+
+.userImageContainerRight {
+  margin-left: 2px;
+}
+
+.userImageContainer {
+  position: relative;
+  border-radius: 10px;
+  height: clamp(3.2rem, 4.4vw, 5.7rem);
+  aspect-ratio: 1/1;
+}
+
+.displayedImageRight {
+  object-position: right;
+}
+
+.displayedImageLeft {
+  object-position: left;
+}
+
+.displayedImage {
+  object-fit: cover !important;
+  object-position: center !important;
+  position: relative !important;
+  display: block;
+  width: 100% !important;
+  max-width: 20rem !important;
+  aspect-ratio: 1/1 !important;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.dateLeft {
+  text-align: right;
+}
+
+.dateRight {
+  text-align: left;
+}
+
+.date {
+  z-index: 10;
+  margin-top: 2px;
+  font-size: clamp(0.7rem, 1vw, 2rem);
+  color: lightgray;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  height: 1.8rem;
+}
+
+.attachments a {
+
+  all: unset;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+
+  height: 1.5em;
+
+  margin-top: 3px;
+
+  font-size: clamp(0.7rem, 1.5vw, 1.5rem);
+  white-space: nowrap;
+  background-color: rgba(240, 240, 240, 0.05);
+  border-radius: 5px;
+}
+
+svg, mat-icon {
+  height: 100%;
+}
+
+#fileDownload {
+  height: 100%;
+}
+
+.attachments a:hover {
+  color: lightgray;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.message.message-right:hover #edit {
+  display: flex;
+  flex-direction: row;
+  text-align: end;
+  justify-items: flex-end;
+  justify-content: space-evenly;
+  z-index: 5;
+}
+
+#edit {
+  display: none;
+  max-height:  fit-content;
+  width: 100%;
+}
+
+#edit mat-icon:hover {
+  filter: drop-shadow(0 0 2px white);
+}

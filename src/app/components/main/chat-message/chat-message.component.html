@@ -1,0 +1,94 @@
+<header [class.headerLeft]="!isOwnMessage" [class.headerRight]="isOwnMessage">
+  <div class="userName">
+    {{ userName() }}
+  </div>
+</header>
+
+<div class="message" [class.message-right]="isOwnMessage" [class.message-left]="!isOwnMessage">
+
+
+  @if(isOwnMessage) {
+    <!-- ----------- -->
+    <!-- PROFILE PIC -->
+    <!-- ----------- -->
+    <div class="message-text" [class.message-textRight]="isOwnMessage" [class.message-textLeft]="!isOwnMessage">
+      {{ message() }}
+    </div>
+
+    <!-- ------------ -->
+    <!-- TEXT MESSAGE -->
+    <!-- ------------ -->
+    <div class="userImageContainer" [class.userImageContainerRight]="isOwnMessage" [class.userImageContainerLeft]="!isOwnMessage">
+      <img class="userImage" fill sizes="10vw" alt="user image" [ngSrc]="profileImageURL()">
+    </div>
+
+  } @else {
+
+    <!-- ----------- -->
+    <!-- PROFILE PIC -->
+    <!-- ----------- -->
+    <div class="userImageContainer" [class.userImageContainerRight]="isOwnMessage" [class.userImageContainerLeft]="!isOwnMessage">
+      <img class="userImage" fill sizes="10vw" alt="user image" [ngSrc]="profileImageURL()">
+    </div>
+
+    <!-- ------------ -->
+    <!-- TEXT MESSAGE -->
+    <!-- ------------ -->
+    <div class="message-text" [class.message-textRight]="isOwnMessage" [class.message-textLeft]="!isOwnMessage">
+      {{ message() }}
+    </div>
+  }
+
+  <!-- -------------- -->
+  <!-- ATTACHED IMAGE -->
+  <!-- -------------- -->
+  @if (attachmentImage() != null) {
+    @if(!isOwnMessage) {
+      <div> <!-- Empty div for correct grid layout --> </div>
+    }
+    <img class="displayedImage" [class.displayedImageRight]="isOwnMessage" [class.displayedImageLeft]="!isOwnMessage"
+         sizes="100%, auto" fill alt="user image" [ngSrc]='attachmentImage() ?? ""' >
+    @if(isOwnMessage) {
+      <div> <!-- Empty div for correct grid layout --> </div>
+    }
+  }
+
+  <!-- ---------------------- -->
+  <!-- ATTACHMENT TO DOWNLOAD -->
+  <!-- ---------------------- -->
+  @if(hasAttachment()) {
+    @if(!isOwnMessage) {
+      <div> <!-- Empty div for correct grid layout --> </div>
+    }
+    <div class="attachments">
+      <a href="">
+        <mat-icon id="fileDownload" svgIcon="fileDownload"></mat-icon>
+        {{ attachmentName() }}
+      </a>
+    </div>
+    @if(isOwnMessage) {
+      <div> <!-- Empty div for correct grid layout --> </div>
+    }
+  }
+
+  <!-- ------------------- -->
+  <!-- DATE OF THE MESSAGE -->
+  <!-- ------------------- -->
+  @if(!isOwnMessage) {
+    <div> <!-- Empty div for correct grid layout --> </div>
+  }
+
+  <div class="date" [class.dateRight]="isOwnMessage" [class.dateLeft]="!isOwnMessage">
+    {{ date() }}
+  </div>
+
+  <div id="edit">
+    @if (isOwnMessage) {
+      <mat-icon svgIcon="edit"></mat-icon>
+      <mat-icon svgIcon="trash"></mat-icon>
+    }
+  </div>
+</div>
+
+
+
