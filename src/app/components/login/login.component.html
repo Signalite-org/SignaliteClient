@@ -1,66 +1,276 @@
-<div class="login-container">
-    <h2>Sign In</h2>
-
-    <div *ngIf="errorMessage" class="alert alert-danger">
-      {{ errorMessage }}
-    </div>
-
-    <div *ngIf="successMessage" class="alert alert-success">
-      {{ successMessage }}
-    </div>
-
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          class="form-control"
-          [class.is-invalid]="loginForm.get('email')?.invalid &&
-                           (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)"
-        >
-        <div class="invalid-feedback" *ngIf="loginForm.get('email')?.errors?.['required'] &&
-                                              (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)">
-          Email is required
+<div class="background"></div>
+<div class="content">
+    <div class="box-left" [@formSwitch]="isMobile ? null : currentForm">
+        <!-- Login -->
+        <div class="box-login" *ngIf="currentForm === 'login'">
+            <div class="header-text">
+                <h1 class="text-front">SIGNALITE</h1>
+                <h1 class="text-back">SIGNALITE</h1>
+            </div>
+            <img class="logo" src="assets/images/logo.png" />
+            <div class="background-shadow"></div>
+            <div class="background-theme"></div>
+            <div class="content-form">
+                <h2 class="header">Login</h2>
+                <div class="line"></div>
+                <div *ngIf="errorMessage" class="error-message">
+                    {{errorMessage}}
+                </div>
+                <form [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()">
+                    <div class="form-box form-begin">
+                        <input formControlName="email" name="email" class="form-input" type="email" placeholder=""
+                            (focus)="loginEmailFocused = true" (blur)="loginEmailFocused = false"
+                            [class.is-invalid]="loginForm.get('email')?.invalid && (loginForm.get('email')?.touched || loginForm.get('email')?.dirty)"
+                            required>
+                        <label for="email" class="placelabel">Email</label>
+    
+                        <!-- Validation -->
+                        <ul class="error-box"
+                            *ngIf="loginEmailFocused && loginForm.get('email')?.errors && (loginForm.get('email')?.touched || loginForm.get('email')?.dirty)">
+                            <li *ngIf="loginForm.get('email')?.errors?.['required']">
+                                Email is required.
+                            </li>
+                            <li *ngIf="loginForm.get('email')?.errors?.['email']">
+                                Invalid email address.
+                            </li>
+                        </ul>
+                    </div>
+    
+                    <div class="form-box">
+                        <input formControlName="password" name="password" class="form-input" type="password"
+                            placeholder="" (focus)="loginPasswordFocused = true"
+                            (blur)="loginPasswordFocused = false"
+                            [class.is-invalid]="loginForm.get('password')?.invalid && (loginForm.get('password')?.touched || loginForm.get('password')?.dirty)"
+                            required>
+                        <label for="password" class="placelabel">Password</label>
+    
+                        <!-- Validation -->
+                        <ul class="error-box"
+                            *ngIf="loginPasswordFocused && loginForm.get('password')?.errors && (loginForm.get('password')?.touched || loginForm.get('password')?.dirty)">
+                            <li *ngIf="loginForm.get('password')?.errors?.['required']">
+                                Pasword is required.
+                            </li>
+                        </ul>
+                    </div>
+    
+                    <div class="button-box">
+                        <button type="submit" class="button-style"
+                            [disabled]="loginForm.invalid || isLoading">Login</button>
+                    </div>
+                </form>
+                <span class="loader" *ngIf="isLoading"></span>
+                <div class="box-next">
+                    <p>Don't have account? <button type="button" (click)="toggleForm('registerMain')"
+                            class="as-link">Sign up</button></p>
+                </div>
+            </div>
         </div>
-        <div class="invalid-feedback" *ngIf="loginForm.get('email')?.errors?.['email'] &&
-                                              (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)">
-          Please enter a valid email address
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          formControlName="password"
-          class="form-control"
-          [class.is-invalid]="loginForm.get('password')?.invalid &&
-                           (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)"
-        >
-        <div class="invalid-feedback" *ngIf="loginForm.get('password')?.errors?.['required'] &&
-                                              (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)">
-          Password is required
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        class="btn btn-primary"
-        [disabled]="loginForm.invalid || isLoading"
-      >
-        <span *ngIf="!isLoading">Login</span>
-        <span *ngIf="isLoading">Signing in...</span>
-      </button>
-    </form>
-
-
-    <!-- Instructions for testing -->
-    <div class="mt-4">
-      <p><strong>For Testing:</strong> After login, check your browser console to see presence hub events, including KeepAlive messages.</p>
     </div>
-  </div>
-
-<router-outlet />
+    
+    <div class="divider"></div>
+    
+    <div class="box-right" [@formSwitch]="isMobile ? null : currentForm">
+        <!-- RegisterMain -->
+        <div class="box-register" *ngIf="currentForm === 'registerMain'">
+            <div class="header-text">
+                <h1 class="text-front">SIGNALITE</h1>
+                <h1 class="text-back">SIGNALITE</h1>
+            </div>
+            
+            <img class="logo" src="assets/images/logo.png" />
+            <div class="background-shadow"></div>
+            <div class="background-theme"></div>
+            <div class="content-form">
+                <h2 class="header">Register</h2>
+                <div class="line"></div>
+                <div *ngIf="errorMessage" class="error-message">
+                    {{errorMessage}}
+                </div>
+                <form [formGroup]="registerMainForm" (ngSubmit)="onSubmitRegisterMain()">
+                    <div class="form-box form-begin">
+                        <input formControlName="email" name="emailRegister" type="email" class="form-input"
+                            placeholder="" (focus)="registerMainEmailFocused = true"
+                            (blur)="registerMainEmailFocused = false"
+                            [class.is-invalid]="registerMainForm.get('email')?.invalid && (registerMainForm.get('email')?.touched || registerMainForm.get('email')?.dirty)"
+                            required>
+                        <label for="email" class="placelabel">Email</label>
+    
+                        <!-- Validation -->
+                        <ul class="error-box"
+                            *ngIf="registerMainEmailFocused && registerMainForm.get('email')?.errors && (registerMainForm.get('email')?.touched || registerMainForm.get('email')?.dirty)">
+                            <li *ngIf="registerMainForm.get('email')?.errors?.['required']">
+                                Email is required.
+                            </li>
+                            <li *ngIf="registerMainForm.get('email')?.errors?.['isEmpty']">
+                                Email is empty.
+                            </li>
+                            <li *ngIf="registerMainForm.get('email')?.errors?.['email']">
+                                Invalid email address.
+                            </li>
+                        </ul>
+                    </div>
+    
+                    <div class="form-box">
+                        <input formControlName="password" name="passwordRegister" type="password" class="form-input"
+                            placeholder="" (focus)="registerMainPasswordFocused = true"
+                            (blur)="registerMainPasswordFocused = false"
+                            [class.is-invalid]="registerMainForm.get('password')?.invalid && (registerMainForm.get('password')?.touched || registerMainForm.get('password')?.dirty)"
+                            required>
+                        <label for="password" class="placelabel">Password</label>
+    
+                        <!-- Validation -->
+                        <ul class="error-box"
+                            *ngIf="registerMainPasswordFocused && registerMainForm.get('password')?.errors && (registerMainForm.get('password')?.touched || registerMainForm.get('password')?.dirty)">
+                            <li *ngIf="registerMainForm.get('password')?.errors?.['required']">
+                                Password is required.
+                            </li>
+                            <li *ngIf="registerMainForm.get('password')?.errors?.['minlength']">
+                                Password must be at least {{minLengthPassword}} characters long.
+                            </li>
+                            <li *ngIf="registerMainForm.get('password')?.errors?.['isEmpty']">
+                                Password is empty.
+                            </li>
+                            <li *ngIf="registerMainForm.get('password')?.errors?.['lowercase']">
+                                Password must contain at least one lowercase letter.
+                            </li>
+                            <li *ngIf="registerMainForm.get('password')?.errors?.['uppercase']">
+                                Password must contain at least one uppercase letter.
+                            </li>
+                            <li *ngIf="registerMainForm.get('password')?.errors?.['special']">
+                                Password must contain at least one special character.
+                            </li>
+                            <li *ngIf="registerMainForm.get('password')?.errors?.['digits']">
+                                Password must contain at least one number.
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="form-box">
+                        <input formControlName="confirmPassword" name="confirmPassword" type="password"
+                            class="form-input" placeholder="" (focus)="registerMainConfirmPasswordFocused = true"
+                            (blur)="registerMainConfirmPasswordFocused = false"
+                            [class.is-invalid]="(registerMainForm.get('confirmPassword')?.invalid || registerMainForm.errors?.['fieldsMismatch']) &&
+                        (registerMainForm.get('confirmPassword')?.touched || registerMainForm.get('confirmPassword')?.dirty)" required>
+                        <label for="confirmPassword" class="placelabel">Confirm password</label>
+    
+                        <!-- Validation -->
+                        <ul class="error-box"
+                            *ngIf="registerMainConfirmPasswordFocused && 
+                        (registerMainForm.get('confirmPassword')?.errors || registerMainForm.errors?.['fieldsMismatch']) && 
+                        (registerMainForm.get('confirmPassword')?.touched || registerMainForm.get('confirmPassword')?.dirty)">
+                            <li *ngIf="registerMainForm.get('confirmPassword')?.errors?.['required']">
+                                Confirm password is required.
+                            </li>
+                            <li *ngIf="registerMainForm.errors?.['fieldsMismatch']">
+                                Passwords do not match.
+                            </li>
+                        </ul>
+                    </div>
+    
+                    <div class="button-box">
+                        <button type="submit" class="button-style"
+                            [disabled]="registerMainForm.invalid || isLoading">Register</button>
+                    </div>
+                </form>
+                <span class="loader" *ngIf="isLoading"></span>
+                <div class="box-next">
+                    <p>Have account? <button type="button" (click)="toggleForm('login')" class="as-link">Sign
+                            in</button></p>
+                </div>
+            </div>
+        </div>
+    
+        <!-- RegisterExtra -->
+        <div class="box-register" *ngIf="currentForm === 'registerExtra'">
+            <div class="header-text">
+                <h1 class="text-front">SIGNALITE</h1>
+                <h1 class="text-back">SIGNALITE</h1>
+            </div>
+            
+            <img class="logo" src="assets/images/logo.png" />
+            <div class="background-shadow"></div>
+            <div class="background-theme"></div>
+            <div class="content-form">
+                <h2 class="header">Register</h2>
+                <div class="line"></div>
+                <div *ngIf="errorMessage" class="error-message">
+                    {{ errorMessage }}
+                </div>
+                <div *ngIf="successMessage" class="succes-message">
+                    {{ successMessage }}
+                </div>
+                <form [formGroup]="registerExtraForm" (ngSubmit)="onSubmitRegisterExtra()">
+                    <div class="form-box form-begin">
+                        <input formControlName="username" name="username" type="text" class="form-input"
+                            placeholder="" (focus)="registerExtraUsernameFocused = true"
+                            (blur)="registerExtraUsernameFocused = false"
+                            [class.is-invalid]="registerExtraForm.get('username')?.invalid && (registerExtraForm.get('username')?.touched || registerExtraForm.get('username')?.dirty)"
+                            required>
+                        <label for="text" class="placelabel">Username</label>
+    
+                        <!-- Validation -->
+                        <ul class="error-box"
+                            *ngIf="registerExtraUsernameFocused && registerExtraForm.get('username')?.errors && (registerExtraForm.get('username')?.touched || registerExtraForm.get('username')?.dirty)">
+                            <li *ngIf="registerExtraForm.get('username')?.errors?.['required']">
+                                Username is required.
+                            </li>
+                            <li *ngIf="registerExtraForm.get('username')?.errors?.['isEmpty']">
+                                Username is empty.
+                            </li>
+                            <li
+                                *ngIf="registerExtraForm.get('username')?.errors?.['minlength'] || registerExtraForm.get('username')?.errors?.['maxlength']">
+                                Username must be between {{minLengthUsername}} and {{maxLengthUsername}} characters.
+                            </li>
+                        </ul>
+                    </div>
+    
+                    <div class="form-box">
+                        <input formControlName="name" name="name" type="text" class="form-input" placeholder=""
+                            (focus)="registerExtraNameFocused = true" (blur)="registerExtraNameFocused = false"
+                            [class.is-invalid]="registerExtraForm.get('name')?.invalid && (registerExtraForm.get('name')?.touched || registerExtraForm.get('name')?.dirty)"
+                            required>
+                        <label for="text" class="placelabel">Name</label>
+    
+                        <!-- Validation -->
+                        <ul class="error-box"
+                            *ngIf="registerExtraNameFocused && registerExtraForm.get('name')?.errors && (registerExtraForm.get('name')?.touched || registerExtraForm.get('name')?.dirty)">
+                            <li *ngIf="registerExtraForm.get('name')?.errors?.['required']">
+                                Name is required.
+                            </li>
+                            <li *ngIf="registerExtraForm.get('name')?.errors?.['isEmpty']">
+                                Name is empty.
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="form-box">
+                        <input formControlName="surname" name="surname" type="text" class="form-input"
+                            placeholder="" (focus)="registerExtraSurnameFocused = true"
+                            (blur)="registerExtraSurnameFocused = false"
+                            [class.is-invalid]="registerExtraForm.get('surname')?.invalid && (registerExtraForm.get('surname')?.touched || registerExtraForm.get('surname')?.dirty)"
+                            required>
+                        <label for="text" class="placelabel">Surname</label>
+    
+                        <!-- Validation -->
+                        <ul class="error-box"
+                            *ngIf="registerExtraSurnameFocused && registerExtraForm.get('surname')?.errors && (registerExtraForm.get('surname')?.touched || registerExtraForm.get('surname')?.dirty)">
+                            <li *ngIf="registerExtraForm.get('surname')?.errors?.['required']">
+                                Surname is required.
+                            </li>
+                            <li *ngIf="registerExtraForm.get('surname')?.errors?.['isEmpty']">
+                                Surname is empty.
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="button-box">
+                        <button type="submit" class="button-style"
+                            [disabled]="registerExtraForm.invalid || isLoading">Next</button>
+                    </div>
+                </form>
+    
+                <span class="loader" *ngIf="isLoading"></span>
+                <div class="box-next">
+                    <p><button type="button" (click)="toggleForm('registerMain')" class="as-link">Back</button></p>
+                </div>
+            </div>
+        </div>
+    </div>    
+</div>

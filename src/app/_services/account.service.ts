@@ -4,12 +4,14 @@ import { environment } from '../../environments/environment';
 import { LoginDTO } from '../_models/LoginDTO';
 
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, map, take } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, take } from 'rxjs';
 import { LoginResponseDTO } from '../_models/LoginResponseDTO';
 import { TokenResponseDTO } from '../_models/TokenResponseDTO';
 import { RegisterDTO } from '../_models/RegisterDTO';
 import { PresenceService } from './presence.service';
 import { NotificationsService } from './notifications.service';
+import { handleError } from '../_utils/error.handler';
+
 
 @Injectable({
   providedIn: 'root'
@@ -158,5 +160,21 @@ export class AccountService {
 
   private stopRefreshTokenTimer() {
     clearTimeout(this.refreshTokenTimeout);
+  }
+
+  existsUserByUsername(username: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.baseUrl}/api/auth/user-exists-by-username`, {
+        params: { username }
+      }).pipe(
+        catchError(handleError)
+    );
+}
+
+  existsUserByEmail(email: string): Observable<boolean> {
+      return this.http.get<boolean>(`${this.baseUrl}/api/auth/user-exists-by-email`, {
+        params: { email }
+      }).pipe(
+        catchError(handleError)
+    );
   }
 }

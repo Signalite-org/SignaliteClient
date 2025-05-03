@@ -1,4 +1,7 @@
 export interface RegisterDTO {
-    email: string;
-    password: string;
-  }
+  username: string;
+  name: string;
+  surname: string;
+  email: string;
+  password: string;
+}
