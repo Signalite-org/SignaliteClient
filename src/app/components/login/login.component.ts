@@ -97,6 +97,13 @@ export class LoginComponent {
     });
   }
 
+  isMobile = window.innerWidth <= 1280;
+
+  ngOnInit() {
+    window.addEventListener('resize', () => {
+      this.isMobile = window.innerWidth <= 1280;
+    });
+  }
 
   toggleForm(form: 'login' | 'registerMain' | 'registerExtra') {
     if (!this.isLoading){

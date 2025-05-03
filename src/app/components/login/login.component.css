@@ -3,6 +3,9 @@
 }
 
 :host {
+    
+    
+
     --bg-first-color: #424374;
     --bg-second-color: #1a1a2d;
     --bg-box-login-first-color: #3d6cb7;
@@ -19,50 +22,80 @@
     --bg-focus-input: #ffffff6c;
 }
 
-.background {
+.background{
     position: fixed;
+    min-height: 100vh;
     width: 100%;
-    height: 100%;
     background: linear-gradient(to bottom, var(--bg-first-color) 0%,var(--bg-second-color) 100%);
+}
+
+.content{
+    position: static;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.box-left, .box-right{
+    flex: 1;
+    position: relative;
+    display: flex;
 }
 
 .box-left{
-    flex: 1;
-    display: flex;
-    align-items: center;
     justify-content: end;
 }
 
 .box-right{
-    flex: 1;
-    display: flex;
-    align-items: center;
     justify-content: start;
 }
 
-
 .divider {
+    position: relative;
     flex: 0 0 auto;
-    height: 100%;
+    height: 600px;
     width: 2px;
     background-color: rgb(255, 255, 255);
-    margin: 0 10px;
 }
 
 
 .box-login, .box-register{
-    position: absolute;
+    position: relative;
     width: 500px;
     height: 700px;
+    margin: 40px 10px;
+}
+
+@media (max-width: 1279px)
+{
+    :host{
+        display:block;
+    }
+
+    .box-left, .box-right{
+        flex: none;
+        position: relative;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .divider {
+        display: none;
+    }
+}
+
+.header-text{
+    position: relative;
+    top: -50px;
+    z-index: 1;
 }
 
 h1 {
     position: absolute;
     text-align: center;
-    top: -50px;
     width: 100%;
     font-size: 5em;
     background: linear-gradient(to right, var(--title-first-color) 0%, var(--title-second-color) 50%, var(--title-third-color) 100%);
@@ -79,7 +112,7 @@ h1 {
 }
 
 .text-back{
-    top: -46px;
+    top: 4px;
     left: 4px;
     text-shadow: 0px 0px 4px #00000033;
 }
@@ -107,27 +140,15 @@ h1 {
     border-radius: 20px 20px 20px 20px;
 }
 
-.content{
+.content-form{
+    position: relative;
     display: flex;
-    position: absolute;
     flex-direction: column;
     align-items: center;
     width: 100%;
     height: 100%;
     padding: 5% 10% 5% 10%;
 }
-
-/* .content-login{
-    display: flex;
-}
-
-.content-register-main{
-    display: none;
-}
-
-.content-register-extra{
-    display: none;
-} */
 
 .header{
     padding-top: 50px;
