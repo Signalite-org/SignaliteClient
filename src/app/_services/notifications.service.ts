@@ -4,11 +4,12 @@ import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { FriendRequest } from '../_models/FriendRequest';
-import { GroupBasicInfoDTO } from '../_models/GroupBasicInfo';
+import { GroupBasicInfoDTO} from '../_models/GroupBasicInfoDTO';
 import { FriendRequestAccepted } from '../_models/FriendRequestAccepted';
 import { FriendRequestDTO } from '../_models/FriendRequestDTO';
 import { UserDTO } from '../_models/UserDTO';
 import { MessageDTO } from '../_models/MessageDTO';
+import {MessageOfGroupDTO} from '../_models/MessageOfGroupDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -21,33 +22,33 @@ export class NotificationsService {
   // New BehaviorSubjects to track notifications
   private friendRequestsSource = new BehaviorSubject<FriendRequestDTO[]>([]);
   friendRequests$ = this.friendRequestsSource.asObservable();
-  
+
   private friendRequestsAcceptedSource = new BehaviorSubject<UserDTO[]>([]);
   friendRequestsAccepted$ = this.friendRequestsAcceptedSource.asObservable();
-  
+
   private addedToGroupSource = new BehaviorSubject<GroupBasicInfoDTO[]>([]);
   addedToGroup$ = this.addedToGroupSource.asObservable();
 
-  private messagesReceivedSource = new BehaviorSubject<MessageDTO[]>([]);
+  private messagesReceivedSource = new BehaviorSubject<MessageOfGroupDTO[]>([]);
   messageReceived$ = this.messagesReceivedSource.asObservable();
 
-  constructor(private router: Router) { 
+  constructor(private router: Router) {
     console.log('NotificationsService constructed');
   }
-  
+
   createHubConnection(token: string) {
     if (!token) {
       console.error('No token provided for notifications hub connection');
       return;
     }
-  
+
     // If a connection already exists, just return
   if (this.hubConnection) {
     console.log('notifications hub connection already exists, not creating a new one');
     return;
   }
     console.log('Creating notifications hub connection...');
-  
+
     // Create the connection
     this.hubConnection = new HubConnectionBuilder()
       .withUrl(`${this.hubUrl}/notifications`, {
@@ -55,18 +56,18 @@ export class NotificationsService {
       })
       .withAutomaticReconnect()
       .build();
-      
+
     // IMPORTANT: Register handlers BEFORE starting the connection
     // This ensures no messages are missed
     this.registerSignalRHandlers();
-  
+
     // Then start the connection
     this.startHubConnection();
   }
 
   private startHubConnection() {
     if (!this.hubConnection) return;
-  
+
     this.hubConnection.start()
       .then(() => {
         console.log('✅ Successfully connected to notifications hub');
@@ -79,18 +80,18 @@ export class NotificationsService {
   private registerSignalRHandlers() {
     if (!this.hubConnection || this.handlersRegistered) return;
 
-  
+
     console.log('Registering Notifications SignalR handlers...');
-  
+
     this.hubConnection.on('FriendRequest', (notification: FriendRequestDTO) => {
-      console.log('📬 Received friend request notification:', notification); 
+      console.log('📬 Received friend request notification:', notification);
       const currentFriendRequests = this.friendRequestsSource.value;
       const exists = currentFriendRequests.some(req => req.id === notification.id);
       if (!exists) {
         this.friendRequestsSource.next([...currentFriendRequests, notification]);
       }
     });
-    
+
     this.hubConnection.on('FriendRequestAccepted', (notification: UserDTO) => {
       console.log('📬 Received friend request accepted notification:', notification);
       const currentAccepted = this.friendRequestsAcceptedSource.value;
@@ -99,11 +100,11 @@ export class NotificationsService {
         this.friendRequestsAcceptedSource.next([...currentAccepted, notification]);
       }
     });
-    
-    this.hubConnection.on('MessageReceived', (message: MessageDTO) => {
+
+    this.hubConnection.on('MessageReceived', (message: MessageOfGroupDTO) => {
       console.log('📬 Received message:', message);
       const currentMessages = this.messagesReceivedSource.value;
-      const exists = currentMessages.some(req => req.id === message.id);
+      const exists = currentMessages.some(req => req.message.id === message.message.id);
       if (!exists) {
         this.messagesReceivedSource.next([...currentMessages, message])
       }
@@ -171,7 +172,7 @@ export class NotificationsService {
     this.stopHubConnection();
     this.createHubConnection(token);
   }
-  
+
   // DEBUG method - force a disconnection and reconnection
   forceReconnect(token: string) {
     console.log('Forcing reconnection of notifications hub...');
@@ -183,12 +184,16 @@ export class NotificationsService {
   clearFriendRequests() {
     this.friendRequestsSource.next([]);
   }
-  
+
   clearFriendRequestsAccepted() {
     this.friendRequestsAcceptedSource.next([]);
   }
-  
+
   clearAddedToGroup() {
     this.addedToGroupSource.next([]);
+  }
+
+  clearReceivedMessages() {
+    this.messagesReceivedSource.next([]);
   }
 }

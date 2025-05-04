@@ -14,7 +14,9 @@
 
 :host:hover {
   cursor: pointer;
+  background: #3e5aa1;
 }
+
 
 section {
   margin-left: 1%;

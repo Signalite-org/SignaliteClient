@@ -1,4 +1,8 @@
 <div id="background">
+  <div class="graphicsSVG" id="svg1" >
+    <img alt="background image" ngSrc="../../../../assets/images/BackGroundArt.png" fill priority/>
+  </div>
+
   <!-- <app-dialog-add-friend-create-group></app-dialog-add-friend-create-group> -->
   <div id="content">
 
@@ -13,6 +17,7 @@
     <app-header-group-friend
       (returnToNormalModeEvent)="returnToNormalChatLayout()"
       [isInFullChatMode]="currentChatLayout() == ChatLayoutStyle.CENTER_ONLY"
+      [groupId]="currentGroupId()"
       class="header">
     </app-header-group-friend>
 
@@ -22,11 +27,16 @@
 
     <!-- ROW 2 -->
     <section-group-friends
+      [newMessageTrigger]="triggerNewMessagesForAllGroups"
       [groupsViewEnabled]="isGroupsViewEnabled()"
-      class="left" [class.hidden]="hideLeftColumn()">
+      class="left" [class.hidden]="hideLeftColumn()"
+      (onGroupFriendClicked)="currentGroupId.set($event)">
     </section-group-friends>
 
-    <app-section-chat></app-section-chat>
+    <app-section-chat
+      [currentGroup]="currentGroupId()"
+      [newMessageTrigger]="triggerNewMessageForCurrentGroup"
+    ></app-section-chat>
 
     <app-section-members
       [class.hidden]="hideRightColumn()">
@@ -43,7 +53,11 @@
 
     <app-bar-message-send
       class="footer"
-      (click)="switchToFullChatMode()">
+      (click)="switchToFullChatMode()"
+      [currentGroupId]="currentGroupId()"
+      [currentUser]="userInfo()"
+      (triggerSentNewMessage)="this.triggerNewMessageForCurrentGroup.emit($event);"
+    >
     </app-bar-message-send>
 
     <div

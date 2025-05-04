@@ -5,7 +5,7 @@ import {
   OnInit,
   OnDestroy,
   signal,
-  WritableSignal, numberAttribute,
+  WritableSignal, EventEmitter, Output,
 } from '@angular/core';
 import { NavigationFriendsGroups } from '../navigation-friends-groups/navigation-friends-groups';
 import { HeaderGroupFriend } from '../header-group-friend/header-group-friend';
@@ -22,6 +22,10 @@ import {Observable} from 'rxjs';
 import {
   DialogAddFriendCreateGroupComponent
 } from '../dialog-add-friend-create-group/dialog-add-friend-create-group.component';
+import {NotificationsService} from '../../../_services/notifications.service';
+import {MessageDTO} from '../../../_models/MessageDTO';
+import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
+import {NgOptimizedImage} from '@angular/common';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -31,7 +35,7 @@ enum ChatLayoutStyle {
 
 @Component({
   selector: 'app-main-layout',
-  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, DialogAddFriendCreateGroupComponent],
+  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, DialogAddFriendCreateGroupComponent, NgOptimizedImage],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
@@ -41,7 +45,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private renderer: Renderer2,
     private el: ElementRef,
     private accountService: AccountService,
-    private userService: UserService
+    private userService: UserService,
+    private notificationsService: NotificationsService,
   ) {
     this.userId.set(this.accountService.currentUser()?.userId ?? -1);
   }
@@ -55,6 +60,21 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       }
     )
     this.setupResizeListener();
+
+    //////////////////////////
+    // SETUP OF LIVE EVENTS //
+    //////////////////////////
+
+    // On new messages received
+    this.notificationsService.messageReceived$.subscribe( messages => {
+      for(let i = 0; i < messages.length; i++) {
+        if(messages[i].groupId == this.currentGroupId()) {
+          this.triggerNewMessageForCurrentGroup.emit(messages[i].message);
+        }
+      }
+      this.triggerNewMessagesForAllGroups.emit(messages);
+      this.notificationsService.clearReceivedMessages();
+    })
   }
 
   ngOnDestroy() {
@@ -69,11 +89,17 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   // DATA BINDING //
   //////////////////
 
+  // NOTIFICATIONS - EVENTS
+  @Output() triggerNewMessageForCurrentGroup = new EventEmitter<MessageDTO>();
+  @Output() triggerNewMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
+
   protected userInfo : WritableSignal<UserDTO | null> = signal(null);
   protected userId : WritableSignal<number> = signal(-1);
   protected fullName : WritableSignal<string> = signal("");
   protected currentUserProfileImageURL : WritableSignal<string>  = signal("../../../../assets/images/default-user.jpg");
+
   protected isGroupsViewEnabled : WritableSignal<boolean> = signal(false);
+  protected currentGroupId : WritableSignal<number> = signal(0);
 
   /////////////////////
   // LAYOUT HANDLING //
@@ -82,7 +108,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   hideRightColumn = signal(false);
   hideLeftColumn= signal(false);
   private resizeObserver: ResizeObserver | null = null;
-  private testSwitch: number = -1;
   protected currentChatLayout:WritableSignal<ChatLayoutStyle> = signal(ChatLayoutStyle.ALL_VISIBLE);
 
   protected returnToNormalChatLayout() {
@@ -104,7 +129,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     } else if(this.hideRightColumn()) { // right hidden
       this.renderer.setStyle(content, 'grid-template-columns', 'minmax(6em, 30%) minmax(50%, 1fr)');
     } else { // both visible
-      this.renderer.setStyle(content, 'grid-template-columns', 'max-content minmax(0, 1fr) 15%');
+      this.renderer.setStyle(content, 'grid-template-columns', 'minmax(6em, 15%) minmax(0, 1fr) 15%');
     }
   }
 

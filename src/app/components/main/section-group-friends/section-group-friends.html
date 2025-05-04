@@ -8,11 +8,12 @@
     }
 
   }
-  @for(friendOrGroup of filteredGroups(); track friendOrGroup.id) {
+  @for(groupId of filteredGroups(); track groupId.id) {
     <app-user-card
-      [userName]="friendOrGroup.name"
-      [profileImageURL]='friendOrGroup.photoUrl ?? "../../../../assets/images/default-user.jpg"'
-      [lastMessage]='friendOrGroup.lastMessage ?? "no last messages"'
+      [userName]="groupId.name"
+      [profileImageURL]='groupId.photoUrl ?? "../../../../assets/images/default-user.jpg"'
+      [lastMessage]='groupId.lastMessage ?? "no last messages"'
+      (click) = "onGroupFriendClicked.emit(groupId.id)"
     ></app-user-card>
   }
 </section>

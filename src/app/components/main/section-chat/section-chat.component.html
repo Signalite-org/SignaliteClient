@@ -1,22 +1,44 @@
-<div class="content">
-  <app-chat-message [isOwnMessage]="true"></app-chat-message>
-  <app-chat-message [isOwnMessage]="true"></app-chat-message>
-  <app-chat-message></app-chat-message>
-  <app-chat-message [isOwnMessage]="true"></app-chat-message>
-  <app-chat-message [isOwnMessage]="true"></app-chat-message>
-  <app-chat-message></app-chat-message>
-  <app-chat-message [isOwnMessage]="true"></app-chat-message>
-  <app-chat-message></app-chat-message>
-  <app-chat-message></app-chat-message>
-  <app-chat-message></app-chat-message>
-  <app-chat-message></app-chat-message>
-  <app-chat-message [isOwnMessage]="true"></app-chat-message>
-  <app-chat-message></app-chat-message>
-  <app-chat-message></app-chat-message>
-  <app-chat-message [isOwnMessage]="true"></app-chat-message>
-  <app-chat-message [isOwnMessage]="true"></app-chat-message>
-  <app-chat-message></app-chat-message>
-  <app-chat-message [isOwnMessage]="true"></app-chat-message>
+<div class="content" #scrollContainer (scroll)="onScroll()">
+
+  @if(
+    ( (!reachedFirstPage() && directionOlderMessages()) || (!isScrollVisible() && !isGroupInvalid()) )
+    && !isTopMessageInSet() && cachedMessages().length!=0
+    ) {
+
+    <button id="down" (click)="loadPreviousPage(); directionOlderMessages.set(false)">
+      ⬇⬇⬇
+    </button>
+
+
+  }
+
+  @for(message of cachedMessages(); track message.id) {
+    <div [attr.data-msg-id]="message.id" class="mess">
+      <app-chat-message
+        [profileImageURL]='message.sender.profilePhotoUrl ?? "../../../../assets/images/default-user.jpg"'
+        [userName]="message.sender.username"
+
+        [isOwnMessage]="message.sender.id==currentUserId()"
+        [message]='message.content ?? ""'
+        [date]="formatDateTime(message.lastModification)"
+        [attachmentType]='message.attachment?.type ?? ""'
+        [hasAttachment]='message.attachment != undefined'
+        [attachmentUrl]="message.attachment?.url ?? null"
+        [attachmentName]='message.attachment?.name ?? "unnamed attachment"'
+        [attachmentSize]="message.attachment?.fileSize ?? 0"
+      >
+      </app-chat-message>
+    </div>
+  }
+
+  @if(
+    ( (!reachedLastPage() && !directionOlderMessages()) || (!isScrollVisible() && !reachedLastPage()) )
+    && !isGroupInvalid() && cachedMessages().length!=0
+    ) {
+    <button id="up" (click)="loadNextPage(); directionOlderMessages.set(true)">
+      ⬆⬆⬆
+    </button>
+  }
 </div>
 
 

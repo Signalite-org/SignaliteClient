@@ -8,16 +8,17 @@
 
 
   @if(isOwnMessage) {
-    <!-- ----------- -->
-    <!-- PROFILE PIC -->
-    <!-- ----------- -->
-    <div class="message-text" [class.message-textRight]="isOwnMessage" [class.message-textLeft]="!isOwnMessage">
-      {{ message() }}
-    </div>
 
     <!-- ------------ -->
     <!-- TEXT MESSAGE -->
     <!-- ------------ -->
+    <div class="message-text" [class.message-textRight]="isOwnMessage" [class.message-textLeft]="!isOwnMessage">
+      {{ message() }}
+    </div>
+
+    <!-- ----------- -->
+    <!-- PROFILE PIC -->
+    <!-- ----------- -->
     <div class="userImageContainer" [class.userImageContainerRight]="isOwnMessage" [class.userImageContainerLeft]="!isOwnMessage">
       <img class="userImage" fill sizes="10vw" alt="user image" [ngSrc]="profileImageURL()">
     </div>
@@ -42,12 +43,12 @@
   <!-- -------------- -->
   <!-- ATTACHED IMAGE -->
   <!-- -------------- -->
-  @if (attachmentImage() != null) {
+  @if (attachmentUrl() != null && showAttachment()) {
     @if(!isOwnMessage) {
       <div> <!-- Empty div for correct grid layout --> </div>
     }
     <img class="displayedImage" [class.displayedImageRight]="isOwnMessage" [class.displayedImageLeft]="!isOwnMessage"
-         sizes="100%, auto" fill alt="user image" [ngSrc]='attachmentImage() ?? ""' >
+         sizes="100%, auto" fill alt="attached image" [ngSrc]='attachmentUrl() ?? ""' >
     @if(isOwnMessage) {
       <div> <!-- Empty div for correct grid layout --> </div>
     }
@@ -60,11 +61,13 @@
     @if(!isOwnMessage) {
       <div> <!-- Empty div for correct grid layout --> </div>
     }
-    <div class="attachments">
-      <a href="">
+    <div class="attachments" [class.displayedImageRight]="isOwnMessage" [class.displayedImageLeft]="!isOwnMessage">
+      <a download target="_blank" [href]="attachmentUrl()">
         <mat-icon id="fileDownload" svgIcon="fileDownload"></mat-icon>
-        {{ attachmentName() }}
+        <p>{{attachmentName()}}</p>
       </a>
+      <div id="file-details">type: {{attachmentType().split('/')[attachmentType().split('/').length-1]}}, size: {{attachmentSize().toFixed(2)}} MB</div>
+
     </div>
     @if(isOwnMessage) {
       <div> <!-- Empty div for correct grid layout --> </div>

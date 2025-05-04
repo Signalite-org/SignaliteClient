@@ -1,14 +1,35 @@
-<div class="bar">
-  <input type="text">
-  <button>
-    <mat-icon svgIcon="smile"></mat-icon>
+<form [formGroup]="messageForm" (ngSubmit)="sendMessage(messageForm.value.message)">
+  <div class="bar">
+    <input
+      type="text"
+      formControlName="message"
+      placeholder="Type your message..."
+    >
+
+    @if(selectedFile) {
+      <div id="fileName" (click)="triggerFileInput()">
+        {{selectedFile.name}}
+      </div>
+    }
+    @else {
+      <button type="button" (click)="triggerFileInput()">
+          <mat-icon svgIcon="attachment"></mat-icon>
+      </button>
+    }
+
+    @if(selectedFile) {
+      <button type="button" (click)="selectedFile = undefined;">
+        <mat-icon svgIcon="return"></mat-icon>
+      </button>
+    }
+
+
+  </div>
+
+  <button type="submit">
+    <mat-icon svgIcon="paperPlane"></mat-icon>
   </button>
- <button>
-   <mat-icon svgIcon="attachment"></mat-icon>
- </button>
 
-</div>
-<button>
-  <mat-icon svgIcon="paperPlane"></mat-icon>
-</button>
-
+  <!-- Hidden file input -->
+  <input type="file" #fileInput (change)="onFileSelected($event)" hidden>
+</form>

@@ -1,4 +1,10 @@
 :host {
+  width: 100%;
+  height: 100%;
+}
+
+form {
+  all: unset;
   display: flex;
   flex-direction: row;
   width: 100%;
@@ -22,7 +28,7 @@
   width: 100%;
   font-size: clamp(1rem, 1vw, 1.2rem);
 
-  padding: 5px;
+  padding: 5px 5px 5px 3%;
 }
 
 svg, mat-icon {
@@ -31,16 +37,39 @@ svg, mat-icon {
 }
 
 button {
+  all: unset;
+  box-sizing: border-box;
   height: 100%;
-  margin-left: 2rem;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: row;
+  justify-content: flex-start;
   align-items: center;
   align-content: center;
-  all: unset;
+  max-width: 20%;
+
+}
+
+#fileName {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: stretch;
+  justify-self: flex-start;
+
+  font-size: clamp(1rem, 1vw, 1.2rem);
+  height: 100%;
+  max-width: 20%;
+  text-overflow: ellipsis;
+  font-style: italic;
+  overflow-x: scroll;
+  white-space: nowrap;
+  line-break: unset;
+}
+
+#fileName::-webkit-scrollbar {
+  display: none;
 }
 
 button:hover {
-  color: blueviolet;
+  filter: drop-shadow(0px 0px 3px rgb(255, 255, 255));
 }

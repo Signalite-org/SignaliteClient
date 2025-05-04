@@ -47,16 +47,7 @@ export class GroupsComponent implements OnInit {
       }
     });
 
-    this.notificationService.userAddedToGroup$.pipe(
-      skip(1)
-    ).subscribe(requests => {
-      const newUser = requests[requests.length - 1];
-      const exists = this.groupMembers?.members.some(req => req.id === newUser.id);
-      if (!exists) {
-        this.groupMembers?.members.push(newUser);
-        this.toastr.info('Nowy uzytkownik dodany do grupy');
-      }
-    });
+
 
   }
 

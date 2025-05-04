@@ -1,5 +1,6 @@
-import {Component, EventEmitter, input, Output} from '@angular/core';
+import {Component, effect, EventEmitter, input, Output, signal, WritableSignal} from '@angular/core';
 import {MatIcon} from '@angular/material/icon';
+import {GroupService} from '../../../_services/group.service';
 
 @Component({
   selector: 'app-header-group-friend',
@@ -10,8 +11,22 @@ import {MatIcon} from '@angular/material/icon';
   styleUrl: './header-group-friend.css'
 })
 export class HeaderGroupFriend {
-  groupFriendName = input("Loading name...")
-  isInFullChatMode= input(true)
+  groupFriendName : WritableSignal<string> = signal("");
+  isInFullChatMode= input(true);
+  groupId = input(-1)
+
+  constructor(groupService: GroupService) {
+    effect(() => {
+      console.log(this.groupId());
+      const id = this.groupId();
+
+      if(id > 0) {
+        groupService.getGroupBasicInfo(id).subscribe(group =>
+          this.groupFriendName.set(group.name)
+        )
+      }
+    });
+  }
 
   @Output() returnToNormalModeEvent = new EventEmitter<void>();
 

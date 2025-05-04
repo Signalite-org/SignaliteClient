@@ -24,3 +24,41 @@
   content-visibility: auto;
   contain-intrinsic-size: 200px; /* Simulated height while loading */
 }
+
+.mess {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+button {
+  all:unset;
+  display: flex;
+  box-sizing: border-box;
+
+  width: 100%;
+  padding: 10px;
+
+  text-align: center;
+  background-color: rgba(0,0,0,0.1);
+  border-radius: 5px;
+
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1em;
+
+  min-height: max(calc(18vh - 15vw), 80px);
+}
+button:hover {
+  background-color: rgba(0,0,0,0.15);
+}
+
+#up {
+  margin-bottom: 10px;
+}
+
+#down {
+  margin-top: 10px;
+}
