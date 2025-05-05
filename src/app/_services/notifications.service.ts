@@ -32,6 +32,9 @@ export class NotificationsService {
   private messagesReceivedSource = new BehaviorSubject<MessageOfGroupDTO[]>([]);
   messageReceived$ = this.messagesReceivedSource.asObservable();
 
+  private messagesDeletedSource = new BehaviorSubject<MessageOfGroupDTO[]>([]);
+  messageDeleted$ = this.messagesDeletedSource.asObservable();
+
   constructor(private router: Router) {
     console.log('NotificationsService constructed');
   }
@@ -140,8 +143,13 @@ export class NotificationsService {
       console.log('📬 Received MessageModified notification:', notification);
     });
 
-    this.hubConnection.on('MessageDeleted', (notification) => {
-      console.log('📬 Received MessageDeleted notification:', notification);
+    this.hubConnection.on('MessageDeleted', (message: MessageOfGroupDTO) => {
+      console.log('📬 Received MessageDeleted notification:', message);
+      const deletedMessages = this.messagesDeletedSource.value;
+      const exists = deletedMessages.some(req => req.message.id === message.message.id);
+      if (!exists) {
+        this.messagesReceivedSource.next([...deletedMessages, message])
+      }
     });
 
     this.hubConnection.on('GroupDeleted', (notification) => {
@@ -195,5 +203,9 @@ export class NotificationsService {
 
   clearReceivedMessages() {
     this.messagesReceivedSource.next([]);
+  }
+
+  clearDeletedMessages() {
+    this.messagesDeletedSource.next([]);
   }
 }
