@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
@@ -21,20 +21,30 @@ export class NotificationsService {
   private hubUrl = environment.hubUrl;
   private handlersRegistered = false;
   // New BehaviorSubjects to track notifications
-  private friendRequestsSource = new BehaviorSubject<FriendRequestDTO[]>([]);
-  friendRequests$ = this.friendRequestsSource.asObservable();
+  private _friendRequests = signal<FriendRequestDTO[]>([]);
+  public get friendRequests() {
+    return this._friendRequests.asReadonly();
+  }
 
-  private friendRequestsAcceptedSource = new BehaviorSubject<UserDTO[]>([]);
-  friendRequestsAccepted$ = this.friendRequestsAcceptedSource.asObservable();
+  private _friendRequestsAccepted = signal<UserBasicInfo[]>([]);
+  public get friendRequestsAccepted() {
+    return this._friendRequestsAccepted.asReadonly();
+  }
 
-  private addedToGroupSource = new BehaviorSubject<GroupBasicInfoDTO[]>([]);
-  addedToGroup$ = this.addedToGroupSource.asObservable();
+  private _addedToGroup = signal<GroupBasicInfoDTO[]>([]);
+  public get addedToGroup() {
+    return this._addedToGroup.asReadonly();
+  }
 
-  private messagesReceivedSource = new BehaviorSubject<MessageOfGroupDTO[]>([]);
-  messageReceived$ = this.messagesReceivedSource.asObservable();
+  private _messagesReceived = signal<MessageOfGroupDTO[]>([]);
+  public get messagesReceived() {
+    return this._messagesReceived.asReadonly();
+  }
 
-  private userAddedToGroupSource = new BehaviorSubject<UserBasicInfo[]>([]);
-  userAddedToGroup$ = this.userAddedToGroupSource.asObservable();
+  private _userAddedToGroup = signal<UserBasicInfo[]>([]);
+  public get userAddedToGroup() {
+    return this._userAddedToGroup.asReadonly();
+  }
 
   constructor(private router: Router) {
     console.log('NotificationsService constructed');
@@ -89,47 +99,52 @@ export class NotificationsService {
 
     this.hubConnection.on('FriendRequest', (notification: FriendRequestDTO) => {
       console.log('📬 Received friend request notification:', notification);
-      const currentFriendRequests = this.friendRequestsSource.value;
-      const exists = currentFriendRequests.some(req => req.id === notification.id);
-      if (!exists) {
-        this.friendRequestsSource.next([...currentFriendRequests, notification]);
-      }
+      this._friendRequests.update(requests => {
+        if (!requests.some(req => req.id === notification.id)) {
+          return [...requests, notification];
+        }
+        return requests;
+      });
     });
 
-    this.hubConnection.on('FriendRequestAccepted', (notification: UserDTO) => {
+    this.hubConnection.on('FriendRequestAccepted', (notification: UserBasicInfo) => {
       console.log('📬 Received friend request accepted notification:', notification);
-      const currentAccepted = this.friendRequestsAcceptedSource.value;
-      const exists = currentAccepted.some(req => req.id === notification.id)
-      if (!exists) {
-        this.friendRequestsAcceptedSource.next([...currentAccepted, notification]);
-      }
+      this._friendRequestsAccepted.update(accepted => {
+        if (!accepted.some(req => req.id === notification.id)) {
+          return [...accepted, notification];
+        }
+        return accepted;
+      });
     });
 
     this.hubConnection.on('MessageReceived', (message: MessageOfGroupDTO) => {
       console.log('📬 Received message:', message);
-      const currentMessages = this.messagesReceivedSource.value;
-      const exists = currentMessages.some(req => req.message.id === message.message.id);
-      if (!exists) {
-        this.messagesReceivedSource.next([...currentMessages, message])
-      }
+      this._messagesReceived.update(messages => {
+        if (!messages.some(msg => msg.message.id === message.message.id)) {
+          return [...messages, message];
+        }
+        return messages;
+      });
     });
 
     this.hubConnection.on('AddedToGroup', (groupInfo: GroupBasicInfoDTO) => {
       console.log('📬 Received AddedToGroup notification:', groupInfo);
-      const currentGroups = this.addedToGroupSource.value;
-      const exists = currentGroups.some(req => req.id === groupInfo.id)
-      if (!exists) {
-        this.addedToGroupSource.next([...currentGroups, groupInfo]);
-      }
+      this._addedToGroup.update(groups => {
+        if (!groups.some(group => group.id === groupInfo.id)) {
+          return [...groups, groupInfo];
+        }
+        return groups;
+      });
     });
 
     this.hubConnection.on('UserAddedToGroup', (userInfo: UserBasicInfo) => {
       console.log('📬 Received UserAddedToGroup notification:', userInfo);
-      const currentMembers = this.userAddedToGroupSource.value;
-      const exists = currentMembers.some(req => req.id === userInfo.id)
-      if (!exists) {
-        this.userAddedToGroupSource.next([...currentMembers, userInfo]);
-      }
+      this._userAddedToGroup.update(members => {
+        if (!members.some(member => member.id === userInfo.id)) {
+          return [...members, userInfo];
+        }
+        return members;
+      });
     });
 
     this.hubConnection.on('GroupUpdated', (groupInfo) => {
@@ -194,18 +209,18 @@ export class NotificationsService {
 
   // Helper methods to clear notifications
   clearFriendRequests() {
-    this.friendRequestsSource.next([]);
+    this._friendRequests.set([]);
   }
 
   clearFriendRequestsAccepted() {
-    this.friendRequestsAcceptedSource.next([]);
+    this._friendRequestsAccepted.set([]);
   }
 
   clearAddedToGroup() {
-    this.addedToGroupSource.next([]);
+    this._addedToGroup.set([]);
   }
 
   clearReceivedMessages() {
-    this.messagesReceivedSource.next([]);
+    this._messagesReceived.set([]);
   }
 }

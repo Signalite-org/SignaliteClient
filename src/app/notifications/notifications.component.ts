@@ -13,25 +13,23 @@ import { UserBasicInfo } from '../_models/UserBasicInfo';
   styleUrl: './notifications.component.css'
 })
 export class NotificationsComponent implements OnInit {
-  friendRequests: FriendRequestDTO[] = [];
-  friendRequestsAccepted: UserBasicInfo[] = [];
-  addedToGroups: GroupBasicInfoDTO[] = [];
+  get friendRequests(): FriendRequestDTO[] {
+    return this.notificationsService.friendRequests();
+  }
+
+
+  get friendRequestsAccepted(): UserBasicInfo[] {
+    return this.notificationsService.friendRequestsAccepted();
+  }
+  
+  get addedToGroups(): GroupBasicInfoDTO[] {
+    return this.notificationsService.addedToGroup();
+  }
   
   constructor(private notificationsService: NotificationsService) {}
   
   ngOnInit(): void {
-    // Subscribe to notifications
-    this.notificationsService.friendRequests$.subscribe(requests => {
-      this.friendRequests = requests;
-    });
-    
-    this.notificationsService.friendRequestsAccepted$.subscribe(accepted => {
-      this.friendRequestsAccepted = accepted;
-    });
-    
-    this.notificationsService.addedToGroup$.subscribe(groups => {
-      this.addedToGroups = groups;
-    });
+
   }
   
   clearFriendRequests(): void {

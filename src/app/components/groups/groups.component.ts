@@ -1,5 +1,5 @@
 // groups.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GroupService } from '../../_services/group.service';
@@ -7,7 +7,6 @@ import { ToastrService } from 'ngx-toastr';
 import { GroupBasicInfoDTO } from '../../_models/GroupBasicInfoDTO';
 import { GroupMembersDTO } from '../../_models/GroupMembersDTO';
 import { NotificationsService } from '../../_services/notifications.service';
-import { skip } from 'rxjs';
 
 @Component({
   selector: 'app-groups',
@@ -26,34 +25,41 @@ export class GroupsComponent implements OnInit {
   groupNameControl = new FormControl('');
   userIdToAddControl = new FormControl('');
   selectedFile: File | null = null;
+  
+  // Track the last processed length for the addedToGroup signal
+  private lastProcessedAddedToGroupLength = 0;
 
   constructor(
     private groupService: GroupService,
     private toastr: ToastrService,
     private notificationService: NotificationsService
-  ) {}
-
-  ngOnInit(): void {
-    this.loadGroups();
-
-    // Instead of using skip(1)
-    this.notificationService.addedToGroup$.subscribe(requests => {
-      // Only process if there are any requests
-      if (requests && requests.length > 0) {
-        // Get the latest group
-        const newGroup = requests[requests.length - 1];
+  ) {
+    // Create an effect to monitor the addedToGroup signal
+    effect(() => {
+      const groups = this.notificationService.addedToGroup();
+      
+      // Only process if there are new items
+      if (groups.length > 0 && groups.length > this.lastProcessedAddedToGroupLength) {
+        // Get the newest group
+        const newGroup = groups[groups.length - 1];
         
         // Check if it's already in our list
-        const exists = this.groups.some(req => req.id === newGroup.id);
+        const exists = this.groups.some(group => group.id === newGroup.id);
         
         // Only add if it doesn't exist
         if (!exists) {
           this.groups.push(newGroup);
           this.toastr.info('Dodano cię do nowej grupy!');
         }
+        
+        // Update our processed length marker
+        this.lastProcessedAddedToGroupLength = groups.length;
       }
     });
+  }
 
+  ngOnInit(): void {
+    this.loadGroups();
   }
 
   loadGroups(): void {

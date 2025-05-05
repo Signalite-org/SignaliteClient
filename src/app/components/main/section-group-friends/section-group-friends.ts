@@ -25,7 +25,8 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
   // SUBSCRIPTIONS
   private newMessageSubscription?: Subscription;
   private groupsSubscription?: Subscription;
- 
+  private lastProcessedAddedToGroupLength = 0;
+
   // CONSTRUCTOR
   constructor(private groupsService: GroupService, private notifiactionService: NotificationsService, private toastr: ToastrService) {
     effect(() => {
@@ -44,6 +45,25 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
         });
       }
     });
+
+    // Effect for added to group notifications
+    effect(() => {
+      const groups = this.notifiactionService.addedToGroup();
+      
+      // Only process if there are new items beyond what we've already processed
+      if (groups.length > 0 && groups.length > this.lastProcessedAddedToGroupLength) {
+        const newGroup = groups[groups.length - 1];
+        const exists = this.groupList().some(group => group.id === newGroup.id);
+        
+        if (!exists) {
+          this.groupList.update(current => [...current, newGroup]);
+          this.toastr.info('Dodano cie do nowej grupy!');
+        }
+        
+        // Update our processed length marker
+        this.lastProcessedAddedToGroupLength = groups.length;
+      }
+    });
   }
  
   ngOnInit() {
@@ -53,16 +73,6 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
       this.updateFilteredGroups();
     });
 
-    this.notifiactionService.addedToGroup$.pipe(
-      skip(1)
-    ).subscribe(requests => {
-      const newGroup = requests[requests.length - 1];
-      const exists = this.groupList().some(req => req.id === newGroup.id);
-      if (!exists) {
-        this.groupList.set([...this.groupList(), newGroup]);
-        this.toastr.info('Dodano cie do nowej grupy!');
-      }
-    });
 
   }
  
@@ -79,7 +89,12 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
     for(let i = 0; i < newMessages.length; i++) {
       for(let j = 0; j < this.groupList().length; j++) {
         if(this.groupList()[j].id == newMessages[i].groupId){
-          this.groupsService.updateLastMessage(this.groupList()[j].id, newMessages[i].message.sender.username, newMessages[i].message?.content ?? 'sent file', newMessages[i].message.id)
+          this.groupsService.updateLastMessage(
+            this.groupList()[j].id, 
+            newMessages[i].message.sender.username, 
+            newMessages[i].message?.content ?? 'sent file', 
+            newMessages[i].message.id
+          );
           break;
         }
       }

@@ -6,6 +6,7 @@ import {
   OnDestroy,
   signal,
   WritableSignal, EventEmitter, Output,
+  effect,
 } from '@angular/core';
 import { NavigationFriendsGroups } from '../navigation-friends-groups/navigation-friends-groups';
 import { HeaderGroupFriend } from '../header-group-friend/header-group-friend';
@@ -42,6 +43,8 @@ enum ChatLayoutStyle {
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
 
+  private lastProcessedMessagesLength = 0;
+
   constructor(
     private renderer: Renderer2,
     private el: ElementRef,
@@ -50,6 +53,29 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private notificationsService: NotificationsService,
   ) {
     this.userId.set(this.accountService.currentUser()?.userId ?? -1);
+
+    effect(() => {
+      const messages = this.notificationsService.messagesReceived();
+      
+      // Only process if there are new messages
+      if (messages.length > 0 && messages.length > this.lastProcessedMessagesLength) {
+        // Process all the messages
+        for (let i = 0; i < messages.length; i++) {
+          if (messages[i].groupId == this.currentGroupId()) {
+            this.triggerNewMessageForCurrentGroup.emit(messages[i].message);
+          }
+        }
+        
+        // Emit all messages for global handling
+        this.triggerNewMessagesForAllGroups.emit(messages);
+        
+        // Clear the messages from notifications service
+        this.notificationsService.clearReceivedMessages();
+        
+        // Update our processed length
+        this.lastProcessedMessagesLength = 0; // Reset to 0 since we cleared the messages
+      }
+    });
   }
 
   ngOnInit() {
@@ -62,20 +88,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     )
     this.setupResizeListener();
 
-    //////////////////////////
-    // SETUP OF LIVE EVENTS //
-    //////////////////////////
 
-    // On new messages received
-    this.notificationsService.messageReceived$.subscribe( messages => {
-      for(let i = 0; i < messages.length; i++) {
-        if(messages[i].groupId == this.currentGroupId()) {
-          this.triggerNewMessageForCurrentGroup.emit(messages[i].message);
-        }
-      }
-      this.triggerNewMessagesForAllGroups.emit(messages);
-      this.notificationsService.clearReceivedMessages();
-    })
   }
 
   ngOnDestroy() {

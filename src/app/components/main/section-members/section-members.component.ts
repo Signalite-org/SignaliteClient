@@ -27,6 +27,7 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
  
   // Subskrypcja do śledzenia
   private membersSubscription?: Subscription;
+  private lastProcessedUserAddedLength = 0;
  
   constructor(private groupService: GroupService, private presenceService: PresenceService, private notificationService: NotificationsService) {
     // Efekt reagujący na zmianę groupId
@@ -42,20 +43,32 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
       this.onlineUsersIds.set(onlineUsers);
       console.log('Online users updated:', this.onlineUsersIds());
     });
+
+    // Effect for user added to group notifications
+    effect(() => {
+      const usersAdded = this.notificationService.userAddedToGroup();
+      
+      // Only process if there are new items
+      if (usersAdded.length > 0 && usersAdded.length > this.lastProcessedUserAddedLength) {
+        // Get the newest added user
+        const newUser = usersAdded[usersAdded.length - 1];
+        
+        // Check if they belong to our current group (you might need to refine this logic)
+        // and if they already exist in our local array
+        const exists = this.members().some(req => req.id === newUser.id);
+        if (!exists) {
+          this.members.update(current => [...current, newUser]);
+        }
+        
+        // Update the processed length
+        this.lastProcessedUserAddedLength = usersAdded.length;
+      }
+    });
   }
  
   ngOnInit() {
     console.log('SectionMembersComponent: ngOnInit, groupId =', this.groupId());
 
-    this.notificationService.userAddedToGroup$.pipe(
-      skip(1)
-    ).subscribe(requests => {
-      const newUser = requests[requests.length - 1];
-      const exists = this.members().some(req => req.id === newUser.id);
-      if (!exists) {
-        this.members.set([...this.members(), newUser]);
-      }
-    });
   }
  
   ngOnDestroy() {
