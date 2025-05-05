@@ -50,19 +50,20 @@ export class NotificationsService {
     console.log('NotificationsService constructed');
   }
 
-  createHubConnection(token: string) {
+  createHubConnection(token: string): Promise<void> {
     if (!token) {
       console.error('No token provided for notifications hub connection');
-      return;
+      return Promise.reject('No token provided');
     }
-
+  
     // If a connection already exists, just return
-  if (this.hubConnection) {
-    console.log('notifications hub connection already exists, not creating a new one');
-    return;
-  }
+    if (this.hubConnection) {
+      console.log('notifications hub connection already exists, not creating a new one');
+      return Promise.resolve();
+    }
+    
     console.log('Creating notifications hub connection...');
-
+  
     // Create the connection
     this.hubConnection = new HubConnectionBuilder()
       .withUrl(`${this.hubUrl}/notifications`, {
@@ -70,24 +71,26 @@ export class NotificationsService {
       })
       .withAutomaticReconnect()
       .build();
-
+  
     // IMPORTANT: Register handlers BEFORE starting the connection
-    // This ensures no messages are missed
     this.registerSignalRHandlers();
-
-    // Then start the connection
-    this.startHubConnection();
+  
+    // Return the promise from start operation
+    return this.startHubConnection();
   }
 
-  private startHubConnection() {
-    if (!this.hubConnection) return;
-
-    this.hubConnection.start()
+  private startHubConnection(): Promise<void> {
+    if (!this.hubConnection) {
+      return Promise.reject('No hub connection exists');
+    }
+  
+    return this.hubConnection.start()
       .then(() => {
         console.log('✅ Successfully connected to notifications hub');
       })
       .catch(error => {
         console.error('❌ Error starting notifications hub connection:', error);
+        throw error;
       });
   }
 
@@ -184,16 +187,17 @@ export class NotificationsService {
   }
 
   stopHubConnection() {
-    if (this.hubConnection) {
-      console.log('Stopping notifications hub connection...');
-      this.hubConnection.stop()
-        .catch(error => console.error('Error stopping notifications hub connection:', error))
-        .finally(() => {
-          this.hubConnection = undefined;
-          console.log('Notifications hub connection stopped');
-        });
-    }
+  if (this.hubConnection) {
+    console.log('Stopping hub connection...');
+    this.hubConnection.stop()
+      .catch(error => console.error('Error stopping hub connection:', error))
+      .finally(() => {
+        this.hubConnection = undefined;
+        this.handlersRegistered = false; // Reset this flag
+        console.log('Hub connection stopped');
+      });
   }
+}
 
   reconnect(token: string) {
     this.stopHubConnection();

@@ -50,19 +50,22 @@ export class PresenceService {
       .withAutomaticReconnect()
       .build();
     this.registerSignalRHandlers();
-    this.startHubConnection();
+    return this.startHubConnection();
   }
 
   private startHubConnection() {
-    if (!this.hubConnection) return;
+    if (!this.hubConnection) {
+      return Promise.reject('No hub connection exists');
+    }
 
-    this.hubConnection.start()
-      .then(() => {
-        console.log('✅ Successfully connected to presence hub');
-      })
-      .catch(error => {
-        console.error('❌ Error starting presence hub connection:', error);
-      });
+    return this.hubConnection.start()
+    .then(() => {
+      console.log('✅ Successfully connected to presence hub');
+    })
+    .catch(error => {
+      console.error('❌ Error starting presence hub connection:', error);
+      throw error; // Re-throw to propagate the error
+    });
   }
 
   private registerSignalRHandlers() {
@@ -81,15 +84,8 @@ export class PresenceService {
     });
 
 
-    this.hubConnection.on('UserIsOnline', (user: UserBasicInfo) => {
+    this.hubConnection.on('UserIsOnline', (user: {username: string, id: number}) => {
       console.log(`👤 User connected: ${user.username} (ID: ${user.id})`);
-      
-      this._onlineUserIds.update(ids => {
-        if (!ids.includes(user.id)) {
-          return [...ids, user.id];
-        }
-        return ids;
-      });
       
       this._onlineUserIds.update(ids => {
         // Only add the ID if it's not already in the list
@@ -136,7 +132,8 @@ export class PresenceService {
         .catch(error => console.error('Error stopping hub connection:', error))
         .finally(() => {
           this.hubConnection = undefined;
-          console.log('Presence hub connection stopped');
+          this.handlersRegistered = false; // Reset this flag
+          console.log('Hub connection stopped');
         });
     }
   }
