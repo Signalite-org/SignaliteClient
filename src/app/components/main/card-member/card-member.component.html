@@ -1,7 +1,7 @@
 <div class="imageContainer">
   <div class="activity" [class.online]="isOnline()" [class.offline]="!isOnline()"></div>
-  <img fill sizes="10vw" class="userImage" alt="user/group image" [ngSrc]="profileImageURL()">
+  <img fill sizes="10vw" class="userImage" alt="user/group image" [ngSrc]="user()?.profilePhotoUrl ?? '../../../../assets/images/default-user.jpg'">
 </div>
 <section>
-  <div id="userName">{{ userName() }}</div>
+  <div id="userName">{{ user()?.username }}</div>
 </section>

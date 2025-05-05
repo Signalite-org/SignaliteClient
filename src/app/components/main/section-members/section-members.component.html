@@ -1,19 +1,22 @@
-<header>
-  Members
-</header>
+@if (groupId() !== 0) {
+  <header>
+    Members
+  </header>
+}
 <div class="content">
-  <app-card-member [isOnline]="true"></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member [isOnline]="true"></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member [isOnline]="true"></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member></app-card-member>
-  <app-card-member></app-card-member>
+  @if (loading()) {
+    <div class="loading"></div>
+  } @else if (error()) {
+  } @else if (members().length === 0) {
+    <div class="empty-state">
+      Brak członków w tej grupie
+    </div>
+  } @else {
+    @for (member of members(); track member.id) {
+      <app-card-member 
+        [user]="member" 
+        [isOnline]="isUserOnline(member.id)">
+      </app-card-member>
+    }
+  }
 </div>

@@ -1,5 +1,6 @@
 import {Component, input, Input, signal, WritableSignal} from '@angular/core';
 import {NgOptimizedImage} from "@angular/common";
+import { UserBasicInfo } from '../../../_models/UserBasicInfo';
 
 @Component({
   selector: 'app-card-member',
@@ -11,6 +12,5 @@ import {NgOptimizedImage} from "@angular/common";
 })
 export class CardMemberComponent {
   isOnline = input(false);
-  userName = input('loading...');
-  profileImageURL = input('../../../../assets/images/default-user.jpg');
+  user = input<UserBasicInfo>()
 }

@@ -24,4 +24,11 @@ export class UserService {
       );
   }
 
+  getUserByUsername(username: string): Observable<UserDTO> {
+        return this.http.get<UserDTO>(`${this.baseUrl}/${username}`)
+          .pipe(
+              catchError(handleError)
+          );
+    }
+
 }

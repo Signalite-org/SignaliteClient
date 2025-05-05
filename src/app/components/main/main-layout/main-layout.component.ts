@@ -26,6 +26,7 @@ import {NotificationsService} from '../../../_services/notifications.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import {NgOptimizedImage} from '@angular/common';
+import { NewGroupComponent } from '../new-group/new-group.component';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -101,6 +102,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   protected isGroupsViewEnabled : WritableSignal<boolean> = signal(false);
   protected currentGroupId : WritableSignal<number> = signal(0);
 
+
   /////////////////////
   // LAYOUT HANDLING //
   /////////////////////
@@ -120,6 +122,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.layoutAllVisible();
     }
     this.updateLayout();
+  }
+
+
+  protected handleGroupDeleted() {
+    this.currentGroupId.set(-1)
+    console.log(this.currentGroupId())
   }
 
   private updateLayout() {

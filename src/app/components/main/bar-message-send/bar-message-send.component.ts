@@ -10,6 +10,7 @@ import {UserDTO} from '../../../_models/UserDTO';
 import {UserBasicInfo} from '../../../_models/UserBasicInfo';
 import {MessagePostResponse} from '../../../_models/MessagePostResponse';
 import {AttachmentDTO} from '../../../_models/AttachmentDTO';
+import { GroupService } from '../../../_services/group.service';
 
 @Component({
   selector: 'app-bar-message-send',
@@ -34,6 +35,7 @@ export class BarMessageSendComponent {
 
   constructor(
     private messagesService:MessageService,
+    private groupService: GroupService,
     private fb: FormBuilder)
   {
     this.messageForm = this.fb.group({
@@ -91,7 +93,9 @@ export class BarMessageSendComponent {
       attachment: attachmentDTO,
       sender: currentUserBasicInfo
     }
-
+    
+    // update last message locally after sendig new message
+    this.groupService.updateLastMessage(this.currentGroupId(), messageDTO.sender.username, content, messageDTO.id)
     this.triggerSentNewMessage.emit(messageDTO);
   }
 

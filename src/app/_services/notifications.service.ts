@@ -10,6 +10,7 @@ import { FriendRequestDTO } from '../_models/FriendRequestDTO';
 import { UserDTO } from '../_models/UserDTO';
 import { MessageDTO } from '../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../_models/MessageOfGroupDTO';
+import { UserBasicInfo } from '../_models/UserBasicInfo';
 
 @Injectable({
   providedIn: 'root'
@@ -31,6 +32,9 @@ export class NotificationsService {
 
   private messagesReceivedSource = new BehaviorSubject<MessageOfGroupDTO[]>([]);
   messageReceived$ = this.messagesReceivedSource.asObservable();
+
+  private userAddedToGroupSource = new BehaviorSubject<UserBasicInfo[]>([]);
+  userAddedToGroup$ = this.userAddedToGroupSource.asObservable();
 
   constructor(private router: Router) {
     console.log('NotificationsService constructed');
@@ -113,11 +117,19 @@ export class NotificationsService {
     this.hubConnection.on('AddedToGroup', (groupInfo: GroupBasicInfoDTO) => {
       console.log('📬 Received AddedToGroup notification:', groupInfo);
       const currentGroups = this.addedToGroupSource.value;
-      this.addedToGroupSource.next([...currentGroups, groupInfo]);
+      const exists = currentGroups.some(req => req.id === groupInfo.id)
+      if (!exists) {
+        this.addedToGroupSource.next([...currentGroups, groupInfo]);
+      }
     });
 
-    this.hubConnection.on('UserAddedToGroup', (userInfo) => {
+    this.hubConnection.on('UserAddedToGroup', (userInfo: UserBasicInfo) => {
       console.log('📬 Received UserAddedToGroup notification:', userInfo);
+      const currentMembers = this.userAddedToGroupSource.value;
+      const exists = currentMembers.some(req => req.id === userInfo.id)
+      if (!exists) {
+        this.userAddedToGroupSource.next([...currentMembers, userInfo]);
+      }
     });
 
     this.hubConnection.on('GroupUpdated', (groupInfo) => {

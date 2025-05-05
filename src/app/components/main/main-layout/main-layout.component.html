@@ -2,7 +2,6 @@
   <div class="graphicsSVG" id="svg1" >
     <img alt="background image" ngSrc="../../../../assets/images/BackGroundArt.png" fill priority/>
   </div>
-
   <!-- <app-dialog-add-friend-create-group></app-dialog-add-friend-create-group> -->
   <div id="content">
 
@@ -17,6 +16,7 @@
     <app-header-group-friend
       (returnToNormalModeEvent)="returnToNormalChatLayout()"
       [isInFullChatMode]="currentChatLayout() == ChatLayoutStyle.CENTER_ONLY"
+      (groupDeleted)="handleGroupDeleted()"
       [groupId]="currentGroupId()"
       class="header">
     </app-header-group-friend>
@@ -39,7 +39,9 @@
     ></app-section-chat>
 
     <app-section-members
-      [class.hidden]="hideRightColumn()">
+      [class.hidden]="hideRightColumn()"
+      [groupId]="currentGroupId()"
+      >
     </app-section-members>
 
     <!-- ROW 3 -->

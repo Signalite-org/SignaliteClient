@@ -36,18 +36,23 @@ export class GroupsComponent implements OnInit {
   ngOnInit(): void {
     this.loadGroups();
 
-    this.notificationService.addedToGroup$.pipe(
-      skip(1)
-    ).subscribe(requests => {
-      const newGroup = requests[requests.length - 1];
-      const exists = this.groups.some(req => req.id === newGroup.id);
-      if (!exists) {
-        this.groups.push(newGroup);
-        this.toastr.info('Dodano cie do nowej grupy!');
+    // Instead of using skip(1)
+    this.notificationService.addedToGroup$.subscribe(requests => {
+      // Only process if there are any requests
+      if (requests && requests.length > 0) {
+        // Get the latest group
+        const newGroup = requests[requests.length - 1];
+        
+        // Check if it's already in our list
+        const exists = this.groups.some(req => req.id === newGroup.id);
+        
+        // Only add if it doesn't exist
+        if (!exists) {
+          this.groups.push(newGroup);
+          this.toastr.info('Dodano cię do nowej grupy!');
+        }
       }
     });
-
-
 
   }
 

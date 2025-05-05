@@ -81,15 +81,8 @@ export class PresenceService {
     });
 
 
-    this.hubConnection.on('UserIsOnline', (user: UserBasicInfo) => {
+    this.hubConnection.on('UserIsOnline', (user: {username: string, id: number}) => {
       console.log(`👤 User connected: ${user.username} (ID: ${user.id})`);
-      
-      this._onlineUserIds.update(ids => {
-        if (!ids.includes(user.id)) {
-          return [...ids, user.id];
-        }
-        return ids;
-      });
       
       this._onlineUserIds.update(ids => {
         // Only add the ID if it's not already in the list
