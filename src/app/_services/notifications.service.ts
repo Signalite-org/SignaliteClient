@@ -76,7 +76,7 @@ export class NotificationsService {
     this.registerSignalRHandlers();
   
     // Return the promise from start operation
-    return this.startHubConnection();
+    return this.retryConnection(token)
   }
 
   private startHubConnection(): Promise<void> {
@@ -204,13 +204,6 @@ export class NotificationsService {
     this.createHubConnection(token);
   }
 
-  // DEBUG method - force a disconnection and reconnection
-  forceReconnect(token: string) {
-    console.log('Forcing reconnection of notifications hub...');
-    this.reconnect(token);
-    return 'Reconnection forced';
-  }
-
   // Helper methods to clear notifications
   clearFriendRequests() {
     this._friendRequests.set([]);
@@ -226,5 +219,21 @@ export class NotificationsService {
 
   clearReceivedMessages() {
     this._messagesReceived.set([]);
+  }
+
+  private retryConnection(token: string, maxRetries: number = 3, currentRetry: number = 0): Promise<void> {
+    return this.startHubConnection()
+      .catch(err => {
+        if (currentRetry < maxRetries) {
+          console.log(`Connection attempt ${currentRetry + 1} failed, retrying...`);
+          // Exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, currentRetry), 8000);
+          return new Promise(resolve => setTimeout(resolve, delay))
+            .then(() => this.retryConnection(token, maxRetries, currentRetry + 1));
+        } else {
+          console.error('Max retries reached, connection failed');
+          throw err;
+        }
+      });
   }
 }

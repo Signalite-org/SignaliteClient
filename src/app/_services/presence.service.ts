@@ -50,7 +50,7 @@ export class PresenceService {
       .withAutomaticReconnect()
       .build();
     this.registerSignalRHandlers();
-    return this.startHubConnection();
+    return this.retryConnection(token)
   }
 
   private startHubConnection() {
@@ -146,5 +146,21 @@ export class PresenceService {
   // Helper method to check if a user is online
   isUserOnline(userId: number): boolean {
     return this.onlineUserIds().includes(userId);
+  }
+
+  private retryConnection(token: string, maxRetries: number = 3, currentRetry: number = 0): Promise<void> {
+    return this.startHubConnection()
+      .catch(err => {
+        if (currentRetry < maxRetries) {
+          console.log(`Connection attempt ${currentRetry + 1} failed, retrying...`);
+          // Exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, currentRetry), 8000);
+          return new Promise(resolve => setTimeout(resolve, delay))
+            .then(() => this.retryConnection(token, maxRetries, currentRetry + 1));
+        } else {
+          console.error('Max retries reached, connection failed');
+          throw err;
+        }
+      });
   }
 }
