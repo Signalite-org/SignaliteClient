@@ -9,6 +9,7 @@ import { MessageDTO } from "../_models/MessageDTO";
 import {MessageThreadDTO} from '../_models/MessageThreadDTO';
 import {MessagePostResponse} from '../_models/MessagePostResponse';
 import {MessageOfGroupDTO} from '../_models/MessageOfGroupDTO';
+import { GroupService } from "./group.service";
 
 @Injectable({
     providedIn: 'root'

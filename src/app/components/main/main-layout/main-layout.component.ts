@@ -115,7 +115,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   protected isGroupsViewEnabled : WritableSignal<boolean> = signal(false);
   protected currentGroupId : WritableSignal<number> = signal(0);
 
-
   /////////////////////
   // LAYOUT HANDLING //
   /////////////////////
@@ -142,6 +141,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.currentGroupId.set(-1)
     console.log(this.currentGroupId())
   }
+
+  protected handleGroupUpdated() {
+    let groupId = this.currentGroupId()
+    this.currentGroupId.set(-1)
+    // Ustawiam minimalne opoznienie zeby sie zrefreshowała grupa
+    setTimeout(() => {
+      this.currentGroupId.set(groupId)
+    }, 5);
+  }
+
 
   private updateLayout() {
     const content = this.el.nativeElement.querySelector('#content');

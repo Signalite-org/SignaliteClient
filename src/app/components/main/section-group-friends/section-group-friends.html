@@ -1,4 +1,4 @@
-<app-friend-group-search></app-friend-group-search>
+<app-friend-group-search (searchTextChanged)="handleSearchTextChange($event)"></app-friend-group-search>
 <section>
   @if(filteredGroups().length == 0) {
     @if(groupsViewEnabled()) {

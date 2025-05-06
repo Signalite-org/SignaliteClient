@@ -1,4 +1,4 @@
-import {Component, effect, EventEmitter, HostListener, input, Output, signal, WritableSignal} from '@angular/core';
+import {Component, effect, EventEmitter, HostListener, input, output, Output, signal, WritableSignal} from '@angular/core';
 import {MatIcon} from '@angular/material/icon';
 import {GroupService} from '../../../_services/group.service';
 import { FormsModule } from '@angular/forms';

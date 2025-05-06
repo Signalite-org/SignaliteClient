@@ -30,7 +30,10 @@
       [newMessageTrigger]="triggerNewMessagesForAllGroups"
       [groupsViewEnabled]="isGroupsViewEnabled()"
       class="left" [class.hidden]="hideLeftColumn()"
-      (onGroupFriendClicked)="currentGroupId.set($event)">
+      (groupDeleted)="handleGroupDeleted()"
+      (groupUpdated)="handleGroupUpdated()"
+      (onGroupFriendClicked)="currentGroupId.set($event)"
+      >
     </section-group-friends>
 
     <app-section-chat
