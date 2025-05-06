@@ -6,7 +6,7 @@ import { SearchResetService } from '../../../_utils/search-reset.service';
 @Component({
   selector: 'app-friend-group-search',
   imports: [
-    MatIcon
+    MatIcon,
   ],
   templateUrl: './group-friend-search.component.html',
   styleUrl: './group-friend-search.component.scss',
