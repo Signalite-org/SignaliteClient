@@ -36,6 +36,16 @@ export class NotificationsService {
     return this._addedToGroup.asReadonly();
   }
 
+  private _deletedGroup = signal<number>(0);
+  public get deletedGroup() {
+    return this._deletedGroup.asReadonly();
+  }
+
+  private _groupUpdated = signal<GroupBasicInfoDTO>({id: 0, name: "", photoUrl: "", isPrivate: false})
+  public get groupUpdated() {
+    return this._groupUpdated.asReadonly();
+  }
+
   private _messagesReceived = signal<MessageOfGroupDTO[]>([]);
   public get messagesReceived() {
     return this._messagesReceived.asReadonly();
@@ -150,16 +160,22 @@ export class NotificationsService {
       });
     });
 
-    this.hubConnection.on('GroupUpdated', (groupInfo) => {
+    this.hubConnection.on('GroupDeleted', (notification: {groupId: number}) => {
+      console.log('📬 Received GroupDeleted notification:', notification);
+      this._deletedGroup.update(() => {
+        return notification.groupId
+      })
+    });
+
+    this.hubConnection.on('GroupUpdated', (groupInfo: GroupBasicInfoDTO) => {
       console.log('📬 Received GroupUpdated notification:', groupInfo);
+      this._groupUpdated.update(() => {
+        return groupInfo
+      })
     });
 
     this.hubConnection.on('UserRemovedFromGroup', (notification) => {
       console.log('📬 Received UserRemovedFromGroup notification:', notification);
-    });
-
-    this.hubConnection.on('GroupUpdated', (notification) => {
-      console.log('📬 Received GroupUpdated notification:', notification);
     });
 
     this.hubConnection.on('UserUpdated', (notification) => {
@@ -172,10 +188,6 @@ export class NotificationsService {
 
     this.hubConnection.on('MessageDeleted', (notification) => {
       console.log('📬 Received MessageDeleted notification:', notification);
-    });
-
-    this.hubConnection.on('GroupDeleted', (notification) => {
-      console.log('📬 Received GroupDeleted notification:', notification);
     });
 
     this.hubConnection.on('AttachmentRemoved', (notification) => {

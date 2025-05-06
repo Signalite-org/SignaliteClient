@@ -1,4 +1,4 @@
-import {Component, input, signal, WritableSignal, effect, Output, EventEmitter, OnInit, OnDestroy} from '@angular/core';
+import {Component, input, signal, WritableSignal, effect, Output, EventEmitter, OnInit, OnDestroy, output} from '@angular/core';
 import {CardFriendComponent} from '../card-friend/card-friend.component';
 import {GroupFriendSearchComponent} from '../search-group-friend/group-friend-search.component';
 import {UserBasicInfo} from '../../../_models/UserBasicInfo';
@@ -57,14 +57,38 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
         
         if (!exists) {
           this.groupList.update(current => [...current, newGroup]);
-          this.toastr.info('Dodano cie do nowej grupy!');
+          this.toastr.info("You've been added to a new group!");
         }
         
         // Update our processed length marker
         this.lastProcessedAddedToGroupLength = groups.length;
       }
     });
-  }
+
+    effect(() => {
+      const deletedGroupId = this.notifiactionService.deletedGroup()
+      if (deletedGroupId > 0) {
+        const exists = this.groupList().some(group => group.id === deletedGroupId);
+        if (exists) {
+          this.groupList.update(current => current.filter(group => group.id !== deletedGroupId));
+          this.groupDeleted.emit()
+          this.toastr.info('Group has been deleted!');
+        }
+      }
+    });
+
+    effect(() => {
+      const updatedGroup = this.notifiactionService.groupUpdated()
+      if (updatedGroup.id > 0) {
+        
+        this.groupList.update(current => current.map(group => 
+          group.id === updatedGroup.id ? updatedGroup : group
+        ))
+        this.groupUpdated.emit()
+        this.toastr.info('Group has been updated!');
+      }
+    });
+}
  
   ngOnInit() {
     // Subskrybuj zmiany w liście grup
@@ -104,6 +128,9 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
  
   groupsViewEnabled = input(false);
   currentUser = input<UserBasicInfo | null>(null);
+
+  groupDeleted = output<void>()
+  groupUpdated = output<void>()
  
   // Przechowuje wszystkie grupy
   private groupList: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
@@ -121,6 +148,15 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
     } else {
       // Ustaw filtrowane grupy na prywatne grupy (2 użytkowników - bezpośrednie wiadomości)
       this.filteredGroups.set(this.groupList().filter((group) => group.isPrivate));
+    }
+  }
+
+  handleSearchTextChange(text: string) {
+    if (this.groupsViewEnabled()) {
+      this.filteredGroups.set(this.groupList().filter((group) => group.name.includes(text) && !group.isPrivate))
+    }
+    else {
+      this.filteredGroups.set(this.groupList().filter((group) => group.name.includes(text) && group.isPrivate))
     }
   }
 }
