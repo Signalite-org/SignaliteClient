@@ -71,7 +71,7 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
         const exists = this.groupList().some(group => group.id === deletedGroupId);
         if (exists) {
           this.groupList.update(current => current.filter(group => group.id !== deletedGroupId));
-          this.groupDeleted.emit()
+          this.groupDeleted.emit(deletedGroupId)
           this.toastr.info('Group has been deleted!');
         }
       }
@@ -129,7 +129,7 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
   groupsViewEnabled = input(false);
   currentUser = input<UserBasicInfo | null>(null);
 
-  groupDeleted = output<void>()
+  groupDeleted = output<number>()
   groupUpdated = output<void>()
  
   // Przechowuje wszystkie grupy
