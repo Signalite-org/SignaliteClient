@@ -119,6 +119,7 @@ header svg:hover, header mat-icon:hover {
   min-height: calc(clamp(3.2rem, 4.4vw, 5.7rem));
 
   align-items: center;
+  word-break: break-all;
 }
 
 .userImage {
@@ -250,4 +251,40 @@ svg, mat-icon {
 
 #file-details {
   font-size: clamp(0.7rem, 1vw, 1rem);
+}
+
+.dialog {
+  font-size: clamp(1rem, 2.2vh, 2rem);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: #3b3b67FF;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+#dialogButtons {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  width: 100%;
+}
+
+#dialogButtons button {
+  all: unset;
+
+  font-size: clamp(1rem, 2vh, 1rem);
+
+  min-width: 40%;
+  padding: 0.5rem;
+  min-height: clamp(0.2rem, 1.3vw, 1.3rem);
+  border: 2px solid rgba(255,255,255,0.1);
+  color: white;
+
+}
+
+#dialogButtons button:hover {
+  background: rgba(255,255,255,0.1);
 }

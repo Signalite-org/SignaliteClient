@@ -10,6 +10,7 @@ import { FriendRequestDTO } from '../_models/FriendRequestDTO';
 import { UserDTO } from '../_models/UserDTO';
 import { MessageDTO } from '../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../_models/MessageOfGroupDTO';
+import {MessageDelete} from '../_models/MessageDelete';
 
 @Injectable({
   providedIn: 'root'
@@ -32,8 +33,11 @@ export class NotificationsService {
   private messagesReceivedSource = new BehaviorSubject<MessageOfGroupDTO[]>([]);
   messageReceived$ = this.messagesReceivedSource.asObservable();
 
-  private messagesDeletedSource = new BehaviorSubject<MessageOfGroupDTO[]>([]);
+  private messagesDeletedSource = new BehaviorSubject<MessageDelete[]>([]);
   messageDeleted$ = this.messagesDeletedSource.asObservable();
+
+  private messagesModifiedSource = new BehaviorSubject<MessageOfGroupDTO[]>([]);
+  messageModified$ = this.messagesModifiedSource.asObservable();
 
   constructor(private router: Router) {
     console.log('NotificationsService constructed');
@@ -139,16 +143,21 @@ export class NotificationsService {
       console.log('📬 Received UserUpdated notification:', notification);
     });
 
-    this.hubConnection.on('MessageModified', (notification) => {
-      console.log('📬 Received MessageModified notification:', notification);
-    });
-
-    this.hubConnection.on('MessageDeleted', (message: MessageOfGroupDTO) => {
+    this.hubConnection.on('MessageDeleted', (message: MessageDelete) => { //GroupId, MessageId
       console.log('📬 Received MessageDeleted notification:', message);
       const deletedMessages = this.messagesDeletedSource.value;
-      const exists = deletedMessages.some(req => req.message.id === message.message.id);
+      const exists = deletedMessages.some(req => req.messageId === message.messageId);
       if (!exists) {
-        this.messagesReceivedSource.next([...deletedMessages, message])
+        this.messagesDeletedSource.next([...deletedMessages, message])
+      }
+    });
+
+    this.hubConnection.on('MessageModified', (message: MessageOfGroupDTO) => {
+      console.log('📬 Received MessageModified notification:', message);
+      const modifiedMessages = this.messagesModifiedSource.value;
+      const exists = modifiedMessages.some(req => req.message.id === message.message.id);
+      if (!exists) {
+        this.messagesReceivedSource.next([...modifiedMessages, message])
       }
     });
 
@@ -207,5 +216,9 @@ export class NotificationsService {
 
   clearDeletedMessages() {
     this.messagesDeletedSource.next([]);
+  }
+
+  clearModifiedMessages() {
+    this.messagesModifiedSource.next([]);
   }
 }

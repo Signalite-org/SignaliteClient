@@ -19,9 +19,6 @@ import {AccountService} from '../../../_services/account.service';
 import {UserService} from '../../../_services/user.service';
 import {UserDTO} from '../../../_models/UserDTO';
 import {Observable} from 'rxjs';
-import {
-  DialogAddFriendCreateGroupComponent
-} from '../dialog-add-friend-create-group/dialog-add-friend-create-group.component';
 import {NotificationsService} from '../../../_services/notifications.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
@@ -35,7 +32,7 @@ enum ChatLayoutStyle {
 
 @Component({
   selector: 'app-main-layout',
-  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, DialogAddFriendCreateGroupComponent, NgOptimizedImage],
+  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
@@ -75,6 +72,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.triggerNewMessagesForAllGroups.emit(messages);
       this.notificationsService.clearReceivedMessages();
     })
+
+    // On messages deleted
+    this.notificationsService.messageDeleted$.subscribe( messages => {
+      for(let i = 0; i < messages.length; i++) {
+        if(messages[i].groupId == this.currentGroupId()) {
+          this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
+        }
+      }
+      this.notificationsService.clearDeletedMessages();
+    })
   }
 
   ngOnDestroy() {
@@ -92,6 +99,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   // NOTIFICATIONS - EVENTS
   @Output() triggerNewMessageForCurrentGroup = new EventEmitter<MessageDTO>();
   @Output() triggerNewMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
+  @Output() triggerDeletedMessageForCurrentGroup = new EventEmitter<number>();
 
   protected userInfo : WritableSignal<UserDTO | null> = signal(null);
   protected userId : WritableSignal<number> = signal(-1);

@@ -104,7 +104,6 @@ export class BarMessageSendComponent {
 
   }
 
-
   triggerFileInput() {
     this.fileInputRef.nativeElement.click();
   }

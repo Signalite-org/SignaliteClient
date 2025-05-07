@@ -1,8 +1,8 @@
 <div class="content" #scrollContainer (scroll)="onScroll()">
 
   @if(
-    ( (!reachedFirstPage() && directionOlderMessages()) || (!isScrollVisible() && !isGroupInvalid()) )
-    && !isTopMessageInSet() && cachedMessages().length!=0
+    ( (!reachedFirstPage() && directionOlderMessages()) || (!isScrollVisible()) )
+    && !isTopMessageInSet() && cachedMessages().length != 0 && !isGroupInvalid()
     ) {
 
     <button id="down" (click)="loadPreviousPage(); directionOlderMessages.set(false)">
@@ -26,6 +26,7 @@
         [attachmentUrl]="message.attachment?.url ?? null"
         [attachmentName]='message.attachment?.name ?? "unnamed attachment"'
         [attachmentSize]="message.attachment?.fileSize ?? 0"
+        (onMessageDeletedEvent)="deleteMessage(message.id, false)"
       >
       </app-chat-message>
     </div>
