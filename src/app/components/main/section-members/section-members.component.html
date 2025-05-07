@@ -12,7 +12,7 @@
       Brak członków w tej grupie
     </div>
   } @else {
-    @for (member of members(); track member.id) {
+    @for (member of this.members(); track member.id) {
       <app-card-member 
         [user]="member" 
         [isOnline]="isUserOnline(member.id)">

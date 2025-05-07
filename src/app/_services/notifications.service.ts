@@ -20,6 +20,10 @@ export class NotificationsService {
   private hubConnection?: HubConnection;
   private hubUrl = environment.hubUrl;
   private handlersRegistered = false;
+
+  private defaultGroup: GroupBasicInfoDTO = {id: -1, name: "", photoUrl: "", isPrivate: false}
+  private defaultUser: UserBasicInfo = {id: -1, username: "", profilePhotoUrl: ""}
+
   // New BehaviorSubjects to track notifications
   private _friendRequests = signal<FriendRequestDTO[]>([]);
   public get friendRequests() {
@@ -31,17 +35,17 @@ export class NotificationsService {
     return this._friendRequestsAccepted.asReadonly();
   }
 
-  private _addedToGroup = signal<GroupBasicInfoDTO[]>([]);
+  private _addedToGroup = signal<GroupBasicInfoDTO>(this.defaultGroup);
   public get addedToGroup() {
     return this._addedToGroup.asReadonly();
   }
 
-  private _deletedGroup = signal<number>(0);
+  private _deletedGroup = signal<number>(-1);
   public get deletedGroup() {
     return this._deletedGroup.asReadonly();
   }
 
-  private _groupUpdated = signal<GroupBasicInfoDTO>({id: 0, name: "", photoUrl: "", isPrivate: false})
+  private _groupUpdated = signal<GroupBasicInfoDTO>(this.defaultGroup)
   public get groupUpdated() {
     return this._groupUpdated.asReadonly();
   }
@@ -51,7 +55,7 @@ export class NotificationsService {
     return this._messagesReceived.asReadonly();
   }
 
-  private _userAddedToGroup = signal<UserBasicInfo[]>([]);
+  private _userAddedToGroup = signal<UserBasicInfo>(this.defaultUser);
   public get userAddedToGroup() {
     return this._userAddedToGroup.asReadonly();
   }
@@ -142,36 +146,22 @@ export class NotificationsService {
 
     this.hubConnection.on('AddedToGroup', (groupInfo: GroupBasicInfoDTO) => {
       console.log('📬 Received AddedToGroup notification:', groupInfo);
-      this._addedToGroup.update(groups => {
-        if (!groups.some(group => group.id === groupInfo.id)) {
-          return [...groups, groupInfo];
-        }
-        return groups;
-      });
+      this._addedToGroup.set(groupInfo);
     });
 
     this.hubConnection.on('UserAddedToGroup', (userInfo: UserBasicInfo) => {
       console.log('📬 Received UserAddedToGroup notification:', userInfo);
-      this._userAddedToGroup.update(members => {
-        if (!members.some(member => member.id === userInfo.id)) {
-          return [...members, userInfo];
-        }
-        return members;
-      });
+      this._userAddedToGroup.set(userInfo);
     });
 
     this.hubConnection.on('GroupDeleted', (notification: {groupId: number}) => {
-      console.log('📬 Received GroupDeleted notification:', notification);
-      this._deletedGroup.update(() => {
-        return notification.groupId
-      })
+      console.log('📬 Received GroupDeleted notification:', notification.groupId);
+      this._deletedGroup.set(notification.groupId)
     });
 
     this.hubConnection.on('GroupUpdated', (groupInfo: GroupBasicInfoDTO) => {
       console.log('📬 Received GroupUpdated notification:', groupInfo);
-      this._groupUpdated.update(() => {
-        return groupInfo
-      })
+      this._groupUpdated.set(groupInfo)
     });
 
     this.hubConnection.on('UserRemovedFromGroup', (notification) => {
@@ -185,6 +175,7 @@ export class NotificationsService {
     this.hubConnection.on('MessageModified', (notification) => {
       console.log('📬 Received MessageModified notification:', notification);
     });
+
 
     this.hubConnection.on('MessageDeleted', (notification) => {
       console.log('📬 Received MessageDeleted notification:', notification);
@@ -226,11 +217,23 @@ export class NotificationsService {
   }
 
   clearAddedToGroup() {
-    this._addedToGroup.set([]);
+    this._addedToGroup.set(this.defaultGroup);
+  }
+
+  clearUserAddedToGroup() {
+    this._userAddedToGroup.set(this.defaultUser)
   }
 
   clearReceivedMessages() {
     this._messagesReceived.set([]);
+  }
+
+  clearDeletedGroup() {
+    this._deletedGroup.set(-1)
+  }
+
+  clearUpdatedGroup() {
+    this._groupUpdated.set(this.defaultGroup)
   }
 
   private retryConnection(token: string, maxRetries: number = 3, currentRetry: number = 0): Promise<void> {

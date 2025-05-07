@@ -149,7 +149,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     // Ustawiam minimalne opoznienie zeby sie zrefreshowała grupa
     setTimeout(() => {
       this.currentGroupId.set(groupId)
-    }, 5);
+    }, 1);
   }
 
 

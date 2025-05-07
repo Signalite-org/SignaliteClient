@@ -52,7 +52,7 @@ export class HeaderGroupFriend {
     });
   }
   
-  @Output() returnToNormalModeEvent = new EventEmitter<void>();
+  returnToNormalModeEvent = output<void>()
   groupDeleted = output<number>()
   
   // Close dropdown when clicking outside

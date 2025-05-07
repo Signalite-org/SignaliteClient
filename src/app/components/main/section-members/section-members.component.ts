@@ -27,7 +27,6 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
  
   // Subskrypcja do śledzenia
   private membersSubscription?: Subscription;
-  private lastProcessedUserAddedLength = 0;
  
   constructor(private groupService: GroupService, private presenceService: PresenceService, private notificationService: NotificationsService) {
     // Efekt reagujący na zmianę groupId
@@ -36,6 +35,15 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
       this.loadMembers();
     });
     
+    effect(() => {
+      const loadedMembers = this.groupService.groupMembers()
+      console.log(loadedMembers)
+      if (loadedMembers !== null) {
+        this.members.set([...loadedMembers.members, loadedMembers.owner]);
+        console.log(this.members())
+      }
+    });
+
     // Efekt dla śledzenia użytkowników online
     effect(() => {
       let onlineUsers = this.presenceService.onlineUserIds()
@@ -43,27 +51,7 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
       this.onlineUsersIds.set(onlineUsers);
       console.log('Online users updated:', this.onlineUsersIds());
     });
-
-    // Effect for user added to group notifications
-    effect(() => {
-      const usersAdded = this.notificationService.userAddedToGroup();
-      
-      // Only process if there are new items
-      if (usersAdded.length > 0 && usersAdded.length > this.lastProcessedUserAddedLength) {
-        // Get the newest added user
-        const newUser = usersAdded[usersAdded.length - 1];
-        
-        // Check if they belong to our current group (you might need to refine this logic)
-        // and if they already exist in our local array
-        const exists = this.members().some(req => req.id === newUser.id);
-        if (!exists) {
-          this.members.update(current => [...current, newUser]);
-        }
-        
-        // Update the processed length
-        this.lastProcessedUserAddedLength = usersAdded.length;
-      }
-    });
+    
   }
  
   ngOnInit() {
@@ -96,6 +84,9 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set(null);
    
+    this.groupService.getGroupMembers(currentGroupId);
+    this.loading.set(false);
+    /*
     // Anuluj poprzednią subskrypcję jeśli istnieje
     if (this.membersSubscription) {
       this.membersSubscription.unsubscribe();
@@ -115,6 +106,6 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
         this.members.set([]);
       }
     });
+    */
   }
-
 }

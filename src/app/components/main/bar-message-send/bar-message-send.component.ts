@@ -44,7 +44,7 @@ export class BarMessageSendComponent {
   }
 
   async sendMessage(message:string) {
-    if(this.currentGroupId() < 1 || message.trim() == "" || this.currentUser()?.id == undefined
+    if(this.currentGroupId() < 1  || this.currentUser()?.id == undefined
     || this.currentUser() == undefined) {
       return;
     }

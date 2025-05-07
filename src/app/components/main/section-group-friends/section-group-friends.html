@@ -8,12 +8,12 @@
     }
 
   }
-  @for(groupId of filteredGroups(); track groupId.id) {
+  @for(group of filteredGroups(); track group.id) {
     <app-user-card
-      [userName]="groupId.name"
-      [profileImageURL]='groupId.photoUrl ?? "../../../../assets/images/default-user.jpg"'
-      [lastMessage]='groupId.lastMessage ?? "no last messages"'
-      (click) = "onGroupFriendClicked.emit(groupId.id)"
+      [userName]="group.name"
+      [profileImageURL]='group.photoUrl ?? "../../../../assets/images/default-user.jpg"'
+      [lastMessage]='group.lastMessage ?? "no last messages"'
+      (click) = "onGroupFriendClicked.emit(group.id)"
     ></app-user-card>
   }
 </section>

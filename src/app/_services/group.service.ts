@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { effect, Injectable, signal } from "@angular/core";
 import { environment } from "../../environments/environment";
 import { HttpClient } from "@angular/common/http";
 import { BehaviorSubject, catchError, Observable, tap } from "rxjs";
@@ -7,6 +7,7 @@ import { handleError } from "../_utils/error.handler";
 import { GroupMembersDTO } from "../_models/GroupMembersDTO";
 import { MessageOfGroupDTO } from "../_models/MessageOfGroupDTO";
 import { MessageDTO } from "../_models/MessageDTO";
+import { NotificationsService } from "./notifications.service";
 
 @Injectable({
     providedIn: 'root'
@@ -15,10 +16,15 @@ export class GroupService {
     private baseUrl = `${environment.apiUrl}/api/groups`;
     
     // BehaviorSubject przechowujący aktualną listę grup
-    private groupsSubject = new BehaviorSubject<GroupBasicInfoDTO[]>([]);
-    
-    // Observable, który komponenty mogą subskrybować
-    public groups$ = this.groupsSubject.asObservable();
+    private _groups = signal<GroupBasicInfoDTO[]>([])
+    public get groups() {
+      return this._groups.asReadonly()
+    }
+
+    private _groupMembers = signal<GroupMembersDTO>({members: [], owner: {id: -1, username: "", profilePhotoUrl: ""}})
+    public get groupMembers() {
+      return this._groupMembers.asReadonly()
+    }
     
     // BehaviorSubject dla aktualizacji wiadomości
     private lastMessageUpdatedSubject = new BehaviorSubject<MessageOfGroupDTO[]>([]);
@@ -28,29 +34,51 @@ export class GroupService {
  
     constructor(
       private http: HttpClient,
+      private notificationService: NotificationsService
     ) { 
       // Inicjalizacja listy grup przy tworzeniu serwisu
-      this.refreshGroups();
+      this.fetchGroups();
+
+      effect(() => {
+        const updatedGroup = this.notificationService.groupUpdated()
+        if (updatedGroup.id > 0) {
+          this._groups.update(groups => groups.map(group => group.id === updatedGroup.id ? updatedGroup : group))
+        }
+      });
+
+      effect(() => {
+        const addedToGroup = this.notificationService.addedToGroup()
+        if (addedToGroup.id > 0) {
+          this._groups.update(groups => [...groups, addedToGroup])
+        }
+      });
+
+      effect(() => {
+        const deletedGroupId = this.notificationService.deletedGroup()
+        if (deletedGroupId > 0) {
+          this._groups.update(groups => groups.filter(group => group.id !== deletedGroupId))
+        }
+      });
+
+      effect(() => {
+        const userAddedToGroup = this.notificationService.userAddedToGroup()
+        if (userAddedToGroup.id > 0) {
+          let newGroupMembers = this._groupMembers()
+          console.log(`new group members: ${newGroupMembers.members}`)
+          newGroupMembers?.members.push(userAddedToGroup)
+          this._groupMembers.update(() => newGroupMembers)
+          console.log(`group members signał: ${this._groupMembers().members}`)
+        }
+      });
     }
     
     // Metoda do odświeżania listy grup
-    refreshGroups() {
+    fetchGroups() {
       this.http.get<GroupBasicInfoDTO[]>(this.baseUrl)
         .pipe(catchError(handleError))
         .subscribe(groups => {
-          this.groupsSubject.next(groups);
+          this._groups.set(groups);
         });
-    }
-    
-    getGroups(): Observable<GroupBasicInfoDTO[]> {
-        // Jeśli w subjeccie są już dane, używamy ich
-        if (this.groupsSubject.value.length > 0) {
-          return this.groups$;
-        }
-        
-        // W przeciwnym razie odświeżamy dane
-        this.refreshGroups();
-        return this.groups$;
     }
     
     // Metoda do aktualizacji lastMessage dla konkretnej grupy
@@ -87,7 +115,7 @@ export class GroupService {
     
     // Metoda do aktualizacji lastMessage w liście grup
     private updateGroupsLastMessage(groupId: number, senderUsername: string, content: string | null) {
-      const currentGroups = this.groupsSubject.value;
+      const currentGroups = this._groups();
       const groupIndex = currentGroups.findIndex(g => g.id === groupId);
       
       if (groupIndex !== -1) {
@@ -96,15 +124,8 @@ export class GroupService {
           ...currentGroups[groupIndex],
           lastMessage: `${senderUsername}: ${content || 'sent file'}`,
         };
-        
-        // Remove the group from its current position
-        const filteredGroups = currentGroups.filter(g => g.id !== groupId);
-        
-        // Create the new array with the updated group at the beginning
-        const updatedGroups = [updatedGroup, ...filteredGroups];
-        
-        // Emit the updated list of groups
-        this.groupsSubject.next(updatedGroups);
+
+        this._groups.update(groups => groups.map(group => group.id === groupId ? updatedGroup : group))
       }
     }
    
@@ -112,8 +133,7 @@ export class GroupService {
         return this.http.post<void>(`${this.baseUrl}?groupName=${encodeURIComponent(groupName)}`, {})
           .pipe(
             tap(() => {
-              // Po utworzeniu grupy odświeżamy listę grup
-              this.refreshGroups();
+              this.fetchGroups();
             }),
             catchError(handleError)
           );
@@ -124,7 +144,7 @@ export class GroupService {
         return this.http.put<void>(`${this.baseUrl}/${groupId}?groupName=${encodeURIComponent(groupName)}`, {})
           .pipe(
             tap(() => {
-              this.refreshGroups();
+              this.fetchGroups();
             }),
             catchError(handleError)
           );
@@ -137,7 +157,7 @@ export class GroupService {
         return this.http.post<void>(`${this.baseUrl}/photo/${groupId}`, formData)
           .pipe(
             tap(() => {
-              this.refreshGroups();
+              this.fetchGroups();
             }),
             catchError(handleError)
           );
@@ -150,18 +170,19 @@ export class GroupService {
           );
     }
    
-    getGroupMembers(groupId: number): Observable<GroupMembersDTO> {
-        return this.http.get<GroupMembersDTO>(`${this.baseUrl}/${groupId}/members`)
-          .pipe(
-            catchError(handleError)
-          );
+    getGroupMembers(groupId: number) {
+      this.http.get<GroupMembersDTO>(`${this.baseUrl}/${groupId}/members`)
+          .pipe(catchError(handleError))
+          .subscribe(members => {
+            this._groupMembers.set(members);
+          })
     }
    
     deleteGroup(groupId: number): Observable<void> {
         return this.http.delete<void>(`${this.baseUrl}/${groupId}`)
           .pipe(
             tap(() => {
-              this.refreshGroups();
+              this.fetchGroups();
             }),
             catchError(handleError)
           );

@@ -24,15 +24,15 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
  
   // SUBSCRIPTIONS
   private newMessageSubscription?: Subscription;
-  private groupsSubscription?: Subscription;
-  private lastProcessedAddedToGroupLength = 0;
+  //private groupsSubscription?: Subscription;
 
   // CONSTRUCTOR
   constructor(private groupsService: GroupService, private notifiactionService: NotificationsService, private toastr: ToastrService) {
+    // Ten efekt odpowiada za zaladowanie w dobre miejsce grup (prywatne/wieloosobowe) do opdowiednich tabów
     effect(() => {
       this.updateFilteredGroups();
-    });
-   
+    })
+    
     // LIVE EVENTS dla wiadomości z zewnętrznego źródła (np. SignalR)
     effect(() => {
       const emitter = this.newMessageTrigger();
@@ -48,73 +48,54 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
 
     // Effect for added to group notifications
     effect(() => {
-      const groups = this.notifiactionService.addedToGroup();
-      
-      // Only process if there are new items beyond what we've already processed
-      if (groups.length > 0 && groups.length > this.lastProcessedAddedToGroupLength) {
-        const newGroup = groups[groups.length - 1];
-        const exists = this.groupList().some(group => group.id === newGroup.id);
-        
-        if (!exists) {
-          this.groupList.update(current => [...current, newGroup]);
+        const addedToGroup = this.notifiactionService.addedToGroup();
+        if (addedToGroup.id > 0) {
           this.toastr.info("You've been added to a new group!");
+          this.notifiactionService.clearAddedToGroup();
         }
-        
-        // Update our processed length marker
-        this.lastProcessedAddedToGroupLength = groups.length;
-      }
     });
+
 
     effect(() => {
       const deletedGroupId = this.notifiactionService.deletedGroup()
       if (deletedGroupId > 0) {
-        const exists = this.groupList().some(group => group.id === deletedGroupId);
-        if (exists) {
-          this.groupList.update(current => current.filter(group => group.id !== deletedGroupId));
-          this.groupDeleted.emit(deletedGroupId)
-          this.toastr.info('Group has been deleted!');
-        }
+        this.groupDeleted.emit(deletedGroupId)
+        this.toastr.info('Group has been deleted!');
+        this.notifiactionService.clearDeletedGroup();
       }
     });
 
     effect(() => {
       const updatedGroup = this.notifiactionService.groupUpdated()
       if (updatedGroup.id > 0) {
-        
-        this.groupList.update(current => current.map(group => 
-          group.id === updatedGroup.id ? updatedGroup : group
-        ))
         this.groupUpdated.emit()
         this.toastr.info('Group has been updated!');
+        this.notifiactionService.clearUpdatedGroup();
       }
     });
 }
  
   ngOnInit() {
-    // Subskrybuj zmiany w liście grup
-    this.groupsSubscription = this.groupsService.groups$.subscribe(groups => {
-      this.groupList.set(groups);
+      //this.groupList.set(this.groupsService.groups());
       this.updateFilteredGroups();
-    });
-
-
   }
  
   ngOnDestroy() {
     // Sprzątamy subskrypcje przy zniszczeniu komponentu
     this.newMessageSubscription?.unsubscribe();
-    this.groupsSubscription?.unsubscribe();
+    //this.groupsSubscription?.unsubscribe();
   }
  
   // EVENT HANDLING
   newMessageTrigger = input<EventEmitter<MessageOfGroupDTO[]>>();
  
+  
   handleNewMessages(newMessages: MessageOfGroupDTO[]) {
     for(let i = 0; i < newMessages.length; i++) {
-      for(let j = 0; j < this.groupList().length; j++) {
-        if(this.groupList()[j].id == newMessages[i].groupId){
+      for(let j = 0; j < this.groupsService.groups().length; j++) {
+        if(this.groupsService.groups()[j].id == newMessages[i].groupId){
           this.groupsService.updateLastMessage(
-            this.groupList()[j].id, 
+            this.groupsService.groups()[j].id, 
             newMessages[i].message.sender.username, 
             newMessages[i].message?.content ?? 'sent file', 
             newMessages[i].message.id
@@ -123,7 +104,7 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
         }
       }
     }
-    this.updateFilteredGroups();
+    this.updateFilteredGroups()
   }
  
   groupsViewEnabled = input(false);
@@ -133,7 +114,7 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
   groupUpdated = output<void>()
  
   // Przechowuje wszystkie grupy
-  private groupList: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
+  //private groupList: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
  
   // Przechowuje albo prywatne, albo nieprywtne grupy
   protected filteredGroups: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
@@ -144,19 +125,19 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
      
     if(this.groupsViewEnabled()) {
       // Ustaw filtrowane grupy na publiczne grupy
-      this.filteredGroups.set(this.groupList().filter((group) => !group.isPrivate));
+      this.filteredGroups.set(this.groupsService.groups().filter((group) => !group.isPrivate));
     } else {
       // Ustaw filtrowane grupy na prywatne grupy (2 użytkowników - bezpośrednie wiadomości)
-      this.filteredGroups.set(this.groupList().filter((group) => group.isPrivate));
+      this.filteredGroups.set(this.groupsService.groups().filter((group) => group.isPrivate));
     }
   }
 
   handleSearchTextChange(text: string) {
     if (this.groupsViewEnabled()) {
-      this.filteredGroups.set(this.groupList().filter((group) => group.name.includes(text) && !group.isPrivate))
+      this.filteredGroups.set(this.groupsService.groups().filter((group) => group.name.includes(text) && !group.isPrivate))
     }
     else {
-      this.filteredGroups.set(this.groupList().filter((group) => group.name.includes(text) && group.isPrivate))
+      this.filteredGroups.set(this.groupsService.groups().filter((group) => group.name.includes(text) && group.isPrivate))
     }
   }
 }

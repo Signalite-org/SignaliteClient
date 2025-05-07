@@ -15,7 +15,7 @@ export class AutoLoginComponent implements OnInit {
   ngOnInit() {
     // Sprawdź, czy mamy już zalogowanego użytkownika
     if (this.accountService.currentUser()) {
-      this.router.navigateByUrl('/home');
+      this.router.navigateByUrl('/main');
       return;
     }
 
@@ -29,7 +29,7 @@ export class AutoLoginComponent implements OnInit {
     ).subscribe({
       next: () => {
         if (this.accountService.currentUser()) {
-          this.router.navigateByUrl('/home');
+          this.router.navigateByUrl('/main');
         } else {
           this.router.navigateByUrl('/login');
         }
