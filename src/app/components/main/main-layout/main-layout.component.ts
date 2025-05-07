@@ -134,9 +134,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
 
-  protected handleGroupDeleted() {
-    this.currentGroupId.set(-1)
-    console.log(this.currentGroupId())
+  protected handleGroupDeleted(groupId: number) {
+    if (this.currentGroupId() === groupId) {
+      this.currentGroupId.set(-1)
+    }
   }
 
   protected handleGroupUpdated() {

@@ -52,6 +52,41 @@ header {
   display: flex;
   flex-direction: column;
   animation: dropdown-fade 0.25s ease;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+/* Poprawione wyrównanie dla photo-btn */
+.photo-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center; /* To już masz, ale upewniam się */
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 15px; /* Takie samo jak option-btn */
+  color: #333;
+  font-family: inherit;
+  font-size: inherit;
+  gap: 8px; /* Takie samo jak option-btn */
+  line-height: 1; /* Dodaj to, aby wyrównać tekst */
+}
+
+.photo-btn mat-icon {
+  margin-right: 0; /* Usuń margin, używamy gap */
+  display: flex; /* Dodaj to dla lepszego wyrównania */
+  align-items: center; /* Dodaj to dla lepszego wyrównania */
+}
+
+/* Możesz też dodać to samo do innych przycisków dla spójności */
+.option-btn mat-icon {
+  display: flex;
+  align-items: center;
+}
+
+.photo-btn:hover {
+  background-color: #f0f0f0;
 }
 
 @keyframes dropdown-fade {
@@ -76,14 +111,12 @@ header {
   cursor: pointer;
   transition: background-color 0.2s ease;
   color: #333;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .option-btn:hover {
   background-color: #f0f2ff;
-}
-
-.option-btn mat-icon {
-  font-size: 18px;
 }
 
 .delete-btn:hover {
@@ -107,6 +140,8 @@ header {
   border: 1px solid #7b68ee;
   border-radius: 4px;
   outline: none;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .save-btn {
@@ -117,6 +152,8 @@ header {
   padding: 5px 10px;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .save-btn:hover {
@@ -142,6 +179,8 @@ header {
   outline: none;
   transition: all 0.3s ease;
   background-color: rgba(248, 249, 255, 0.8);
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .username-input:focus {
@@ -158,6 +197,8 @@ header {
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s ease;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .add-user-btn:hover {

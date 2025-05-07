@@ -16,7 +16,7 @@
     <app-header-group-friend
       (returnToNormalModeEvent)="returnToNormalChatLayout()"
       [isInFullChatMode]="currentChatLayout() == ChatLayoutStyle.CENTER_ONLY"
-      (groupDeleted)="handleGroupDeleted()"
+      (groupDeleted)="handleGroupDeleted($event)"
       [groupId]="currentGroupId()"
       class="header">
     </app-header-group-friend>
@@ -30,7 +30,7 @@
       [newMessageTrigger]="triggerNewMessagesForAllGroups"
       [groupsViewEnabled]="isGroupsViewEnabled()"
       class="left" [class.hidden]="hideLeftColumn()"
-      (groupDeleted)="handleGroupDeleted()"
+      (groupDeleted)="handleGroupDeleted($event)"
       (groupUpdated)="handleGroupUpdated()"
       (onGroupFriendClicked)="currentGroupId.set($event)"
       >

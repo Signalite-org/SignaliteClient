@@ -4,6 +4,7 @@ import {GroupService} from '../../../_services/group.service';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../_services/user.service';
 import { ToastrService } from 'ngx-toastr';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-header-group-friend',
@@ -24,11 +25,13 @@ export class HeaderGroupFriend {
   areOptionsVisible = signal(false);
   isRenaming = signal(false);
   newGroupName = signal("");
+  selectedFile = signal<File | null>(null)
   
   constructor(
     private groupService: GroupService, 
     private userService: UserService, 
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private sanitizer: DomSanitizer
   ) {
     effect(() => {
       console.log(this.groupId());
@@ -50,7 +53,7 @@ export class HeaderGroupFriend {
   }
   
   @Output() returnToNormalModeEvent = new EventEmitter<void>();
-  @Output() groupDeleted = new EventEmitter<void>();
+  groupDeleted = output<number>()
   
   // Close dropdown when clicking outside
   @HostListener('document:click', ['$event'])
@@ -107,7 +110,7 @@ export class HeaderGroupFriend {
         next: () => {
           this.toastr.success('Group deleted successfully');
           this.returnToNormalModeEvent.emit(); // Return to normal mode after deletion
-          this.groupDeleted.emit()
+          this.groupDeleted.emit(this.groupId())
         },
         error: (error) => {
           console.error('Error deleting group:', error);
@@ -117,6 +120,45 @@ export class HeaderGroupFriend {
     }
   }
   
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile.set(input.files[0]);
+      this.uploadGroupPhoto();
+    }
+  }
+  
+  uploadGroupPhoto() {
+    if (!this.selectedFile) {
+      this.toastr.warning('No file selected');
+      return;
+    }
+  
+    // Check file type
+    if (!this.selectedFile()!.type.match(/image\/(jpeg|jpg|png)/)) {
+      this.toastr.error('Invalid file type. Please select an image file (JPEG, PNG)');
+      return;
+    }
+  
+    if (this.selectedFile()!.size > 10 * 1024 * 1024) {
+      this.toastr.error('File is too large. Maximum size is 10MB');
+      return;
+    }
+  
+    this.groupService.updateGroupPhoto(this.groupId(), this.selectedFile()!).subscribe({
+      next: () => {
+        this.toastr.success('Group photo updated successfully');
+        this.areOptionsVisible.set(false);
+        this.selectedFile.set(null);
+      },
+      error: (error) => {
+        console.error('Error updating group photo:', error);
+        this.toastr.error(error);
+      }
+    });
+  }
+
+
   // Add user to group
   addUser() {
     // Sprawdź czy nazwa użytkownika nie jest pusta
