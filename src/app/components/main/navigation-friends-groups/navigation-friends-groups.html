@@ -3,6 +3,10 @@
   @if (isAddingGroup()) {
     <app-new-group (close)="onCloseAdd()"></app-new-group>
   }
+
+  @if (isAddingFriend()) {
+    <app-send-friend-request (close)="onCloseAdd()"></app-send-friend-request>
+  }
   <button (click)="onStartAdd()">
     <mat-icon class="icons" [svgIcon]="addIcon()"></mat-icon>
   </button>

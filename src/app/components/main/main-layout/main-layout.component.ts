@@ -20,9 +20,6 @@ import {AccountService} from '../../../_services/account.service';
 import {UserService} from '../../../_services/user.service';
 import {UserDTO} from '../../../_models/UserDTO';
 import {Observable} from 'rxjs';
-import {
-  DialogAddFriendCreateGroupComponent
-} from '../dialog-add-friend-create-group/dialog-add-friend-create-group.component';
 import {NotificationsService} from '../../../_services/notifications.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
@@ -37,7 +34,7 @@ enum ChatLayoutStyle {
 
 @Component({
   selector: 'app-main-layout',
-  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, DialogAddFriendCreateGroupComponent, NgOptimizedImage],
+  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })

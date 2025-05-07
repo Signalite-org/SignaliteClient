@@ -7,7 +7,7 @@ import { ToastrService } from 'ngx-toastr';
 import { UserDTO } from '../../_models/UserDTO';
 import { FriendRequestDTO } from '../../_models/FriendRequestDTO';
 import { NotificationsService } from '../../_services/notifications.service';
-import { skip } from 'rxjs';
+import { isEmpty, skip } from 'rxjs';
 import { UserBasicInfo } from '../../_models/UserBasicInfo';
 
 @Component({
@@ -22,7 +22,7 @@ export class FriendsComponent implements OnInit {
   friendRequests: FriendRequestDTO[] = [];
   isLoading = false;
   errorMessage = '';
-  recipientIdControl = new FormControl('');
+  recipientUsernameControl = new FormControl('');
 
   private lastProcessedFriendRequestsLength = 0;
   private lastProcessedFriendsLength = 0;
@@ -126,33 +126,6 @@ export class FriendsComponent implements OnInit {
     this.friendsService.getFriendRequests().subscribe({
       next: (response) => {
         this.friendRequests = response;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.errorMessage = error.message;
-        this.toastr.error(this.errorMessage);
-        this.isLoading = false;
-      }
-    });
-  }
-
-  sendFriendRequest(): void {
-    if (!this.recipientIdControl.value) {
-      this.toastr.warning('Proszę podać ID odbiorcy');
-      return;
-    }
-
-    const recipientId = parseInt(this.recipientIdControl.value, 10);
-    if (isNaN(recipientId)) {
-      this.toastr.warning('ID odbiorcy musi być liczbą');
-      return;
-    }
-
-    this.isLoading = true;
-    this.friendsService.sendFriendRequest(recipientId).subscribe({
-      next: () => {
-        this.toastr.success('Zaproszenie zostało wysłane');
-        this.recipientIdControl.reset();
         this.isLoading = false;
       },
       error: (error) => {

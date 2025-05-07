@@ -31,4 +31,9 @@ export class UserService {
           );
     }
 
+    checkUserExists(username: string): Observable<boolean> {
+      return this.http.get<boolean>(`${this.baseUrl}/user-exists/${username}`);
+    }
+
+
 }
