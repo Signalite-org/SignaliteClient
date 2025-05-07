@@ -3,13 +3,15 @@ import {GroupFriendsSwitchComponent} from '../switch-group-friends/group-friends
 import {MatMiniFabButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
 import { NewGroupComponent } from "../new-group/new-group.component";
+import { SendFriendRequestComponent } from '../../send-friend-request/send-friend-request.component';
 
 @Component({
   selector: 'navigation-friends-groups',
   imports: [
     GroupFriendsSwitchComponent,
     MatIcon,
-    NewGroupComponent
+    NewGroupComponent,
+    SendFriendRequestComponent
 ],
   templateUrl: './navigation-friends-groups.html',
   styleUrl: './navigation-friends-groups.scss'
@@ -19,6 +21,7 @@ export class NavigationFriendsGroups {
 
   @Output() isGroupsViewEnabledEvent = new EventEmitter<boolean>(false);
   protected isAddingGroup : WritableSignal<Boolean> = signal(false)
+  protected isAddingFriend: WritableSignal<boolean> = signal(false);
 
   isGroupsViewEnabled(showGroups :boolean) {
     this.isGroupsViewEnabledEvent.emit(showGroups);
@@ -30,12 +33,15 @@ export class NavigationFriendsGroups {
   }
 
   onCloseAdd() {
-    this.isAddingGroup.set(false)
+    this.isAddingGroup.set(false);
+    this.isAddingFriend.set(false);
   }
 
   onStartAdd() {
     if(this.addIcon() === "addGroup") {
-      this.isAddingGroup.set(true)
+      this.isAddingGroup.set(true);
+    } else {
+      this.isAddingFriend.set(true);
     }
   }
 }
