@@ -64,10 +64,10 @@ export class GroupService {
         const userAddedToGroup = this.notificationService.userAddedToGroup()
         if (userAddedToGroup.id > 0) {
           let newGroupMembers = this._groupMembers()
-          console.log(`new group members: ${newGroupMembers.members}`)
+          console.log('New group members:', JSON.stringify(newGroupMembers.members, null, 2))
           newGroupMembers?.members.push(userAddedToGroup)
           this._groupMembers.update(() => newGroupMembers)
-          console.log(`group members signał: ${this._groupMembers().members}`)
+          console.log('Group members signal after update:', JSON.stringify(this._groupMembers().members, null, 2))
         }
       });
     }
@@ -94,7 +94,6 @@ export class GroupService {
           profilePhotoUrl: undefined
         }
       };
-      
       // Tworzymy obiekt MessageOfGroupDTO
       const messageOfGroupDTO: MessageOfGroupDTO = {
         groupId: groupId,

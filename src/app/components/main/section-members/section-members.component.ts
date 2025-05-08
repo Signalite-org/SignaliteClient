@@ -38,9 +38,35 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
     effect(() => {
       const loadedMembers = this.groupService.groupMembers()
       console.log(loadedMembers)
-      if (loadedMembers !== null) {
+
+      if (loadedMembers.owner.id !== -1) {
         this.members.set([...loadedMembers.members, loadedMembers.owner]);
         console.log(this.members())
+        this.loading.set(false)
+      }
+    });
+
+
+    effect(() => {
+      const addedUser = this.notificationService.userAddedToGroup();
+      console.log('User added to group notification:', addedUser);
+      
+      if (addedUser.id > 0 && this.groupId() > 0) {
+        // Sprawdzamy czy użytkownik już istnieje w liście
+        const currentMembers = this.members();
+        
+        // Sprawdzamy czy użytkownik nie jest już na liście
+        const userExists = currentMembers.some(member => member.id === addedUser.id);
+        
+        if (!userExists) {
+          console.log('Adding new user to members list:', addedUser);
+          this.members.update(members => [...members, addedUser]);
+        } else {
+          console.log('User already exists in members list');
+        }
+        
+        // Wyczyszczenie powiadomienia po przetworzeniu
+        this.notificationService.clearUserAddedToGroup();
       }
     });
 
@@ -85,7 +111,6 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
     this.error.set(null);
    
     this.groupService.getGroupMembers(currentGroupId);
-    this.loading.set(false);
     /*
     // Anuluj poprzednią subskrypcję jeśli istnieje
     if (this.membersSubscription) {
