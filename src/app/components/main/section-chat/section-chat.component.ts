@@ -2,9 +2,8 @@ import {
   AfterViewInit,
   Component,
   effect,
-  ElementRef, EventEmitter, Input,
+  ElementRef, EventEmitter,
   input,
-  OnInit,
   signal,
   ViewChild,
   WritableSignal
@@ -14,16 +13,16 @@ import {GroupService} from '../../../_services/group.service';
 import {MessageService} from '../../../_services/message.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
 import {PaginationQuery} from '../../../_models/PaginationQuery';
-import {UserService} from '../../../_services/user.service';
-import {SIGNAL} from '@angular/core/primitives/signals';
 import {AccountService} from '../../../_services/account.service';
-import {NotificationsService} from '../../../_services/notifications.service';
 import {Subscription} from 'rxjs';
+import {DialogEditMessageComponent} from '../dialog-edit-message/dialog-edit-message.component';
+import {MessageEdit} from '../../../_models/MessageEdit';
 
 @Component({
   selector: 'app-section-chat',
   imports: [
-    ChatMessageComponent
+    ChatMessageComponent,
+    DialogEditMessageComponent
   ],
   templateUrl: './section-chat.component.html',
   styleUrl: './section-chat.component.css'
@@ -31,16 +30,14 @@ import {Subscription} from 'rxjs';
 export class SectionChatComponent implements AfterViewInit {
 
   /*
-  TODO remove, update messages
-
-  TODO update totalPages when removing messages
-  TODO update topMessageId when removing new messages
+  TODO update last messages when editing or removing
   */
+
+  readonly MAX_CACHED_MESSAGES: number = 20;
 
   currentGroup = input(-1)
   currentUserId: WritableSignal<number> = signal(-1);
 
-  readonly MAX_CACHED_MESSAGES: number = 20;
   cachedMessages: WritableSignal<MessageDTO[]> = signal([]);
 
   ////////////
@@ -49,6 +46,12 @@ export class SectionChatComponent implements AfterViewInit {
 
   newMessageTrigger = input<EventEmitter<MessageDTO>>();
   private newMessageSubscription?: Subscription;
+
+  deleteMessageTrigger = input<EventEmitter<number>>();
+  private deleteMessageSubscription?: Subscription;
+
+  editMessageTrigger = input<EventEmitter<MessageEdit>>();
+  private editMessageSubscription?: Subscription;
 
   ////////////////
   // PAGINATION //
@@ -59,7 +62,7 @@ export class SectionChatComponent implements AfterViewInit {
   reachedLastPage: WritableSignal<boolean> = signal(true);
   reachedFirstPage: WritableSignal<boolean> = signal(true);
   isTopMessageInSet: WritableSignal<boolean> = signal(true);
-  topMessageId: number = 0;
+  topMessageId: WritableSignal<number> = signal(0);
 
   // this is used to track for which page the message belongs to
   // messageId -> pageNumber
@@ -115,6 +118,30 @@ export class SectionChatComponent implements AfterViewInit {
         });
       }
     });
+
+    effect(() => {
+      const emitter = this.deleteMessageTrigger();
+
+      // Unsubscribe from the previous emitter (if any)
+      this.deleteMessageSubscription?.unsubscribe();
+
+      // Subscribe to the new one
+      if (emitter) {
+        this.deleteMessageSubscription = emitter.subscribe((messageId: number) => {
+          this.deleteMessage(messageId);
+        });
+      }
+    });
+
+    effect(() => {
+      const emitter = this.editMessageTrigger();
+      this.editMessageSubscription?.unsubscribe();
+      if (emitter) {
+        this.editMessageSubscription = emitter.subscribe((edit: MessageEdit) => {
+          this.editMessage(edit.content, edit.messageId);
+        })
+      }
+    });
   }
 
   ngAfterViewInit() {
@@ -126,11 +153,113 @@ export class SectionChatComponent implements AfterViewInit {
     }).observe(container);
   }
 
+  // DELETING MESSAGES
+  deleteMessage(messageId: number, localOnly: boolean = true) {
+
+    if(messageId <= 1) {
+      return;
+    }
+
+    // Refresh cache
+    this.cachedMessages.update(messages => {
+        return messages.filter(message => message.id !== messageId);
+      }
+    );
+
+    // is deleting top message
+    if(messageId == this.topMessageId()) {
+      const paginationQuery: PaginationQuery = { pageNumber: 1 };
+
+      // try to find new top message
+      this.messageService.getMessageThread(this.currentGroup(), paginationQuery)
+        .subscribe(thread => {
+
+          // WE ARE deleting the message
+          // Message has not yet been deleted from db
+          if(localOnly) {
+            if(thread.items.length < 2) {
+              this.topMessageId.set(-1);
+            } else {
+              this.topMessageId.set(thread.items[1].id);
+            }
+          }
+          // NOTIFICATION that we should delete the message
+          // Message has already been deleted from db
+          else {
+            if(thread.items.length == 0) {
+              this.topMessageId.set(-1);
+            } else {
+              this.topMessageId.set(thread.items[0].id);
+            }
+          }
+
+        });
+    }
+
+    this.updateTotalPages();
+
+    this.isTopMessageInSet.set(
+      this.cachedMessages()
+        .filter(message=> message.id == this.topMessageId() ).length == 1);
+
+    // TODO update last message in section group-friends
+
+    // Deleted all messages in cache
+    // There is no way to check what was the previous page
+    if(this.cachedMessages().length == 0) {
+      this.loadMessagesLatest();
+    }
+
+    if(localOnly) {
+      return;
+    }
+
+    this.messageService.deleteMessage(messageId).subscribe();
+  }
+
+  // MODIFYING MESSAGES
+  showModifyMessageDialog: WritableSignal<boolean> = signal(false);
+  messageToModify: WritableSignal<null | MessageDTO> = signal(null);
+
+  editMessage(messageText: string, messageId: number, localOnly: boolean = true) {
+    if(messageId < 1) {
+      return;
+    }
+
+    const trimmedText = messageText.trim();
+    const index = this.cachedMessages().findIndex(message => message.id == messageId);
+    if(index > -1) {
+      this.cachedMessages.update(messages => {
+        messages[index].content = trimmedText;
+        messages[index].lastModification = this.formatDateTime(this.getFormattedCurrentDate());
+        return messages;
+      })
+    }
+
+    if(localOnly || trimmedText === "") {
+      return;
+    }
+
+    this.messageService.modifyMessage(messageId, messageText).subscribe();
+
+    // TODO update last message in section group-friends
+
+  }
+
   ///////////////////////
   // FETCHING MESSAGES //
   ///////////////////////
 
   handleNewMessage(message: MessageDTO) {
+
+    // Scroll back to top if current user sent message
+    //          - and is viewing old history
+    if(message.sender.id == this.currentUserId() && !this.isTopMessageInSet()) {
+      this.loadMessagesLatest();
+      const scrollContainer = this.scrollContainer.nativeElement as HTMLElement;
+      scrollContainer.scrollTop = 0;
+      return;
+    }
 
     // Make sure to prepend message only if the newest message is visible
     // Don't prepend message when user is viewing old history
@@ -142,14 +271,17 @@ export class SectionChatComponent implements AfterViewInit {
       if(this.cachedMessages().length > this.MAX_CACHED_MESSAGES) {
         this.cachedMessages.update(messages =>
           {
-            messages.pop();
+            const message = messages.pop();
+            if(message && message.id == this.topMessageId()) {
+              this.isTopMessageInSet.set(false);
+            }
             return messages;
           }
         );
       }
     }
 
-    this.topMessageId = message.id;
+    this.topMessageId.set(message.id);
     this.updateTotalPages();
   }
 
@@ -166,7 +298,9 @@ export class SectionChatComponent implements AfterViewInit {
       this.cachedMessages.set(thread.items);
       this.cachedMessages().forEach(msg => this.messagePageMap.set(msg.id, 1));
       this.reachedLastPage.set(1 == this.totalPages());
-      this.topMessageId = thread.items[0].id;
+      if(thread.items.length != 0) {
+        this.topMessageId.set(thread.items[0].id);
+      }
     })
     setTimeout(() => {
       this.checkScrollVisibility(this.scrollContainer.nativeElement);
@@ -175,7 +309,7 @@ export class SectionChatComponent implements AfterViewInit {
 
 
   async loadNextPage() {
-    if (this.isGroupInvalid() || this.reachedLastPage()) return;
+    if (this.isGroupInvalid() || this.reachedLastPage() || this.cachedMessages().length == 0) return;
 
     let lastMsg = this.cachedMessages()[this.cachedMessages().length - 1];
 
@@ -201,13 +335,14 @@ export class SectionChatComponent implements AfterViewInit {
       hasNew = await this.loadMessagesFromPage(this.currentPage(), true);
     }
 
-    this.reachedFirstPage.set(this.currentPage() == 1);
+    this.reachedFirstPage.set(this.isTopMessageInSet());
     this.reachedLastPage.set(this.currentPage() == this.totalPages());
+    console.log(this.isTopMessageInSet());
   }
 
 
   async loadPreviousPage() {
-    if (this.isGroupInvalid() || this.reachedFirstPage()) return;
+    if (this.isGroupInvalid() || this.reachedFirstPage() || this.cachedMessages().length == 0) return;
 
     let firstMsg = this.cachedMessages()[0];
 
@@ -221,7 +356,7 @@ export class SectionChatComponent implements AfterViewInit {
      Previous page won't be there if enough messages were deleted
      and drastically changed pagination.
     */
-    while(this.currentPage() > this.totalPages() && this.currentPage() > 1) {
+    while(this.currentPage() > this.totalPages() && this.currentPage() > 2) {
       this.currentPage.update(page => page - 1);
     }
 
@@ -308,13 +443,16 @@ export class SectionChatComponent implements AfterViewInit {
             });
           }
 
-          // check if cache is reaching the newest message
-          this.isTopMessageInSet.set(messageMap.has(this.topMessageId));
-
           this.cachedMessages.set(
             isNextPage
               ? Array.from(messageMap.values()).slice(-this.MAX_CACHED_MESSAGES)
               : Array.from(messageMap.values()).slice(0, this.MAX_CACHED_MESSAGES)
+          );
+
+          // check if cache is reaching the newest message
+          this.isTopMessageInSet.set(
+            this.cachedMessages()
+              .filter(message=> message.id == this.topMessageId() ).length == 1
           );
 
           resolve(hasAnyUnstoredMessages);
@@ -378,6 +516,7 @@ export class SectionChatComponent implements AfterViewInit {
         this.loadNextPage(); // Scrolling up → older messages
       }
 
+
       if (!this.directionOlderMessages() && atBottom && !this.reachedFirstPage()) {
         this.loadPreviousPage(); // Scrolling down → newer messages
       }
@@ -390,5 +529,23 @@ export class SectionChatComponent implements AfterViewInit {
     var newArray = array.slice();
     newArray.unshift(value);
     return newArray;
+  }
+
+  getFormattedCurrentDate(): string {
+    const now = new Date();
+
+    const pad = (num: number, size: number = 2) => num.toString().padStart(size, '0');
+
+    const year = now.getFullYear();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    const hours = pad(now.getHours());
+    const minutes = pad(now.getMinutes());
+    const seconds = pad(now.getSeconds());
+
+    const milliseconds = now.getMilliseconds(); // e.g. 475
+    const highPrecision = pad(milliseconds, 3) + '0000'; // mock extra digits to match .fffffff
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${highPrecision}`;
   }
 }

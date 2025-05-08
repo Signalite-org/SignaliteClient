@@ -24,6 +24,7 @@ import {NotificationsService} from '../../../_services/notifications.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import {NgOptimizedImage} from '@angular/common';
+import {MessageEdit} from '../../../_models/MessageEdit';
 import { NewGroupComponent } from '../new-group/new-group.component';
 
 enum ChatLayoutStyle {
@@ -53,7 +54,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
     effect(() => {
       const messages = this.notificationsService.messagesReceived();
-      
+
       // Only process if there are new messages
       if (messages.length > 0 && messages.length > this.lastProcessedMessagesLength) {
         // Process all the messages
@@ -62,13 +63,13 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             this.triggerNewMessageForCurrentGroup.emit(messages[i].message);
           }
         }
-        
+
         // Emit all messages for global handling
         this.triggerNewMessagesForAllGroups.emit(messages);
-        
+
         // Clear the messages from notifications service
         this.notificationsService.clearReceivedMessages();
-        
+
         // Update our processed length
         this.lastProcessedMessagesLength = 0; // Reset to 0 since we cleared the messages
       }
@@ -85,7 +86,34 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     )
     this.setupResizeListener();
 
+    //////////////////////////
+    // SETUP OF LIVE EVENTS //
+    //////////////////////////
 
+
+    // On messages deleted
+    this.notificationsService.messageDeleted$.subscribe( messages => {
+      for(let i = 0; i < messages.length; i++) {
+        if(messages[i].groupId == this.currentGroupId()) {
+          this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
+        }
+      }
+      this.notificationsService.clearDeletedMessages();
+    })
+
+    // On message edited
+    this.notificationsService.messageModified$.subscribe( messages => {
+      for(let i = 0; i < messages.length; i++) {
+        if(messages[i].groupId == this.currentGroupId()) {
+          const modifiedMessage : MessageEdit = {
+            messageId: messages[i].message.id,
+            content: messages[i].message.content ?? ''
+          }
+          this.triggerEditMessageForCurrentGroup.emit(modifiedMessage);
+        }
+      }
+      this.notificationsService.clearModifiedMessages();
+    })
   }
 
   ngOnDestroy() {
@@ -103,6 +131,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   // NOTIFICATIONS - EVENTS
   @Output() triggerNewMessageForCurrentGroup = new EventEmitter<MessageDTO>();
   @Output() triggerNewMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
+  @Output() triggerDeletedMessageForCurrentGroup = new EventEmitter<number>();
+  @Output() triggerEditMessageForCurrentGroup = new EventEmitter<MessageEdit>();
+  @Output() triggerEditMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
 
   protected userInfo : WritableSignal<UserDTO | null> = signal(null);
   protected userId : WritableSignal<number> = signal(-1);

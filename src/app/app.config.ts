@@ -6,6 +6,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { tokenInterceptor } from './_interceptors/token.interceptor';
 import { ToastrModule } from 'ngx-toastr';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import {provideCloudinaryLoader} from '@angular/common';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,6 +14,6 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([tokenInterceptor])),
-    importProvidersFrom(ToastrModule.forRoot())
+    importProvidersFrom(ToastrModule.forRoot()),
   ]
 };

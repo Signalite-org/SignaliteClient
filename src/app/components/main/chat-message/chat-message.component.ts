@@ -1,4 +1,15 @@
-import {Component, ElementRef, input, Input, OnInit, Renderer2, signal, WritableSignal} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  input,
+  Input,
+  OnInit, output,
+  Output,
+  Renderer2,
+  signal,
+  WritableSignal
+} from '@angular/core';
 import {NgOptimizedImage, provideCloudinaryLoader} from '@angular/common';
 import {MatIcon} from '@angular/material/icon';
 
@@ -13,6 +24,8 @@ import {MatIcon} from '@angular/material/icon';
 })
 export class ChatMessageComponent implements OnInit {
   @Input() isOwnMessage: boolean = false;
+  @Output() onMessageDeletedEvent = new EventEmitter<void>();
+  @Output() onMessageEditClickedEvent = new EventEmitter<void>();
 
   isInCompactMode = input(false)
   isMessageMerged = input(false)
@@ -33,11 +46,13 @@ export class ChatMessageComponent implements OnInit {
 
   date = input('22/02/2023, 21:37');
 
+  showConfirmDialog: WritableSignal<boolean> =  signal(false);
+  dialogText: string = "Delete this message?";
+
   constructor(
     private renderer: Renderer2,
     private el: ElementRef
   ) { }
-
 
   ngOnInit() {
     this.updateHostLayout();

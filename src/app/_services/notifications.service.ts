@@ -11,6 +11,7 @@ import { UserDTO } from '../_models/UserDTO';
 import { MessageDTO } from '../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../_models/MessageOfGroupDTO';
 import { UserBasicInfo } from '../_models/UserBasicInfo';
+import {MessageDelete} from '../_models/MessageDelete';
 
 @Injectable({
   providedIn: 'root'
@@ -60,6 +61,12 @@ export class NotificationsService {
     return this._userAddedToGroup.asReadonly();
   }
 
+  private messagesDeletedSource = new BehaviorSubject<MessageDelete[]>([]);
+  messageDeleted$ = this.messagesDeletedSource.asObservable();
+
+  private messagesModifiedSource = new BehaviorSubject<MessageOfGroupDTO[]>([]);
+  messageModified$ = this.messagesModifiedSource.asObservable();
+
   constructor(private router: Router) {
     console.log('NotificationsService constructed');
   }
@@ -69,15 +76,15 @@ export class NotificationsService {
       console.error('No token provided for notifications hub connection');
       return Promise.reject('No token provided');
     }
-  
+
     // If a connection already exists, just return
     if (this.hubConnection) {
       console.log('notifications hub connection already exists, not creating a new one');
       return Promise.resolve();
     }
-    
+
     console.log('Creating notifications hub connection...');
-  
+
     // Create the connection
     this.hubConnection = new HubConnectionBuilder()
       .withUrl(`${this.hubUrl}/notifications`, {
@@ -85,10 +92,10 @@ export class NotificationsService {
       })
       .withAutomaticReconnect()
       .build();
-  
+
     // IMPORTANT: Register handlers BEFORE starting the connection
     this.registerSignalRHandlers();
-  
+
     // Return the promise from start operation
     return this.retryConnection(token)
   }
@@ -97,14 +104,13 @@ export class NotificationsService {
     if (!this.hubConnection) {
       return Promise.reject('No hub connection exists');
     }
-  
+
     return this.hubConnection.start()
       .then(() => {
         console.log('✅ Successfully connected to notifications hub');
       })
       .catch(error => {
         console.error('❌ Error starting notifications hub connection:', error);
-        throw error;
       });
   }
 
@@ -172,13 +178,22 @@ export class NotificationsService {
       console.log('📬 Received UserUpdated notification:', notification);
     });
 
-    this.hubConnection.on('MessageModified', (notification) => {
-      console.log('📬 Received MessageModified notification:', notification);
+    this.hubConnection.on('MessageDeleted', (message: MessageDelete) => { //GroupId, MessageId
+      console.log('📬 Received MessageDeleted notification:', message);
+      const deletedMessages = this.messagesDeletedSource.value;
+      const exists = deletedMessages.some(req => req.messageId === message.messageId);
+      if (!exists) {
+        this.messagesDeletedSource.next([...deletedMessages, message])
+      }
     });
 
-
-    this.hubConnection.on('MessageDeleted', (notification) => {
-      console.log('📬 Received MessageDeleted notification:', notification);
+    this.hubConnection.on('MessageModified', (message: MessageOfGroupDTO) => {
+      console.log('📬 Received MessageModified notification:', message);
+      const modifiedMessages = this.messagesModifiedSource.value;
+      const exists = modifiedMessages.some(req => req.message.id === message.message.id);
+      if (!exists) {
+        this.messagesModifiedSource.next([...modifiedMessages, message])
+      }
     });
 
     this.hubConnection.on('AttachmentRemoved', (notification) => {
@@ -250,5 +265,13 @@ export class NotificationsService {
           throw err;
         }
       });
+  }
+
+  clearDeletedMessages() {
+    this.messagesDeletedSource.next([]);
+  }
+
+  clearModifiedMessages() {
+    this.messagesModifiedSource.next([]);
   }
 }
