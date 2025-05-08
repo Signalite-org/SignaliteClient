@@ -1,12 +1,14 @@
-import {Component, input, signal, WritableSignal, effect, Output, EventEmitter} from '@angular/core';
+import {Component, input, signal, WritableSignal, effect, Output, EventEmitter, OnInit, OnDestroy, output} from '@angular/core';
 import {CardFriendComponent} from '../card-friend/card-friend.component';
 import {GroupFriendSearchComponent} from '../search-group-friend/group-friend-search.component';
 import {UserBasicInfo} from '../../../_models/UserBasicInfo';
 import {GroupBasicInfoDTO} from '../../../_models/GroupBasicInfoDTO';
 import {GroupService} from '../../../_services/group.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
-import {Subscription} from 'rxjs';
+import {skip, Subscription} from 'rxjs';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
+import { NotificationsService } from '../../../_services/notifications.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'section-group-friends',
@@ -17,90 +19,125 @@ import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
   templateUrl: './section-group-friends.html',
   styleUrl: './section-group-friends.css'
 })
-export class SectionGroupFriends {
-
-  // TODO fetch newly created group by listening to event
-
+export class SectionGroupFriends implements OnInit, OnDestroy {
   @Output() onGroupFriendClicked = new EventEmitter<number>();
+ 
+  // SUBSCRIPTIONS
+  private newMessageSubscription?: Subscription;
+  //private groupsSubscription?: Subscription;
 
-  /////////////////
-  // CONSTRUCTOR //
-  /////////////////
-
-  constructor(groupsService: GroupService) {
-    groupsService.getGroups().subscribe( groups => {
-        this.groupList.set(groups);
-        this.updateFilteredGroups();
-      }
-    );
+  // CONSTRUCTOR
+  constructor(private groupsService: GroupService, private notifiactionService: NotificationsService, private toastr: ToastrService) {
+    // Ten efekt odpowiada za zaladowanie w dobre miejsce grup (prywatne/wieloosobowe) do opdowiednich tabów
     effect(() => {
       this.updateFilteredGroups();
-    });
-
-    // LIVE EVENTS
-
+    })
+    
+    // LIVE EVENTS dla wiadomości z zewnętrznego źródła (np. SignalR)
     effect(() => {
       const emitter = this.newMessageTrigger();
-
-      // Unsubscribe from the previous emitter (if any)
+      // Wypisz poprzednią subskrypcję (jeśli istnieje)
       this.newMessageSubscription?.unsubscribe();
-
-      // Subscribe to the new one
+      // Subskrybuj nową
       if (emitter) {
         this.newMessageSubscription = emitter.subscribe((messages: MessageOfGroupDTO[]) => {
           this.handleNewMessages(messages);
         });
       }
     });
+
+    // Effect for added to group notifications
+    effect(() => {
+        const addedToGroup = this.notifiactionService.addedToGroup();
+        if (addedToGroup.id > 0) {
+          this.toastr.info("You've been added to a new group!");
+          this.notifiactionService.clearAddedToGroup();
+        }
+    });
+
+
+    effect(() => {
+      const deletedGroupId = this.notifiactionService.deletedGroup()
+      if (deletedGroupId > 0) {
+        this.groupDeleted.emit(deletedGroupId)
+        this.toastr.info('Group has been deleted!');
+        this.notifiactionService.clearDeletedGroup();
+      }
+    });
+
+    effect(() => {
+      const updatedGroup = this.notifiactionService.groupUpdated()
+      if (updatedGroup.id > 0) {
+        this.groupUpdated.emit()
+        this.toastr.info('Group has been updated!');
+        this.notifiactionService.clearUpdatedGroup();
+      }
+    });
+}
+ 
+  ngOnInit() {
+      //this.groupList.set(this.groupsService.groups());
+      this.updateFilteredGroups();
   }
-
-  ////////////////////
-  // EVENT HANDLING //
-  ////////////////////
-
+ 
+  ngOnDestroy() {
+    // Sprzątamy subskrypcje przy zniszczeniu komponentu
+    this.newMessageSubscription?.unsubscribe();
+    //this.groupsSubscription?.unsubscribe();
+  }
+ 
+  // EVENT HANDLING
   newMessageTrigger = input<EventEmitter<MessageOfGroupDTO[]>>();
-  private newMessageSubscription?: Subscription;
-
+ 
+  
   handleNewMessages(newMessages: MessageOfGroupDTO[]) {
-
     for(let i = 0; i < newMessages.length; i++) {
-      for(let j = 0; j < this.groupList().length; j++) {
-        if(this.groupList()[j].id == newMessages[i].groupId){
-          this.groupList.update(groups => {
-            groups[j].lastMessage = newMessages[i].message.sender.username + ": " + (newMessages[i].message?.content ?? 'sent file');
-            return groups
-          })
+      for(let j = 0; j < this.groupsService.groups().length; j++) {
+        if(this.groupsService.groups()[j].id == newMessages[i].groupId){
+          this.groupsService.updateLastMessage(
+            this.groupsService.groups()[j].id, 
+            newMessages[i].message.sender.username, 
+            newMessages[i].message?.content ?? 'sent file', 
+            newMessages[i].message.id
+          );
           break;
         }
       }
     }
-
-    this.updateFilteredGroups();
+    this.updateFilteredGroups()
   }
-
-  ////////////////////
-
+ 
   groupsViewEnabled = input(false);
   currentUser = input<UserBasicInfo | null>(null);
 
-  // stores all groups
-  private groupList: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
-
-  // stores either private or not private groups
+  groupDeleted = output<number>()
+  groupUpdated = output<void>()
+ 
+  // Przechowuje wszystkie grupy
+  //private groupList: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
+ 
+  // Przechowuje albo prywatne, albo nieprywtne grupy
   protected filteredGroups: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
-
+ 
   updateFilteredGroups() {
-    if(this.currentUser ==  null)
+    if(this.currentUser == null)
       return;
-
+     
     if(this.groupsViewEnabled()) {
-      // set filtered groups to public groups
-      this.filteredGroups.set(this.groupList().filter((group) => !group.isPrivate))
-
+      // Ustaw filtrowane grupy na publiczne grupy
+      this.filteredGroups.set(this.groupsService.groups().filter((group) => !group.isPrivate));
     } else {
-      // set filtered groups to private groups (2 users - direct friend messages)
-      this.filteredGroups.set(this.groupList().filter((group) => group.isPrivate))
+      // Ustaw filtrowane grupy na prywatne grupy (2 użytkowników - bezpośrednie wiadomości)
+      this.filteredGroups.set(this.groupsService.groups().filter((group) => group.isPrivate));
     }
   }
 
+  handleSearchTextChange(text: string) {
+    if (this.groupsViewEnabled()) {
+      this.filteredGroups.set(this.groupsService.groups().filter((group) => group.name.includes(text) && !group.isPrivate))
+    }
+    else {
+      this.filteredGroups.set(this.groupsService.groups().filter((group) => group.name.includes(text) && group.isPrivate))
+    }
+  }
 }

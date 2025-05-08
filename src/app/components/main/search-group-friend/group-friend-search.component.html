@@ -6,7 +6,7 @@
 -->
 
 <div id="row">
-  <input type="text" />
+  <input type="text" (input)="onInputChange($event)" [value]="groupText()" />
   <mat-icon class="icons" id="icon">search</mat-icon>
 </div>
 

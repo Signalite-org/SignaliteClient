@@ -2,33 +2,6 @@
 <div class="container mt-4">
     <h2>Znajomi</h2>
   
-    <!-- Formularz wysyłania zaproszenia -->
-    <div class="card mb-4">
-      <div class="card-header">
-        <h4>Wyślij zaproszenie do znajomych</h4>
-      </div>
-      <div class="card-body">
-        <form (ngSubmit)="sendFriendRequest()">
-          <div class="input-group">
-            <input 
-              type="text" 
-              class="form-control" 
-              placeholder="ID użytkownika"
-              [formControl]="recipientIdControl"
-            >
-            <button 
-              class="btn btn-primary" 
-              type="submit"
-              [disabled]="isLoading"
-            >
-              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1"></span>
-              Wyślij zaproszenie
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  
     <!-- Lista zaproszeń -->
     <div class="card mb-4">
       <div class="card-header">

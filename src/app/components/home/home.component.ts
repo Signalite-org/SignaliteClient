@@ -2,12 +2,11 @@ import { Component, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AccountService } from '../../_services/account.service';
 import { PresenceService } from '../../_services/presence.service';
-import { NotificationsComponent } from "../../notifications/notifications.component";
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, NotificationsComponent],
+  imports: [CommonModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })

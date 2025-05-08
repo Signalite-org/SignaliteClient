@@ -98,6 +98,9 @@ export class SectionChatComponent implements AfterViewInit {
       if (group > 0) {
         this.loadMessagesLatest();
       }
+      else {
+        this.cachedMessages.set([])
+      }
     });
 
     // LIVE EVENTS

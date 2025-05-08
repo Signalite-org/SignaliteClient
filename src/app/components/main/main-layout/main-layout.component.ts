@@ -6,6 +6,7 @@ import {
   OnDestroy,
   signal,
   WritableSignal, EventEmitter, Output,
+  effect,
 } from '@angular/core';
 import { NavigationFriendsGroups } from '../navigation-friends-groups/navigation-friends-groups';
 import { HeaderGroupFriend } from '../header-group-friend/header-group-friend';
@@ -24,6 +25,7 @@ import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import {NgOptimizedImage} from '@angular/common';
 import {MessageEdit} from '../../../_models/MessageEdit';
+import { NewGroupComponent } from '../new-group/new-group.component';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -39,6 +41,8 @@ enum ChatLayoutStyle {
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
 
+  private lastProcessedMessagesLength = 0;
+
   constructor(
     private renderer: Renderer2,
     private el: ElementRef,
@@ -47,6 +51,29 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private notificationsService: NotificationsService,
   ) {
     this.userId.set(this.accountService.currentUser()?.userId ?? -1);
+
+    effect(() => {
+      const messages = this.notificationsService.messagesReceived();
+
+      // Only process if there are new messages
+      if (messages.length > 0 && messages.length > this.lastProcessedMessagesLength) {
+        // Process all the messages
+        for (let i = 0; i < messages.length; i++) {
+          if (messages[i].groupId == this.currentGroupId()) {
+            this.triggerNewMessageForCurrentGroup.emit(messages[i].message);
+          }
+        }
+
+        // Emit all messages for global handling
+        this.triggerNewMessagesForAllGroups.emit(messages);
+
+        // Clear the messages from notifications service
+        this.notificationsService.clearReceivedMessages();
+
+        // Update our processed length
+        this.lastProcessedMessagesLength = 0; // Reset to 0 since we cleared the messages
+      }
+    });
   }
 
   ngOnInit() {
@@ -63,16 +90,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     // SETUP OF LIVE EVENTS //
     //////////////////////////
 
-    // On new messages received
-    this.notificationsService.messageReceived$.subscribe( messages => {
-      for(let i = 0; i < messages.length; i++) {
-        if(messages[i].groupId == this.currentGroupId()) {
-          this.triggerNewMessageForCurrentGroup.emit(messages[i].message);
-        }
-      }
-      this.triggerNewMessagesForAllGroups.emit(messages);
-      this.notificationsService.clearReceivedMessages();
-    })
 
     // On messages deleted
     this.notificationsService.messageDeleted$.subscribe( messages => {
@@ -146,6 +163,23 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
     this.updateLayout();
   }
+
+
+  protected handleGroupDeleted(groupId: number) {
+    if (this.currentGroupId() === groupId) {
+      this.currentGroupId.set(-1)
+    }
+  }
+
+  protected handleGroupUpdated() {
+    let groupId = this.currentGroupId()
+    this.currentGroupId.set(-1)
+    // Ustawiam minimalne opoznienie zeby sie zrefreshowała grupa
+    setTimeout(() => {
+      this.currentGroupId.set(groupId)
+    }, 1);
+  }
+
 
   private updateLayout() {
     const content = this.el.nativeElement.querySelector('#content');

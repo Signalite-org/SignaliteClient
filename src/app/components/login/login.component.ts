@@ -228,7 +228,7 @@ export class LoginComponent {
             },
             error: (error) => {
               this.isLoading = false;
-              this.errorMessage = 'Unexpected error occurred. Please try again.';
+              this.errorMessage = error.message;
               console.error('Login error:', error);
             }
           })
@@ -239,7 +239,7 @@ export class LoginComponent {
         this.isLoading = false;
         this.registerExtraForm.enable();
 
-        this.errorMessage = 'Unexpected error occurred. Please try again.';
+        this.errorMessage = error.message;
         console.error('Login error:', error);
       }
     })

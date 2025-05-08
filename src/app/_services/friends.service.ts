@@ -30,8 +30,8 @@ import { UserBasicInfo } from '../_models/UserBasicInfo';
     }
   
     // Wysyłanie zaproszenia do znajomych
-    sendFriendRequest(recipientId: number): Observable<void> {
-      return this.http.post<void>(`${this.baseUrl}/friend-request/${recipientId}`, {}).pipe(
+    sendFriendRequest(recipientUsername: string): Observable<void> {
+      return this.http.post<void>(`${this.baseUrl}/friend-request/${recipientUsername}`, {}).pipe(
         catchError(handleError)
       );
     }

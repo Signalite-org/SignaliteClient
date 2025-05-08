@@ -1,33 +1,228 @@
+/* Header styling */
 header {
-  height: 100%;
-  width: 100%;
   display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  align-content: center;
-  overflow: hidden;
 }
 
-p {
-  all: unset;
-  display: inline-block;
-  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
-  overflow: scroll;
-  overflow-y: hidden;
-  white-space: nowrap;
-
-}
-p::-webkit-scrollbar {
-  display: none;
+/* Name with options */
+.name-with-options {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-svg, mat-icon {
-  height: 100%;
-  margin-left: auto;
-}
-
-svg:hover, mat-icon:hover {
+.group-name {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  margin: 0;
+  padding: 0.5rem;
   cursor: pointer;
-  filter: drop-shadow(0px 0px 2px rgba(255, 255, 255, 1));
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.group-name:hover {
+  background-color: rgba(123, 104, 238, 0.1);
+}
+
+.dropdown-icon {
+  margin-left: 5px;
+  font-size: 18px;
+  color: #4169e1;
+  transition: transform 0.3s ease;
+}
+
+.name-with-options:hover .dropdown-icon {
+  transform: translateY(2px);
+}
+
+/* Options dropdown */
+.options-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 180px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: dropdown-fade 0.25s ease;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+/* Poprawione wyrównanie dla photo-btn */
+.photo-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center; /* To już masz, ale upewniam się */
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 15px; /* Takie samo jak option-btn */
+  color: #333;
+  font-family: inherit;
+  font-size: inherit;
+  gap: 8px; /* Takie samo jak option-btn */
+  line-height: 1; /* Dodaj to, aby wyrównać tekst */
+}
+
+.photo-btn mat-icon {
+  margin-right: 0; /* Usuń margin, używamy gap */
+  display: flex; /* Dodaj to dla lepszego wyrównania */
+  align-items: center; /* Dodaj to dla lepszego wyrównania */
+}
+
+/* Możesz też dodać to samo do innych przycisków dla spójności */
+.option-btn mat-icon {
+  display: flex;
+  align-items: center;
+}
+
+.photo-btn:hover {
+  background-color: #f0f0f0;
+}
+
+@keyframes dropdown-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #333;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.option-btn:hover {
+  background-color: #f0f2ff;
+}
+
+.delete-btn:hover {
+  color: #e53935;
+}
+
+.rename-btn:hover {
+  color: #4169e1;
+}
+
+.rename-container {
+  display: flex;
+  padding: 10px;
+  gap: 8px;
+  background-color: #f0f2ff;
+}
+
+.rename-input {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid #7b68ee;
+  border-radius: 4px;
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #4169e1, #7b68ee);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.save-btn:hover {
+  background: linear-gradient(135deg, #3050c0, #6a5acd);
+}
+
+/* Add user container styling */
+.addUserContainer {
+  display: flex;
+  align-items: top;
+}
+
+.input-button-group {
+  display: flex;
+  align-items: center;
+}
+
+.username-input {
+  border: 1px solid #7b68ee;
+  border-right: none;
+  border-radius: 5px 0 0 5px;
+  padding: 0.5rem 0.8rem;
+  outline: none;
+  transition: all 0.3s ease;
+  background-color: rgba(248, 249, 255, 0.8);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.username-input:focus {
+  border-color: #4a338f;
+  box-shadow: 0 0 0 2px rgba(123, 104, 238, 0.2);
+}
+
+.add-user-btn {
+  color: white;
+  background: linear-gradient(135deg, #4169e1, #7b68ee);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.add-user-btn:hover {
+  background: linear-gradient(135deg, #3050c0, #6a5acd);
+  box-shadow: 0 2px 5px rgba(74, 51, 143, 0.3);
+}
+
+.return-icon {
+  color: #4169e1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.return-icon:hover {
+  color: #7b68ee;
+  transform: scale(1.1);
+}
+
+/* Click outside detection */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
 }
