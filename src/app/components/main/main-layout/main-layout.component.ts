@@ -25,6 +25,7 @@ import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import {NgOptimizedImage} from '@angular/common';
 import { NewGroupComponent } from '../new-group/new-group.component';
+import { RouterModule } from '@angular/router';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -34,7 +35,7 @@ enum ChatLayoutStyle {
 
 @Component({
   selector: 'app-main-layout',
-  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage],
+  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage, RouterModule],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })

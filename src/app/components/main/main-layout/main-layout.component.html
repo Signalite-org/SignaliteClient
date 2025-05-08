@@ -48,12 +48,14 @@
     </app-section-members>
 
     <!-- ROW 3 -->
-    <div
-      class="footer left" [class.hidden]="hideLeftColumn()">
-      <app-card-current-user
-        [userName]='fullName()'
-        [userImageURL]='currentUserProfileImageURL()'>
-      </app-card-current-user>
+    <div [routerLink]="['/profile']">
+      <div
+        class="footer left" [class.hidden]="hideLeftColumn()">
+        <app-card-current-user
+          [userName]='fullName()'
+          [userImageURL]='currentUserProfileImageURL()'>
+        </app-card-current-user>
+      </div>
     </div>
 
     <app-bar-message-send
