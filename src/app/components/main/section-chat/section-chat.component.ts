@@ -2,9 +2,8 @@ import {
   AfterViewInit,
   Component,
   effect,
-  ElementRef, EventEmitter, Input,
+  ElementRef, EventEmitter,
   input,
-  OnInit,
   signal,
   ViewChild,
   WritableSignal
@@ -14,17 +13,16 @@ import {GroupService} from '../../../_services/group.service';
 import {MessageService} from '../../../_services/message.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
 import {PaginationQuery} from '../../../_models/PaginationQuery';
-import {UserService} from '../../../_services/user.service';
-import {SIGNAL} from '@angular/core/primitives/signals';
 import {AccountService} from '../../../_services/account.service';
-import {NotificationsService} from '../../../_services/notifications.service';
-import {single, Subscription} from 'rxjs';
-import {MessageDelete} from '../../../_models/MessageDelete';
+import {Subscription} from 'rxjs';
+import {DialogEditMessageComponent} from '../dialog-edit-message/dialog-edit-message.component';
+import {MessageEdit} from '../../../_models/MessageEdit';
 
 @Component({
   selector: 'app-section-chat',
   imports: [
-    ChatMessageComponent
+    ChatMessageComponent,
+    DialogEditMessageComponent
   ],
   templateUrl: './section-chat.component.html',
   styleUrl: './section-chat.component.css'
@@ -32,15 +30,14 @@ import {MessageDelete} from '../../../_models/MessageDelete';
 export class SectionChatComponent implements AfterViewInit {
 
   /*
-  TODO update messages
-
-  TODO update topMessageId when removing new messages
+  TODO update last messages when editing or removing
   */
+
+  readonly MAX_CACHED_MESSAGES: number = 20;
 
   currentGroup = input(-1)
   currentUserId: WritableSignal<number> = signal(-1);
 
-  readonly MAX_CACHED_MESSAGES: number = 20;
   cachedMessages: WritableSignal<MessageDTO[]> = signal([]);
 
   ////////////
@@ -52,6 +49,9 @@ export class SectionChatComponent implements AfterViewInit {
 
   deleteMessageTrigger = input<EventEmitter<number>>();
   private deleteMessageSubscription?: Subscription;
+
+  editMessageTrigger = input<EventEmitter<MessageEdit>>();
+  private editMessageSubscription?: Subscription;
 
   ////////////////
   // PAGINATION //
@@ -129,6 +129,16 @@ export class SectionChatComponent implements AfterViewInit {
         });
       }
     });
+
+    effect(() => {
+      const emitter = this.editMessageTrigger();
+      this.editMessageSubscription?.unsubscribe();
+      if (emitter) {
+        this.editMessageSubscription = emitter.subscribe((edit: MessageEdit) => {
+          this.editMessage(edit.content, edit.messageId);
+        })
+      }
+    });
   }
 
   ngAfterViewInit() {
@@ -202,6 +212,35 @@ export class SectionChatComponent implements AfterViewInit {
     }
 
     this.messageService.deleteMessage(messageId).subscribe();
+  }
+
+  // MODIFYING MESSAGES
+  showModifyMessageDialog: WritableSignal<boolean> = signal(false);
+  messageToModify: WritableSignal<null | MessageDTO> = signal(null);
+
+  editMessage(messageText: string, messageId: number, localOnly: boolean = true) {
+    if(messageId < 1) {
+      return;
+    }
+
+    const trimmedText = messageText.trim();
+    const index = this.cachedMessages().findIndex(message => message.id == messageId);
+    if(index > -1) {
+      this.cachedMessages.update(messages => {
+        messages[index].content = trimmedText;
+        messages[index].lastModification = this.formatDateTime(this.getFormattedCurrentDate());
+        return messages;
+      })
+    }
+
+    if(localOnly || trimmedText === "") {
+      return;
+    }
+
+    this.messageService.modifyMessage(messageId, messageText).subscribe();
+
+    // TODO update last message in section group-friends
+
   }
 
   ///////////////////////
@@ -487,5 +526,23 @@ export class SectionChatComponent implements AfterViewInit {
     var newArray = array.slice();
     newArray.unshift(value);
     return newArray;
+  }
+
+  getFormattedCurrentDate(): string {
+    const now = new Date();
+
+    const pad = (num: number, size: number = 2) => num.toString().padStart(size, '0');
+
+    const year = now.getFullYear();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    const hours = pad(now.getHours());
+    const minutes = pad(now.getMinutes());
+    const seconds = pad(now.getSeconds());
+
+    const milliseconds = now.getMilliseconds(); // e.g. 475
+    const highPrecision = pad(milliseconds, 3) + '0000'; // mock extra digits to match .fffffff
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${highPrecision}`;
   }
 }

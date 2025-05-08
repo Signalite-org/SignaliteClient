@@ -23,6 +23,7 @@ import {NotificationsService} from '../../../_services/notifications.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import {NgOptimizedImage} from '@angular/common';
+import {MessageEdit} from '../../../_models/MessageEdit';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -82,6 +83,20 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       }
       this.notificationsService.clearDeletedMessages();
     })
+
+    // On message edited
+    this.notificationsService.messageModified$.subscribe( messages => {
+      for(let i = 0; i < messages.length; i++) {
+        if(messages[i].groupId == this.currentGroupId()) {
+          const modifiedMessage : MessageEdit = {
+            messageId: messages[i].message.id,
+            content: messages[i].message.content ?? ''
+          }
+          this.triggerEditMessageForCurrentGroup.emit(modifiedMessage);
+        }
+      }
+      this.notificationsService.clearModifiedMessages();
+    })
   }
 
   ngOnDestroy() {
@@ -100,6 +115,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   @Output() triggerNewMessageForCurrentGroup = new EventEmitter<MessageDTO>();
   @Output() triggerNewMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
   @Output() triggerDeletedMessageForCurrentGroup = new EventEmitter<number>();
+  @Output() triggerEditMessageForCurrentGroup = new EventEmitter<MessageEdit>();
+  @Output() triggerEditMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
 
   protected userInfo : WritableSignal<UserDTO | null> = signal(null);
   protected userId : WritableSignal<number> = signal(-1);

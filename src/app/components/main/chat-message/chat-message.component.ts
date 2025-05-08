@@ -4,7 +4,7 @@ import {
   EventEmitter,
   input,
   Input,
-  OnInit,
+  OnInit, output,
   Output,
   Renderer2,
   signal,
@@ -25,6 +25,7 @@ import {MatIcon} from '@angular/material/icon';
 export class ChatMessageComponent implements OnInit {
   @Input() isOwnMessage: boolean = false;
   @Output() onMessageDeletedEvent = new EventEmitter<void>();
+  @Output() onMessageEditClickedEvent = new EventEmitter<void>();
 
   isInCompactMode = input(false)
   isMessageMerged = input(false)

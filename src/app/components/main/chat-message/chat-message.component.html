@@ -96,7 +96,7 @@
 
   <div id="edit">
     @if (isOwnMessage && !showConfirmDialog()) {
-      <mat-icon svgIcon="edit"></mat-icon>
+      <mat-icon svgIcon="edit" (click)="onMessageEditClickedEvent.emit()"></mat-icon>
       <mat-icon svgIcon="trash" (click)="showConfirmDialog.set(true)"></mat-icon>
     }
   </div>

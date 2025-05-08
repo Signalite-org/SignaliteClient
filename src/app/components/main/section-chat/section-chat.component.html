@@ -1,3 +1,13 @@
+@if (showModifyMessageDialog()) {
+  <app-dialog-edit-message
+    [message]='messageToModify()?.content ?? ""'
+    (onClose)="showModifyMessageDialog.set(false)"
+    (onAppliedMessage)="editMessage($event, messageToModify()?.id ?? -1, false);
+    showModifyMessageDialog.set(false)"
+  >
+  </app-dialog-edit-message>
+}
+
 <div class="content" #scrollContainer (scroll)="onScroll()">
 
   @if(
@@ -27,6 +37,7 @@
         [attachmentName]='message.attachment?.name ?? "unnamed attachment"'
         [attachmentSize]="message.attachment?.fileSize ?? 0"
         (onMessageDeletedEvent)="deleteMessage(message.id, false)"
+        (onMessageEditClickedEvent)="messageToModify.set(message); showModifyMessageDialog.set(true);"
       >
       </app-chat-message>
     </div>

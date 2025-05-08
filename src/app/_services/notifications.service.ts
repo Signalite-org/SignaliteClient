@@ -157,7 +157,7 @@ export class NotificationsService {
       const modifiedMessages = this.messagesModifiedSource.value;
       const exists = modifiedMessages.some(req => req.message.id === message.message.id);
       if (!exists) {
-        this.messagesReceivedSource.next([...modifiedMessages, message])
+        this.messagesModifiedSource.next([...modifiedMessages, message])
       }
     });
 
