@@ -1,0 +1,20 @@
+<div class="container-content">
+    <h1 class="header">Change Password</h1>
+    <form [formGroup]="changePasswordForm">
+        <div class="form-box form-begin">
+            <label class="form-label">Old password</label>
+            <input formControlName="oldPassword" name="oldPassword" class="form-input" type="email" placeholder="" required>
+        </div>
+        <div class="form-box">
+            <label class="form-label">New password</label>
+            <input formControlName="newPassword" name="newPassword" class="form-input" type="password" required>
+        </div>
+        <div class="form-box">
+            <label class="form-label">Confirm new password</label>
+            <input formControlName="confirmNewPassword" name="confirmNewPassword" class="form-input" type="password" required>
+        </div>
+        <div class="button-box-update-form">
+            <button type="submit" class="button-style">Update</button>
+        </div>
+    </form>
+</div>

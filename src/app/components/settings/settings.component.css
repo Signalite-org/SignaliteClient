@@ -42,18 +42,13 @@
     width: 350px;
     height: 100%;
     gap: 50px;
+    overflow: auto;
 }
 
 .content-section{
-    display: flex;
-    flex-direction: column;
+    position: relative;
     width: 100%;
-}
-
-.background-image{
-    height: 30vh;
-    width: 100%;
-    object-fit: cover;
+    overflow: auto;
 }
 
 .profile
@@ -113,4 +108,47 @@
 .navigation p:hover{
     background: #ffffff1E;
     font-size: 2rem;
+}
+
+.active-bar{
+    background: #ffffff1E;
+}
+
+.info-section{
+    position: absolute;
+    font-size: 2rem;
+    color: white;
+    width: auto;
+    height: auto;
+    padding: 10px 20px;
+    top: 20px;
+    left: 20px;
+    background-color: rgb(33, 42, 73);
+    font-style: italic;
+    font-weight: bold;
+    border-radius: 20px;
+}
+
+.back-button{
+    position: absolute;
+    font-size: 2rem;
+    color: white;
+    width: auto;
+    height: auto;
+    padding: 10px 20px;
+    top: 20px;
+    right: 20px;
+    background-color: rgb(33, 42, 73);
+    font-style: italic;
+    font-weight: bold;
+    border-radius: 20px;
+}
+
+.back-button:hover{
+    background-color: rgb(23, 29, 51);
+    color: rgba(255, 255, 255, 0.712);
+}
+
+.back-button:active{
+    background-color: rgb(13, 16, 29);
 }

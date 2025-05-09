@@ -1,0 +1,31 @@
+<div class="container-content">
+    <div clsss="backgorund-image">
+        <img class="image" src="assets/images/background0.png">
+        <div class="button-box-update-image">
+            <button type="submit" class="button-style">Change</button>
+        </div>
+    </div>
+    <h1 class="header">Edit Profile</h1>
+    <form [formGroup]="profileFrom">
+        <div class="form-box form-begin">
+            <label class="form-label">Username</label>
+            <input formControlName="username" name="username" class="form-input" type="email" placeholder="" required>
+        </div>
+        <div class="form-box">
+            <label class="form-label">Email</label>
+            <input formControlName="email" name="email" class="form-input" type="password" required>
+        </div>
+        <div class="form-box">
+            <label class="form-label">Name</label>
+            <input formControlName="name" name="name" class="form-input" type="password" required>
+        </div>
+        <div class="form-box">
+            <label class="form-label">Surname</label>
+            <input formControlName="surname" name="surname" class="form-input" type="password" required>
+        </div>
+        <div class="button-box-update-form">
+            <button type="submit" class="button-style">Update</button>
+        </div>
+    </form>
+</div>
+

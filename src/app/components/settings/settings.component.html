@@ -1,0 +1,41 @@
+<div class="background"></div>
+
+<div class="content">
+   <div class="navbar">
+      <div class="profile">
+         <div class="profile-image">
+            <img src="assets/images/background.png">
+            <div class="edit">
+               <mat-icon>edit</mat-icon>
+            </div>
+         </div>
+         <p>Dawidus Pacia I</p>
+      </div>
+
+      <div class="navigation">
+         <p (click)="select('Profile')" [ngClass]="{ 'active-bar': currentForm === 'Profile' }">Profile</p>
+         <p (click)="select('Security')" [ngClass]="{ 'active-bar': currentForm === 'Security' }">Security</p>
+         <p>Log out</p>
+      </div>
+      
+   </div>
+   <div class="content-section">
+      <div class="info-section">
+         <p>{{currentForm}}</p>
+      </div>
+      <div class="back-button">
+         <p>Back</p>
+      </div>
+      @switch (currentForm) 
+      {
+         @case ("Profile") {
+            <app-profile></app-profile>
+         }
+         @case ("Security") {
+            <app-security></app-security>
+         }
+         @default {}
+      }
+   </div>
+</div>
+
