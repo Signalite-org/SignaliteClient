@@ -31,7 +31,7 @@
       [groupsViewEnabled]="isGroupsViewEnabled()"
       class="left" [class.hidden]="hideLeftColumn()"
       (groupDeleted)="handleGroupDeleted($event)"
-      (groupUpdated)="handleGroupUpdated()"
+      (groupUpdated)="handleGroupUpdated($event)"
       (onGroupFriendClicked)="currentGroupId.set($event)"
       >
     </section-group-friends>

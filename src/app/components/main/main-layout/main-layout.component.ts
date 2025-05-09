@@ -96,6 +96,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       for(let i = 0; i < messages.length; i++) {
         if(messages[i].groupId == this.currentGroupId()) {
           this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
+          
         }
       }
       this.notificationsService.clearDeletedMessages();
@@ -171,15 +172,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected handleGroupUpdated() {
-    let groupId = this.currentGroupId()
-    this.currentGroupId.set(-1)
-    // Ustawiam minimalne opoznienie zeby sie zrefreshowała grupa
-    setTimeout(() => {
-      this.currentGroupId.set(groupId)
-    }, 1);
+  protected handleGroupUpdated(groupId: number) {
+    let currentGroupId = this.currentGroupId()
+    if (currentGroupId === groupId) {
+      this.currentGroupId.set(-1)
+      // Ustawiam minimalne opoznienie zeby sie zrefreshowała grupa
+      setTimeout(() => {
+        this.currentGroupId.set(groupId)
+      }, 1);
+    }
   }
-
 
   private updateLayout() {
     const content = this.el.nativeElement.querySelector('#content');

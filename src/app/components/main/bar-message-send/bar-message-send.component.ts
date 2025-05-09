@@ -96,6 +96,7 @@ export class BarMessageSendComponent {
     
     // update last message locally after sendig new message
     this.groupService.updateLastMessage(this.currentGroupId(), messageDTO.sender.username, content, messageDTO.id)
+    this.groupService.moveGroupToTop(this.currentGroupId())
     this.triggerSentNewMessage.emit(messageDTO);
   }
 

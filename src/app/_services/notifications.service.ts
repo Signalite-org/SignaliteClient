@@ -12,6 +12,7 @@ import { MessageDTO } from '../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../_models/MessageOfGroupDTO';
 import { UserBasicInfo } from '../_models/UserBasicInfo';
 import {MessageDelete} from '../_models/MessageDelete';
+import { GroupService } from './group.service';
 
 @Injectable({
   providedIn: 'root'

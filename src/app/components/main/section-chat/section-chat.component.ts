@@ -270,7 +270,6 @@ export class SectionChatComponent implements AfterViewInit {
     }
 
     this.messageService.modifyMessage(messageId, messageText).subscribe();
-
     // TODO update last message in section group-friends
 
   }
