@@ -9,6 +9,7 @@ import {skip, Subscription} from 'rxjs';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import { NotificationsService } from '../../../_services/notifications.service';
 import { ToastrService } from 'ngx-toastr';
+import {MessageDelete} from '../../../_models/MessageDelete';
 
 @Component({
   selector: 'section-group-friends',
@@ -21,9 +22,10 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class SectionGroupFriends implements OnInit, OnDestroy {
   @Output() onGroupFriendClicked = new EventEmitter<number>();
- 
+
   // SUBSCRIPTIONS
   private newMessageSubscription?: Subscription;
+  private editMessageSubscription?: Subscription;
   //private groupsSubscription?: Subscription;
 
   // CONSTRUCTOR
@@ -32,7 +34,7 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
     effect(() => {
       this.updateFilteredGroups();
     })
-    
+
     // LIVE EVENTS dla wiadomości z zewnętrznego źródła (np. SignalR)
     effect(() => {
       const emitter = this.newMessageTrigger();
@@ -45,6 +47,16 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
         });
       }
     });
+
+    effect(() => {
+      const emitter = this.editMessageTrigger();
+      this.editMessageSubscription?.unsubscribe();
+      if (emitter) {
+        this.editMessageSubscription = emitter.subscribe((messages: MessageOfGroupDTO[]) => {
+          this.handleEditedMessages(messages);
+        })
+      }
+    })
 
     // Effect for added to group notifications
     effect(() => {
@@ -74,22 +86,22 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
       }
     });
 }
- 
+
   ngOnInit() {
       //this.groupList.set(this.groupsService.groups());
       this.updateFilteredGroups();
   }
- 
+
   ngOnDestroy() {
     // Sprzątamy subskrypcje przy zniszczeniu komponentu
     this.newMessageSubscription?.unsubscribe();
     //this.groupsSubscription?.unsubscribe();
   }
- 
+
   // EVENT HANDLING
   newMessageTrigger = input<EventEmitter<MessageOfGroupDTO[]>>();
- 
-  
+  editMessageTrigger=input<EventEmitter<MessageOfGroupDTO[]>>();
+
   handleNewMessages(newMessages: MessageOfGroupDTO[]) {
     for(let i = 0; i < newMessages.length; i++) {
       for(let j = 0; j < this.groupsService.groups().length; j++) {
@@ -97,9 +109,9 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
           const groupId = this.groupsService.groups()[j].id
           this.groupsService.moveGroupToTop(groupId)
           this.groupsService.updateLastMessage(
-            groupId, 
-            newMessages[i].message.sender.username, 
-            newMessages[i].message?.content ?? 'sent file', 
+            groupId,
+            newMessages[i].message.sender.username,
+            newMessages[i].message?.content ?? 'sent file',
             newMessages[i].message.id
           );
           this.updateFilteredGroups()
@@ -108,23 +120,40 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
       }
     }
   }
- 
+
+  handleEditedMessages(messages: MessageOfGroupDTO[]) {
+    for(let i = 0; i < messages.length; i++) {
+      for(let j = 0; j < this.groupsService.groups().length; j++) {
+        if(this.groupsService.groups()[j].id == messages[i].groupId){
+          this.groupsService.updateLastMessage(
+            messages[i].groupId,
+            messages[i].message.sender.username,
+            messages[i].message?.content ?? 'sent file',
+            messages[i].message.id
+          );
+          this.updateFilteredGroups()
+          break;
+        }
+      }
+    }
+  }
+
   groupsViewEnabled = input(false);
   currentUser = input<UserBasicInfo | null>(null);
 
   groupDeleted = output<number>()
   groupUpdated = output<number>()
- 
+
   // Przechowuje wszystkie grupy
   //private groupList: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
- 
+
   // Przechowuje albo prywatne, albo nieprywtne grupy
   protected filteredGroups: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
- 
+
   updateFilteredGroups() {
     if(this.currentUser == null)
       return;
-     
+
     if(this.groupsViewEnabled()) {
       // Ustaw filtrowane grupy na publiczne grupy
       this.filteredGroups.set(this.groupsService.groups().filter((group) => !group.isPrivate));

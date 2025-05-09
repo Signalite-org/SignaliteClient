@@ -3,7 +3,7 @@ import {
   Component,
   effect,
   ElementRef, EventEmitter,
-  input,
+  input, Output,
   signal,
   ViewChild,
   WritableSignal
@@ -17,6 +17,7 @@ import {AccountService} from '../../../_services/account.service';
 import {Subscription} from 'rxjs';
 import {DialogEditMessageComponent} from '../dialog-edit-message/dialog-edit-message.component';
 import {MessageEdit} from '../../../_models/MessageEdit';
+import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 
 @Component({
   selector: 'app-section-chat',
@@ -30,8 +31,9 @@ import {MessageEdit} from '../../../_models/MessageEdit';
 export class SectionChatComponent implements AfterViewInit {
 
   /*
-  TODO update last messages when editing or removing
+  TODO update last messages when removing
   */
+  @Output() onMessageModified = new EventEmitter<MessageOfGroupDTO>();
 
   readonly MAX_CACHED_MESSAGES: number = 20;
 
@@ -158,10 +160,6 @@ export class SectionChatComponent implements AfterViewInit {
   // DELETING MESSAGES
   async deleteMessage(messageId: number, localOnly: boolean = true) {
 
-    console.log('messageId', messageId);
-    console.log("top message", this.topMessageId());
-    console.log(localOnly);
-
     if(!localOnly) {
       this.updateTotalPages();
     }
@@ -257,10 +255,13 @@ export class SectionChatComponent implements AfterViewInit {
 
     const trimmedText = messageText.trim();
     const index = this.cachedMessages().findIndex(message => message.id == messageId);
+    let modifiedMessage: MessageDTO | undefined;
+
     if(index > -1) {
       this.cachedMessages.update(messages => {
         messages[index].content = trimmedText;
         messages[index].lastModification = this.formatDateTime(this.getFormattedCurrentDate());
+        modifiedMessage = messages[index];
         return messages;
       })
     }
@@ -270,7 +271,14 @@ export class SectionChatComponent implements AfterViewInit {
     }
 
     this.messageService.modifyMessage(messageId, messageText).subscribe();
-    // TODO update last message in section group-friends
+
+    if(modifiedMessage) {
+      const messageOfGroup: MessageOfGroupDTO = {
+        groupId: this.currentGroup(),
+        message: modifiedMessage
+      }
+      this.onMessageModified.emit(messageOfGroup);
+    }
 
   }
 
