@@ -31,13 +31,14 @@ p {
   height: 100%;
   width: 100%;
   background: rgba(0,0,0,0.7);
-  filter: grayscale(100%);
 
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   align-content: center;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px); /* For Safari support */
 }
 
 .content {

@@ -19,10 +19,10 @@
 
 dialog {
   width: 480px; /* Fixed width */
-  background-color: #433352;
+  box-shadow: 0 0 100px #6563bf;
+  background-color: #201f36;
   border-radius: 6px;
-  border: none;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  border: 0.1em solid #504e97;
   overflow: hidden;
   padding: 16px; /* Fixed size */
   top: 80px; /* Fixed position from top */
@@ -30,7 +30,7 @@ dialog {
   position: fixed; /* Fixed position instead of absolute */
   left: 50%;
   transform: translateX(-50%); /* Center horizontally */
-  margin: 0; /* Remove default margins */
+  margin: 0; /* Remove default margins */]
 }
 
 h2 {
@@ -70,6 +70,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  align-content: center;
 }
 
 .actions {
@@ -97,15 +98,17 @@ button[type="button"]:active {
 }
 
 button[type="submit"] {
-  background-color: #7380ca;
+  color: white;
+  background-color: #425878;
+
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
 }
 
 button[type="submit"]:hover,
 button[type="submit"]:active {
-  background-color: #5e5cce;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+  background-color: #5344a1;
+  box-shadow: 0 1px 6px rgba(255, 255, 255, 0.3);
 }
 
 /* Use a media query just to handle very small screens */
@@ -114,4 +117,9 @@ button[type="submit"]:active {
     width: 90%; /* On very small screens, use percentage width */
     padding: 16px;
   }
+}
+
+span {
+  color: #b6b6b6;
+  font-size: clamp(1.2rem, 1vw, 1.4rem);
 }
