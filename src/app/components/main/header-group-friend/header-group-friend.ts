@@ -25,6 +25,7 @@ export class HeaderGroupFriend {
   areOptionsVisible = signal(false);
   isRenaming = signal(false);
   isAddingUser = signal(false);
+  isDeleting = signal(false);
   newGroupName = signal("");
   selectedFile = signal<File | null>(null)
   
@@ -87,6 +88,14 @@ export class HeaderGroupFriend {
 
   showAddingUserInput() {
     this.isAddingUser.set(!this.isAddingUser());
+  }
+
+  hideGroupDeleteConfirmation() {
+    this.isDeleting.set(false)
+  }
+
+  showGroupDeleteConfirmation() {
+    this.isDeleting.set(true)
   }
   
   // Rename group
@@ -157,19 +166,19 @@ export class HeaderGroupFriend {
   
   // Delete group
   deleteGroup() {
-    if (confirm('Are you sure you want to delete this group?')) {
-      this.groupService.deleteGroup(this.groupId()).subscribe({
-        next: () => {
-          this.toastr.success('Group deleted successfully');
-          this.returnToNormalModeEvent.emit(); // Return to normal mode after deletion
-          this.groupDeleted.emit(this.groupId())
-        },
-        error: (error) => {
-          console.error('Error deleting group:', error);
-          this.toastr.error(error);
-        }
-      });
-    }
+    this.groupService.deleteGroup(this.groupId()).subscribe({
+      next: () => {
+        this.toastr.success('Group deleted successfully');
+        this.returnToNormalModeEvent.emit(); // Return to normal mode after deletion
+        this.groupDeleted.emit(this.groupId())
+        this.hideGroupDeleteConfirmation();
+      },
+      error: (error) => {
+        console.error('Error deleting group:', error);
+        this.toastr.error(error);
+        this.hideGroupDeleteConfirmation();
+      }
+    });
   }
   
   onFileSelected(event: Event) {
