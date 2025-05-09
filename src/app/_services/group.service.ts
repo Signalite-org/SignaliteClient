@@ -72,6 +72,23 @@ export class GroupService {
       });
     }
     
+  moveGroupToTop(groupId: number): void {
+    const currentGroups = this._groups();
+    const groupIndex = currentGroups.findIndex(group => group.id === groupId);
+  
+    if (groupIndex !== -1) {
+      const [groupToMove] = currentGroups.slice(groupIndex, groupIndex + 1);
+    
+      const updatedGroups = [
+        groupToMove, 
+        ...currentGroups.slice(0, groupIndex), 
+        ...currentGroups.slice(groupIndex + 1)
+      ];
+    
+      this._groups.set(updatedGroups);
+    }
+  }
+    
     // Metoda do odświeżania listy grup
     fetchGroups() {
       this.http.get<GroupBasicInfoDTO[]>(this.baseUrl)

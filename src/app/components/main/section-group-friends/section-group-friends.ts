@@ -68,7 +68,7 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
     effect(() => {
       const updatedGroup = this.notifiactionService.groupUpdated()
       if (updatedGroup.id > 0) {
-        this.groupUpdated.emit()
+        this.groupUpdated.emit(updatedGroup.id)
         this.toastr.info('Group has been updated!');
         this.notifiactionService.clearUpdatedGroup();
       }
@@ -94,24 +94,26 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
     for(let i = 0; i < newMessages.length; i++) {
       for(let j = 0; j < this.groupsService.groups().length; j++) {
         if(this.groupsService.groups()[j].id == newMessages[i].groupId){
+          const groupId = this.groupsService.groups()[j].id
+          this.groupsService.moveGroupToTop(groupId)
           this.groupsService.updateLastMessage(
-            this.groupsService.groups()[j].id, 
+            groupId, 
             newMessages[i].message.sender.username, 
             newMessages[i].message?.content ?? 'sent file', 
             newMessages[i].message.id
           );
+          this.updateFilteredGroups()
           break;
         }
       }
     }
-    this.updateFilteredGroups()
   }
  
   groupsViewEnabled = input(false);
   currentUser = input<UserBasicInfo | null>(null);
 
   groupDeleted = output<number>()
-  groupUpdated = output<void>()
+  groupUpdated = output<number>()
  
   // Przechowuje wszystkie grupy
   //private groupList: WritableSignal<GroupBasicInfoDTO[]> = signal([]);
