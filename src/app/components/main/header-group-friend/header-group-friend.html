@@ -8,6 +8,16 @@
     }
     @if (areOptionsVisible()) {
       <div class="options-dropdown">
+        <button class="option-btn rename-btn" (click)="showAddingUserInput()">
+          <mat-icon>add</mat-icon>
+          Add user
+        </button>
+        @if (isAddingUser()) {
+          <div class="rename-container">
+            <input type="text" [(ngModel)]="username" maxlength="32" placeholder="Username" class="rename-input">
+            <button class="save-btn" (click)="addUser()">Add</button>
+          </div>
+        }
         <button class="option-btn delete-btn" (click)="deleteGroup()">
           <mat-icon>delete</mat-icon>
           Delete group
@@ -30,15 +40,6 @@
       </div>
     }
   </div>
- 
-  @if (!isPrivate() && groupId() > 0) {
-    <div class="addUserContainer">
-      <div class="input-button-group">
-        <input type="text" placeholder="username" maxlength="32" [(ngModel)]="username" class="username-input">
-        <button (click)="addUser()" class="add-user-btn">Add User</button>
-      </div>
-    </div>
-  }
   @if(isInFullChatMode()) {
     <mat-icon (click)="returnToNormalModeEvent.emit()" svgIcon="return" class="return-icon"></mat-icon>
   }
