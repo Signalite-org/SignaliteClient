@@ -30,7 +30,7 @@ dialog {
   position: fixed; /* Fixed position instead of absolute */
   left: 50%;
   transform: translateX(-50%); /* Center horizontally */
-  margin: 0; /* Remove default margins */]
+  margin: 0; /* Remove default margins */
 }
 
 h2 {
