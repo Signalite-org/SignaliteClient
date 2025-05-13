@@ -1,3 +1,13 @@
+@if (isDeletingUser()) {
+    <app-delete-user-confirmation 
+    [groupId]="groupId()"
+    [user]="user()" 
+    (close)="onCloseAdd()"
+    (userDeleted)="loadMembers()"
+    >
+    </app-delete-user-confirmation>
+}
+
 @if (groupId() > 0) {
   <header>
     Members
@@ -15,7 +25,10 @@
     @for (member of this.members(); track member.id) {
       <app-card-member 
         [user]="member" 
-        [isOnline]="isUserOnline(member.id)">
+        [isOnline]="isUserOnline(member.id)"
+        [isPrivate]="isGroupPrivate()"
+        (startDeletingUser)="onStartAdd()"
+        (emitedUser)="setUser($event)">
       </app-card-member>
     }
   }

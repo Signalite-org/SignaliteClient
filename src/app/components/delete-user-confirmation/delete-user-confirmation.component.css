@@ -10,13 +10,6 @@
   z-index: 1000; /* High z-index to ensure it's above all other components */
 }
 
-.error-message {
-  color: #ff6b6b;
-  font-size: 14px; /* Fixed size */
-  margin-top: 4px; /* Fixed size */
-  margin-bottom: 8px; /* Fixed size */
-}
-
 dialog {
   width: 480px; /* Fixed width */
   box-shadow: 0 0 100px #6563bf;
@@ -30,7 +23,7 @@ dialog {
   position: fixed; /* Fixed position instead of absolute */
   left: 50%;
   transform: translateX(-50%); /* Center horizontally */
-  margin: 0; /* Remove default margins */]
+  margin: 0; /* Remove default margins */
 }
 
 h2 {
@@ -40,30 +33,6 @@ h2 {
   font-size: 20px; /* Fixed size */
 }
 
-label {
-  display: block;
-  font-weight: bold;
-  font-size: 14px; /* Fixed size */
-  color: #9aaec0;
-  margin-bottom: 5px; /* Fixed size */
-}
-
-input,
-textarea {
-  width: 100%;
-  font-size: 16px; /* Fixed size */
-  padding: 8px 10px; /* Fixed size */
-  border-radius: 4px;
-  border: 1px solid #9aa9c0;
-  background-color: #c2c8e1;
-  box-sizing: border-box; /* Include padding in width calculation */
-}
-
-textarea {
-  resize: vertical;
-  min-height: 80px; /* Fixed minimum height */
-  max-height: 200px; /* Fixed maximum height */
-}
 
 .actions-container {
   margin-top: 16px; /* Fixed size */
@@ -71,6 +40,7 @@ textarea {
   justify-content: space-between;
   align-items: center;
   align-content: center;
+  flex-direction: column;
 }
 
 .actions {

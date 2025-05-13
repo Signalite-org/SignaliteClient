@@ -11,7 +11,7 @@
 <div class="content" #scrollContainer (scroll)="onScroll()">
 
   @if(
-    ( (!reachedFirstPage() && directionOlderMessages()) || (!isScrollVisible()) )
+    ( (!reachedFirstPage() && directionOlderMessages()) || (!isScrollVisible() && !reachedFirstPage()) )
     && !isTopMessageInSet() && cachedMessages().length != 0 && !isGroupInvalid()
     ) {
 

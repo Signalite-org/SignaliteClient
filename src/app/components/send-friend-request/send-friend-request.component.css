@@ -1,134 +1,125 @@
-/* send-friend-request.component.css */
 .backdrop {
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    z-index: 1000;
-  }
-  
-  .error-message {
-    color: #ff6b6b;
-    font-size: 14px;
-    margin-top: 4px;
-    margin-bottom: 8px;
-  }
-  
+  background-color: rgba(0, 0, 0, 0.5); /* Change opacity from 0.9 to 0.5 for less darkness */
+  backdrop-filter: blur(5px); /* Add blur effect */
+  -webkit-backdrop-filter: blur(5px); /* For Safari support */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 1000; /* High z-index to ensure it's above all other components */
+}
+
+.error-message {
+  color: #ff6b6b;
+  font-size: 14px; /* Fixed size */
+  margin-top: 4px; /* Fixed size */
+  margin-bottom: 8px; /* Fixed size */
+}
+
+dialog {
+  width: 480px; /* Fixed width */
+  background-color: #201f36;
+  border-radius: 6px;
+  border: 0.1em solid #504e97;
+  box-shadow: 0 0 100px #6563bf;
+  overflow: hidden;
+  padding: 16px; /* Fixed size */
+  top: 80px; /* Fixed position from top */
+  z-index: 1001; /* Higher than backdrop to ensure it's on top */
+  position: fixed; /* Fixed position instead of absolute */
+  left: 50%;
+  transform: translateX(-50%); /* Center horizontally */
+  margin: 0; /* Remove default margins */
+}
+
+h2 {
+  margin: 0;
+  margin-bottom: 8px; /* Fixed size */
+  color: #c2c9e1;
+  font-size: 20px; /* Fixed size */
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  font-size: 14px; /* Fixed size */
+  color: #9aaec0;
+  margin-bottom: 5px; /* Fixed size */
+}
+
+input,
+textarea {
+  width: 100%;
+  font-size: 16px; /* Fixed size */
+  padding: 8px 10px; /* Fixed size */
+  border-radius: 4px;
+  border: 1px solid #9aa9c0;
+  background-color: #c2c8e1;
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px; /* Fixed minimum height */
+  max-height: 200px; /* Fixed maximum height */
+}
+
+.actions-container {
+  margin-top: 16px; /* Fixed size */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-content: center;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px; /* Fixed size */
+}
+
+button {
+  font-size: 16px; /* Fixed size */
+  cursor: pointer;
+  border: none;
+  padding: 8px 20px; /* Fixed size */
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+button[type="button"] {
+  color: #bdadcf;
+}
+
+button[type="button"]:hover,
+button[type="button"]:active {
+  color: #c2c4e1;
+}
+
+button[type="submit"] {
+  color: white;
+  background-color: #425878;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+button[type="submit"]:hover,
+button[type="submit"]:active {
+  background-color: #5344a1;
+  box-shadow: 0 1px 6px rgba(255, 255, 255, 0.3);
+}
+
+/* Use a media query just to handle very small screens */
+@media (max-width: 500px) {
   dialog {
-    width: 480px;
-    background-color: #433352;
-    border-radius: 6px;
-    border: none;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
-    overflow: hidden;
+    width: 90%; /* On very small screens, use percentage width */
     padding: 16px;
-    top: 80px;
-    z-index: 1001;
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    margin: 0;
   }
-  
-  h2 {
-    margin: 0;
-    margin-bottom: 8px;
-    color: #c2c9e1;
-    font-size: 20px;
-  }
-  
-  label {
-    display: block;
-    font-weight: bold;
-    font-size: 14px;
-    color: #9aaec0;
-    margin-bottom: 5px;
-  }
-  
-  input {
-    width: 100%;
-    font-size: 16px;
-    padding: 8px 10px;
-    border-radius: 4px;
-    border: 1px solid #9aa9c0;
-    background-color: #c2c8e1;
-    box-sizing: border-box;
-  }
-  
-  .actions-container {
-    margin-top: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-  }
-  
-  button {
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 4px;
-    background-color: transparent;
-  }
-  
-  button[type="button"] {
-    color: #bdadcf;
-  }
-  
-  button[type="button"]:hover,
-  button[type="button"]:active {
-    color: #c2c4e1;
-  }
-  
-  button[type="submit"] {
-    background-color: #7380ca;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-  }
-  
-  button[type="submit"]:hover,
-  button[type="submit"]:active {
-    background-color: #5e5cce;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
-  }
-  
-  button[disabled] {
-    background-color: #5e5ca0;
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-  
-  @media (max-width: 500px) {
-    dialog {
-      width: 90%;
-      padding: 16px;
-    }
-  }
-  
-  .spinner-border-sm {
-    width: 1rem;
-    height: 1rem;
-    border-width: 0.2em;
-    display: inline-block;
-    vertical-align: text-bottom;
-    border: 0.15em solid currentColor;
-    border-right-color: transparent;
-    border-radius: 50%;
-    animation: spinner-border 0.75s linear infinite;
-  }
-  
-  @keyframes spinner-border {
-    to {
-      transform: rotate(360deg);
-    }
-  }
+}
+
+span {
+  color: #b6b6b6;
+  font-size: clamp(1.2rem, 1vw, 1.4rem);
+}

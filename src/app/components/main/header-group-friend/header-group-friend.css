@@ -250,10 +250,10 @@ header {
 
 dialog {
   width: 480px; /* Fixed width */
-  background-color: #433352;
+  box-shadow: 0 0 100px #6563bf;
+  background-color: #201f36;
   border-radius: 6px;
-  border: none;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  border: 0.1em solid #504e97;
   overflow: hidden;
   padding: 16px; /* Fixed size */
   top: 80px; /* Fixed position from top */
@@ -267,29 +267,15 @@ dialog {
 
 h2 {
   margin: 0;
-  margin-bottom: 8px; /* Fixed size */
+  margin-bottom: 12px; /* Fixed size */
   color: #c2c9e1;
   font-size: 20px; /* Fixed size */
-}
-
-label {
-  display: block;
-  font-size: 14px; /* Fixed size */
-  color: #9aaec0;
-}
-
-.actions-container {
-  margin-top: 16px; /* Fixed size */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .actions {
   display: flex;
   justify-content: center;
   gap: 8px; /* Fixed size */
-  margin-top: 1rem;
 }
 
 button {
@@ -311,15 +297,17 @@ button[type="button"]:active {
 }
 
 button[type="submit"] {
-  background-color: #7380ca;
+  color: white;
+  background-color: #425878;
+
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
 }
 
 button[type="submit"]:hover,
 button[type="submit"]:active {
-  background-color: #5e5cce;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+  background-color: #5344a1;
+  box-shadow: 0 1px 6px rgba(255, 255, 255, 0.3);
 }
 
 /* Use a media query just to handle very small screens */

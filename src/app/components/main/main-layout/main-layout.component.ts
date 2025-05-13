@@ -25,7 +25,8 @@ import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import {NgOptimizedImage} from '@angular/common';
 import {MessageEdit} from '../../../_models/MessageEdit';
-import { NewGroupComponent } from '../new-group/new-group.component';
+import {MessageDelete} from '../../../_models/MessageDelete';
+import { ToastrService } from 'ngx-toastr';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -49,6 +50,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private accountService: AccountService,
     private userService: UserService,
     private notificationsService: NotificationsService,
+    private toastr: ToastrService
   ) {
     this.userId.set(this.accountService.currentUser()?.userId ?? -1);
 
@@ -90,13 +92,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     // SETUP OF LIVE EVENTS //
     //////////////////////////
 
-
     // On messages deleted
     this.notificationsService.messageDeleted$.subscribe( messages => {
       for(let i = 0; i < messages.length; i++) {
         if(messages[i].groupId == this.currentGroupId()) {
           this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
-          
         }
       }
       this.notificationsService.clearDeletedMessages();
@@ -113,6 +113,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
           this.triggerEditMessageForCurrentGroup.emit(modifiedMessage);
         }
       }
+      this.triggerEditMessagesForAllGroups.emit(messages);
       this.notificationsService.clearModifiedMessages();
     })
   }
@@ -133,6 +134,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   @Output() triggerNewMessageForCurrentGroup = new EventEmitter<MessageDTO>();
   @Output() triggerNewMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
   @Output() triggerDeletedMessageForCurrentGroup = new EventEmitter<number>();
+  @Output() triggerDeletedMessagesForAllGroups = new EventEmitter<MessageDelete[]>();
   @Output() triggerEditMessageForCurrentGroup = new EventEmitter<MessageEdit>();
   @Output() triggerEditMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
 
