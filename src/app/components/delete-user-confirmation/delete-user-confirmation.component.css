@@ -1,0 +1,95 @@
+.backdrop {
+  background-color: rgba(0, 0, 0, 0.5); /* Change opacity from 0.9 to 0.5 for less darkness */
+  backdrop-filter: blur(5px); /* Add blur effect */
+  -webkit-backdrop-filter: blur(5px); /* For Safari support */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 1000; /* High z-index to ensure it's above all other components */
+}
+
+dialog {
+  width: 480px; /* Fixed width */
+  box-shadow: 0 0 100px #6563bf;
+  background-color: #201f36;
+  border-radius: 6px;
+  border: 0.1em solid #504e97;
+  overflow: hidden;
+  padding: 16px; /* Fixed size */
+  top: 80px; /* Fixed position from top */
+  z-index: 1001; /* Higher than backdrop to ensure it's on top */
+  position: fixed; /* Fixed position instead of absolute */
+  left: 50%;
+  transform: translateX(-50%); /* Center horizontally */
+  margin: 0; /* Remove default margins */
+}
+
+h2 {
+  margin: 0;
+  margin-bottom: 8px; /* Fixed size */
+  color: #c2c9e1;
+  font-size: 20px; /* Fixed size */
+}
+
+
+.actions-container {
+  margin-top: 16px; /* Fixed size */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-content: center;
+  flex-direction: column;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px; /* Fixed size */
+}
+
+button {
+  font-size: 16px; /* Fixed size */
+  cursor: pointer;
+  border: none;
+  padding: 8px 20px; /* Fixed size */
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+button[type="button"] {
+  color: #bdadcf;
+}
+
+button[type="button"]:hover,
+button[type="button"]:active {
+  color: #c2c4e1;
+}
+
+button[type="submit"] {
+  color: white;
+  background-color: #425878;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+button[type="submit"]:hover,
+button[type="submit"]:active {
+  background-color: #5344a1;
+  box-shadow: 0 1px 6px rgba(255, 255, 255, 0.3);
+}
+
+/* Use a media query just to handle very small screens */
+@media (max-width: 500px) {
+  dialog {
+    width: 90%; /* On very small screens, use percentage width */
+    padding: 16px;
+  }
+}
+
+span {
+  color: #b6b6b6;
+  font-size: clamp(1.2rem, 1vw, 1.4rem);
+}

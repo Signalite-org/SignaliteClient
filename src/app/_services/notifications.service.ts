@@ -13,6 +13,7 @@ import {MessageOfGroupDTO} from '../_models/MessageOfGroupDTO';
 import { UserBasicInfo } from '../_models/UserBasicInfo';
 import {MessageDelete} from '../_models/MessageDelete';
 import { GroupService } from './group.service';
+import { UserDeletedFromGroup } from '../_models/UserDeletedFromGroupNot';
 
 @Injectable({
   providedIn: 'root'
@@ -45,6 +46,11 @@ export class NotificationsService {
   private _deletedGroup = signal<number>(-1);
   public get deletedGroup() {
     return this._deletedGroup.asReadonly();
+  }
+
+  private _userDeletedFromGroup = signal<UserDeletedFromGroup | null>(null)
+  public get userDeletedFromGroup() {
+    return this._userDeletedFromGroup.asReadonly()
   }
 
   private _groupUpdated = signal<GroupBasicInfoDTO>(this.defaultGroup)
@@ -171,8 +177,9 @@ export class NotificationsService {
       this._groupUpdated.set(groupInfo)
     });
 
-    this.hubConnection.on('UserRemovedFromGroup', (notification) => {
+    this.hubConnection.on('UserRemovedFromGroup', (notification: {userId: number, groupId: number}) => {
       console.log('📬 Received UserRemovedFromGroup notification:', notification);
+      this._userDeletedFromGroup.set(notification)
     });
 
     this.hubConnection.on('UserUpdated', (notification) => {
@@ -246,6 +253,10 @@ export class NotificationsService {
 
   clearDeletedGroup() {
     this._deletedGroup.set(-1)
+  }
+
+  clearUserDeletedFromGroup() {
+    this._userDeletedFromGroup.set(null)
   }
 
   clearUpdatedGroup() {

@@ -78,3 +78,20 @@ img {
 .offline {
   background-color: #c31d1d;
 }
+
+.iconContainer {
+  display: flex;
+  flex-grow: 1;
+  justify-content: end;
+  margin-right: 10px;
+}
+
+.clickableIcon {
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.iconContainer:hover .clickableIcon {
+  opacity: 1; /* Show the icon when hovering over the container */
+}

@@ -70,6 +70,8 @@ export class GroupService {
           console.log('Group members signal after update:', JSON.stringify(this._groupMembers().members, null, 2))
         }
       });
+
+      
     }
     
   moveGroupToTop(groupId: number): void {
