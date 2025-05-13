@@ -1,0 +1,51 @@
+<div class="backdrop" (click)="onCancel()"></div>
+<dialog open>
+  <div class="dialog-header">
+    <h2>Friend Requests</h2>
+    <button type="button" class="close-btn" (click)="onCancel()">×</button>
+  </div>
+  
+  @if (errorMessage() !== "") {
+    <p class="error-message">{{errorMessage()}}</p>
+  }
+
+  @if (this.friendsService.friendRequests().length === 0 && !isLoading()) {
+    <div class="no-requests">
+      <p>You have no pending friend requests</p>
+    </div>
+  } @else {
+    <div class="requests-container">
+      @for (request of friendRequests(); track request.id) {
+        <div class="request-item">
+          <div class="user-info">
+            <img 
+              [src]="request.profilePhotoUrl || 'assets/default-avatar.png'" 
+              alt="Profile photo" 
+              class="profile-photo"
+            >
+            <span class="username">{{ request.senderUsername }}</span>
+          </div>
+          <div class="request-actions">
+            <button 
+              type="button" 
+              class="decline-btn" 
+              (click)="declineRequest(request.id)" 
+              [disabled]="isLoading()"
+            >
+              Decline
+            </button>
+            <button 
+              type="button" 
+              class="accept-btn" 
+              (click)="acceptRequest(request.id)"
+              [disabled]="isLoading()"
+            >
+              <span *ngIf="isLoading()" class="spinner-border spinner-border-sm me-1"></span>
+              Accept
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</dialog>

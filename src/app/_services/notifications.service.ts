@@ -26,15 +26,16 @@ export class NotificationsService {
   private defaultGroup: GroupBasicInfoDTO = {id: -1, name: "", photoUrl: "", isPrivate: false}
   private defaultUser: UserBasicInfo = {id: -1, username: "", profilePhotoUrl: ""}
 
+
   // New BehaviorSubjects to track notifications
-  private _friendRequests = signal<FriendRequestDTO[]>([]);
-  public get friendRequests() {
-    return this._friendRequests.asReadonly();
+  private _friendRequest = signal<FriendRequestDTO | null>(null);
+  public get friendRequest() {
+    return this._friendRequest.asReadonly();
   }
 
-  private _friendRequestsAccepted = signal<UserBasicInfo[]>([]);
+  private _friendRequestAccepted = signal<GroupBasicInfoDTO | null>(null);
   public get friendRequestsAccepted() {
-    return this._friendRequestsAccepted.asReadonly();
+    return this._friendRequestAccepted.asReadonly();
   }
 
   private _addedToGroup = signal<GroupBasicInfoDTO>(this.defaultGroup);
@@ -123,22 +124,13 @@ export class NotificationsService {
 
     this.hubConnection.on('FriendRequest', (notification: FriendRequestDTO) => {
       console.log('📬 Received friend request notification:', notification);
-      this._friendRequests.update(requests => {
-        if (!requests.some(req => req.id === notification.id)) {
-          return [...requests, notification];
-        }
-        return requests;
-      });
+      this._friendRequest.set(notification);
     });
 
-    this.hubConnection.on('FriendRequestAccepted', (notification: UserBasicInfo) => {
-      console.log('📬 Received friend request accepted notification:', notification);
-      this._friendRequestsAccepted.update(accepted => {
-        if (!accepted.some(req => req.id === notification.id)) {
-          return [...accepted, notification];
-        }
-        return accepted;
-      });
+    this.hubConnection.on('FriendRequestAccepted', (friend: GroupBasicInfoDTO) => {
+      console.log('📬 Received friend request accepted notification:', friend);
+      this._friendRequestAccepted.set(friend);
+      
     });
 
     this.hubConnection.on('MessageReceived', (message: MessageOfGroupDTO) => {
@@ -223,15 +215,6 @@ export class NotificationsService {
     this.createHubConnection(token);
   }
 
-  // Helper methods to clear notifications
-  clearFriendRequests() {
-    this._friendRequests.set([]);
-  }
-
-  clearFriendRequestsAccepted() {
-    this._friendRequestsAccepted.set([]);
-  }
-
   clearAddedToGroup() {
     this._addedToGroup.set(this.defaultGroup);
   }
@@ -250,6 +233,14 @@ export class NotificationsService {
 
   clearUpdatedGroup() {
     this._groupUpdated.set(this.defaultGroup)
+  }
+
+  clearFriendRequest() {
+    this._friendRequest.set(null);
+  }
+
+  clearFriendRequestAccepted() {
+    this._friendRequestAccepted.set(null);
   }
 
   private retryConnection(token: string, maxRetries: number = 3, currentRetry: number = 0): Promise<void> {

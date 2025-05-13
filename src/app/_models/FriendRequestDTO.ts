@@ -3,5 +3,5 @@ export interface FriendRequestDTO {
     senderId: number;
     senderUsername: string;
     requestDate: string;
-    profilePhotoUrl: string
+    profilePhotoUrl?: string
   }

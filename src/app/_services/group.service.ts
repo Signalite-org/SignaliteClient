@@ -70,6 +70,15 @@ export class GroupService {
           console.log('Group members signal after update:', JSON.stringify(this._groupMembers().members, null, 2))
         }
       });
+
+      effect(() => {
+        const newFriendGroup = this.notificationService.friendRequestsAccepted()
+        if (newFriendGroup) {
+          this._groups.update(groups => [...groups, newFriendGroup])
+        }
+      });
+
+
     }
     
   moveGroupToTop(groupId: number): void {

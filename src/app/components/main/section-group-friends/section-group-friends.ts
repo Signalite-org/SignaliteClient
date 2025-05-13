@@ -24,7 +24,6 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
  
   // SUBSCRIPTIONS
   private newMessageSubscription?: Subscription;
-  //private groupsSubscription?: Subscription;
 
   // CONSTRUCTOR
   constructor(private groupsService: GroupService, private notifiactionService: NotificationsService, private toastr: ToastrService) {
@@ -71,6 +70,14 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
         this.groupUpdated.emit(updatedGroup.id)
         this.toastr.info('Group has been updated!');
         this.notifiactionService.clearUpdatedGroup();
+      }
+    });
+
+    effect(() => {
+      const newFriend = this.notifiactionService.friendRequestsAccepted()
+      if (newFriend) {
+        this.toastr.info(`${newFriend.name} has accepted your friend request`);
+        this.notifiactionService.clearFriendRequestAccepted()
       }
     });
 }
