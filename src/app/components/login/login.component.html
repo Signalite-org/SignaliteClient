@@ -58,9 +58,11 @@
                             [disabled]="loginForm.invalid || isLoading">Login</button>
                     </div>
                 </form>
-                <span class="loader" *ngIf="isLoading"></span>
+                <div class="loader-position" *ngIf="isLoading">
+                    <div class="loader"></div>
+                </div>  
                 <div class="box-next">
-                    <p>Don't have account? <button type="button" (click)="toggleForm('registerMain')"
+                    <p>Don't have account? <button type="button" (click)="selectForm('registerMain')"
                             class="as-link">Sign up</button></p>
                 </div>
             </div>
@@ -171,9 +173,11 @@
                             [disabled]="registerMainForm.invalid || isLoading">Register</button>
                     </div>
                 </form>
-                <span class="loader" *ngIf="isLoading"></span>
+                <div class="loader-position" *ngIf="isLoading">
+                    <div class="loader"></div>
+                </div>  
                 <div class="box-next">
-                    <p>Have account? <button type="button" (click)="toggleForm('login')" class="as-link">Sign
+                    <p>Have account? <button type="button" (click)="selectForm('login')" class="as-link">Sign
                             in</button></p>
                 </div>
             </div>
@@ -265,10 +269,11 @@
                             [disabled]="registerExtraForm.invalid || isLoading">Next</button>
                     </div>
                 </form>
-    
-                <span class="loader" *ngIf="isLoading"></span>
+                <div class="loader-position" *ngIf="isLoading">
+                    <div class="loader"></div>
+                </div>  
                 <div class="box-next">
-                    <p><button type="button" (click)="toggleForm('registerMain')" class="as-link">Back</button></p>
+                    <p><button type="button" (click)="selectForm('registerMain')" class="as-link">Back</button></p>
                 </div>
             </div>
         </div>

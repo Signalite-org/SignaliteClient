@@ -1,3 +1,20 @@
+:host {
+    --bg-first-color: #424374;
+    --bg-second-color: #1a1a2d;
+    --bg-box-login-first-color: #3d6cb7;
+    --bg-box-login-second-color: #8c1dbc80;
+    --title-first-color: #5a95fc;
+    --title-second-color: #8659dd;
+    --title-third-color: #aa2bc5;
+    --text-color: #eff2ff;
+    --bg-error-message: #f8d7da;
+    --text-error-message: #721c24;
+    --bg-success-message: #d4edda;
+    --text-success-message: #155724;
+    --bg-invalid-box: #ff5347;
+    --bg-focus-input: #ffffff6c;
+}
+
 .container-content{
     min-width: min-content;
 }
@@ -27,10 +44,10 @@ form{
 }
 
 .form-box {
+    position: relative;
     display: flex;
     flex-direction: column;
     margin-bottom: 40px;
-    
 }
 
 .form-input{
@@ -46,6 +63,20 @@ form{
 .form-label{
     color: #ffffff;
     font-size: 2rem;
+}
+
+.error-box {
+    position: absolute;
+    top: 100%;
+    width: 100%;
+    background-color: var(--bg-error-message);
+    color: var(--text-error-message);
+    padding: 10px;
+    padding-left: 20px;
+    border-radius: 10px;
+    margin-top: 4px;
+    font-size: 1rem;
+    z-index: 1;
 }
 
 .button-box-update-image{
@@ -73,6 +104,11 @@ form{
     box-shadow: 5px 5px 10px #00000038;
 }
 
+.button-style:disabled, .button-style:active:disabled{
+    background: #313f6e;
+    color: #ffffffb6;
+}
+
 .button-style:hover{
     background: #313f6e;
     color: #ffffffb6;
@@ -81,3 +117,60 @@ form{
 .button-style:active{
     background: #1f2949;
 }
+
+.form-input:focus{
+    outline: 2px solid var(--bg-focus-input);
+}
+
+
+.form-input.is-invalid:focus, .form-input.is-invalid{
+    outline: 2px solid var(--bg-invalid-box);
+}
+
+.error-message, .succes-message{
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 10px;
+    padding-left: 20px;
+    border-radius: 10px;
+}
+
+.error-message{
+    background-color: var(--bg-error-message);
+    color: var(--text-error-message);
+}
+
+.succes-message{
+    background-color: var(--bg-success-message);
+    color: var(--text-success-message);
+}
+
+.loader-position{
+    position: relative;
+    width: 100%;
+}
+
+.loader-position{
+    padding: 20px;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+.loader {
+  width: 80px;
+  padding: 10px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ffffff;
+  --_m: 
+    conic-gradient(#0000 10%,#000),
+    linear-gradient(#000 0 0) content-box;
+  -webkit-mask: var(--_m);
+          mask: var(--_m);
+  -webkit-mask-composite: source-out;
+          mask-composite: subtract;
+  animation: l3 1s infinite linear;
+}
+@keyframes l3 {to{transform: rotate(1turn)}}
+  

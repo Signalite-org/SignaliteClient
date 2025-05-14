@@ -4,18 +4,31 @@
    <div class="navbar">
       <div class="profile">
          <div class="profile-image">
-            <img src="assets/images/background.png">
-            <div class="edit">
+            @if(previewUrl){
+               <img [src]="previewUrl" alt="Profile" />
+            }
+            @else{
+               <img src="assets/images/background.png">
+            }
+            
+            <div class="edit" (click)="fileInput.click()">
                <mat-icon>edit</mat-icon>
+               <input
+                  #fileInput
+                  type="file"
+                  accept="image/*"
+                  (change)="onFileSelected($event)"
+                  hidden
+               />
             </div>
          </div>
-         <p>Dawidus Pacia I</p>
+         <p>{{ownUserInfo()?.username}} ({{ownUserInfo()?.name}} {{ownUserInfo()?.surname}})</p>
       </div>
 
       <div class="navigation">
-         <p (click)="select('Profile')" [ngClass]="{ 'active-bar': currentForm === 'Profile' }">Profile</p>
-         <p (click)="select('Security')" [ngClass]="{ 'active-bar': currentForm === 'Security' }">Security</p>
-         <p>Log out</p>
+         <p (click)="selectForm('Profile')" [ngClass]="{ 'active-bar': currentForm === 'Profile' }">Profile</p>
+         <p (click)="selectForm('Security')" [ngClass]="{ 'active-bar': currentForm === 'Security' }">Security</p>
+         <p (click)="logout()">Log out</p>
       </div>
       
    </div>
@@ -23,7 +36,7 @@
       <div class="info-section">
          <p>{{currentForm}}</p>
       </div>
-      <div class="back-button">
+      <div [routerLink]="['/main']" class="back-button">
          <p>Back</p>
       </div>
       @switch (currentForm) 

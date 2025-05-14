@@ -14,6 +14,7 @@ form{
 }
 
 .form-box {
+    position: relative;
     display: flex;
     flex-direction: column;
     margin-bottom: 40px;
@@ -38,6 +39,20 @@ form{
     font-size: 2rem;
 }
 
+.error-box {
+    position: absolute;
+    top: 100%;
+    width: 100%;
+    background-color: var(--bg-error-message);
+    color: var(--text-error-message);
+    padding: 10px;
+    padding-left: 20px;
+    border-radius: 10px;
+    margin-top: 4px;
+    font-size: 1rem;
+    z-index: 1;
+}
+
 .button-box-update-form{
     display: flex;
     justify-content: right;
@@ -56,6 +71,11 @@ form{
     box-shadow: 5px 5px 10px #00000038;
 }
 
+.button-style:disabled, .button-style:active:disabled{
+    background: #313f6e;
+    color: #ffffffb6;
+}
+
 .button-style:hover{
     background: #313f6e;
     color: #ffffffb6;
@@ -63,4 +83,31 @@ form{
 
 .button-style:active{
     background: #1f2949;
+}
+
+.form-input:focus{
+    outline: 2px solid var(--bg-focus-input);
+}
+
+
+.form-input.is-invalid:focus, .form-input.is-invalid{
+    outline: 2px solid var(--bg-invalid-box);
+}
+
+.error-message, .succes-message{
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 10px;
+    padding-left: 20px;
+    border-radius: 10px;
+}
+
+.error-message{
+    background-color: var(--bg-error-message);
+    color: var(--text-error-message);
+}
+
+.succes-message{
+    background-color: var(--bg-success-message);
+    color: var(--text-success-message);
 }
