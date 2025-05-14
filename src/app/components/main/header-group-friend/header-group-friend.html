@@ -30,7 +30,7 @@
         }
         @if (isAddingUser()) {
           <div class="rename-container">
-            <input type="text" [(ngModel)]="username" maxlength="32" placeholder="Username" class="rename-input">
+            <input type="text" [(ngModel)]="username" maxlength="16" placeholder="Username" class="rename-input">
             <button class="save-btn" (click)="addUser()">Add</button>
           </div>
         }
