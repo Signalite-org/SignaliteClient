@@ -8,7 +8,7 @@
         type="text" 
         id="username" 
         name="username" 
-        maxlength="30" 
+        maxlength="16" 
         [(ngModel)]="username"
         placeholder="Enter username"
       />
@@ -19,7 +19,7 @@
 
     <div class="actions-container">
       <p class="counter">
-        <span>{{ usernameLength() }} / 30</span>
+        <span>{{ usernameLength() }} / 16</span>
       </p>
       <p class="actions">
         <button type="button" (click)="onCancel()">Cancel</button>

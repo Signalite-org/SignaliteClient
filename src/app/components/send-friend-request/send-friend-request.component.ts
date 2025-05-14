@@ -74,8 +74,8 @@ export class SendFriendRequestComponent {
       return;
     }
 
-    if (usernameValue.length < 3 || usernameValue.length > 30) {
-      this.errorMessage.set("Username must be between 3 and 30 characters");
+    if (usernameValue.length < 3 || usernameValue.length > 16) {
+      this.errorMessage.set("Username must be between 3 and 16 characters");
       return;
     }
 
