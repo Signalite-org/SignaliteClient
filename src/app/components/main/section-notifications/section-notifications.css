@@ -21,7 +21,6 @@ header {
   align-items: center;
   width: 100%;
   height: 100%;
-  cursor: pointer;
 }
 
 .icon-container {
@@ -29,9 +28,9 @@ header {
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
 }
 .notification-icon {
-  cursor: pointer;
   transition: color 0.3s, transform 0.2s;
   display: flex;
   justify-content: center;
