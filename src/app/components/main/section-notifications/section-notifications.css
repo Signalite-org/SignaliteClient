@@ -30,7 +30,6 @@ header {
   justify-content: center;
   align-items: center;
 }
-
 .notification-icon {
   cursor: pointer;
   transition: color 0.3s, transform 0.2s;
@@ -38,8 +37,7 @@ header {
   justify-content: center;
   align-items: center;
 }
-
-.notification-icon:hover {
+.icon-container:hover .notification-icon {
   color: #7380ca;
   transform: scale(1.1);
 }
