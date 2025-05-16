@@ -1,8 +1,8 @@
 <div class="container-content">
     <div clsss="backgorund-image">
-        <img class="image" src="assets/images/background0.png">
+        <img class="image" [src]="previewBackgroundUrl || 'assets/images/background0.png'">
         <div class="button-box-update-image">
-            <button type="submit" class="button-style">Change</button>
+            <button type="submit" class="button-style" (click)="requestBackgroundChange()">Change</button>
         </div>
     </div>
     <h1 class="header">Edit Profile</h1>

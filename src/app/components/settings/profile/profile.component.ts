@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, Input, OnInit, signal, WritableSignal } from '@angular/core';
+import { Component, effect, EventEmitter, Input, OnInit, Output, signal, WritableSignal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { notEmptyValidator } from '../../../_utils/customValidators';
 import { catchError, finalize, Observable, of, switchMap, tap, throwError } from 'rxjs';
@@ -16,6 +16,9 @@ import { AccountService } from '../../../_services/account.service';
   styleUrl: './profile.component.css'
 })
 export class ProfileComponent implements OnInit {
+  @Output() backgroundChangeRequested = new EventEmitter<void>();
+  previewBackgroundUrl?: string | ArrayBuffer | null = null;
+
   profileForm: FormGroup;
   profileUsernameFocused: boolean = false;
   profileEmailFocused: boolean = false;
@@ -35,32 +38,31 @@ export class ProfileComponent implements OnInit {
     this.ownUser = this.userService.ownUser;
 
     this.profileForm = this.fb.group({
-      username: [this.ownUser()?.username, [Validators.required, notEmptyValidator(), Validators.minLength(this.minLengthUsername), Validators.maxLength(this.maxLengthUsername)]],
-      email: [this.ownUser()?.email, [Validators.required, notEmptyValidator(), Validators.email]],
-      name: [this.ownUser()?.name, [Validators.required, notEmptyValidator()]],
-      surname: [this.ownUser()?.surname, [Validators.required, notEmptyValidator()]]
+      username: ['', [Validators.required, notEmptyValidator(), Validators.minLength(this.minLengthUsername), Validators.maxLength(this.maxLengthUsername)]],
+      email: ['', [Validators.required, notEmptyValidator(), Validators.email]],
+      name: ['', [Validators.required, notEmptyValidator()]],
+      surname: ['', [Validators.required, notEmptyValidator()]]
     });
 
     effect(() => {
       const userData = this.ownUser();
       if (userData) {
         this.profileForm.patchValue(userData);
-      }
-    });
-
-    this.isLoading = true;
-    this.userService.refreshOwnUser().subscribe({
-      next: () => {
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.isLoading = false;
-        console.error(err)
+        console.log(userData)
+        this.previewBackgroundUrl = userData.backgroundPhotoUrl;
       }
     });
   }
 
   ngOnInit() { }
+
+  requestBackgroundChange() {
+    this.backgroundChangeRequested.emit();
+  }
+
+  setBackgroundImage(imageDataUrl: string | ArrayBuffer | null | undefined) {
+    this.previewBackgroundUrl = imageDataUrl;
+  }
 
   onSubmitUpdateProfile() {
     const loginData: ModifyUserDTO = this.profileForm.value;

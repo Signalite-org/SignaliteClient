@@ -1,0 +1,25 @@
+<div class="background" (click)="onBackgroundClick()">
+    <div class="box-content" 
+    (click)="onBoxClick($event)"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    >
+        @if (isDragging) {
+            <div class="drag-overlay">
+                <h2>Drop the image here</h2>
+            </div>
+        }
+        @else {
+            <div class="custom-change" (click)="fileInput.click()">
+            <h2>Select an image or drag and drop it</h2>
+            <mat-icon class="custom-icon">add_photo_alternate</mat-icon>
+            <input type="file" #fileInput accept="image/*" hidden (change)="onFileSelected($event)" />
+            </div>
+            <div class="default-change" (click)="selectDefaultImage()">
+                <h2>Select the default image</h2>
+                <img [src]="defaultImage" class="default-image" [ngClass]="{ 'circle-shape': shapeDefaultImage === 'circle', 'rectangle-shape': shapeDefaultImage === 'rectangle' }">
+            </div>
+        }
+    </div>
+</div>

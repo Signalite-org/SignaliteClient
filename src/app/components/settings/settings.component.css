@@ -63,6 +63,7 @@
 
 .profile-image{
     position: relative;
+    
     width: 250px;
     height: 250px;
 }
@@ -71,6 +72,7 @@
     height: 100%;
     width: 100%;
     border-radius: 50%;
+    object-fit: cover;
 }
 
 .edit{

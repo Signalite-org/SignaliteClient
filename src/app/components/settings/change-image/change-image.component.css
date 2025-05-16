@@ -1,0 +1,92 @@
+.background {
+    width: 100vw;
+    height: 100vh;
+    background-color: #00000054;
+    position: fixed;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.box-content {
+    margin: 10px;
+    display: flex;
+    width: 500px;
+    height: 300px;
+    background-color: #252030;
+    border-radius: 25px;
+    border: 3px solid #4d4458;
+}
+
+.drag-overlay {
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px;
+    color: rgb(169, 158, 190);
+    background-color: #312b3f;
+    border: 3px solid #4d4458;
+    border-radius: 15px;
+}
+
+.custom-change,
+.default-change {
+    flex: 1;
+    margin: 10px;
+    width: 100%;
+    height: auto;
+    background-color: #312b3f;
+    border: 3px solid #4d4458;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: rgb(169, 158, 190);
+}
+
+.custom-change:hover,
+.default-change:hover {
+    background-color: #3b324e;
+}
+
+.custom-change:active,
+.default-change:active {
+    background-color: #322944;
+}
+
+.custom-change {
+    margin-right: 5px;
+}
+
+.default-change {
+    margin-left: 5px;
+}
+
+.custom-icon {
+    margin: 10px;
+    font-size: 150px;
+    width: auto;
+    height: auto;
+}
+
+.default-image {
+    margin: 10px;
+    width: 150px;
+    height: 150px;
+    border: 3px solid #4d4458;
+    background-color: #282946;
+    object-fit: cover;
+}
+
+.circle-shape{
+    border-radius: 50%;
+}
+
+.rectangle-shape{
+    width: 90%;
+}

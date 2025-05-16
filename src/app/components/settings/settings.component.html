@@ -1,25 +1,21 @@
+<app-change-image
+  *ngIf="showImagePicker"
+  [defaultImage]="defaultImage"
+  [shapeDefaultImage]="shape"
+  (closed)="showImagePicker = false"
+  (imageSelected)="onImageSelected($event)"
+  (defaultSelected)="onDefaultImageSelected()"
+></app-change-image>
+
 <div class="background"></div>
 
 <div class="content">
    <div class="navbar">
       <div class="profile">
          <div class="profile-image">
-            @if(previewUrl){
-               <img [src]="previewUrl" alt="Profile" />
-            }
-            @else{
-               <img src="assets/images/background.png">
-            }
-            
-            <div class="edit" (click)="fileInput.click()">
+            <img [src]="previewProfileUrl || 'assets/images/default-user.jpg'"  alt="Profile" />
+            <div class="edit" (click)="onProfileChangeRequested()">
                <mat-icon>edit</mat-icon>
-               <input
-                  #fileInput
-                  type="file"
-                  accept="image/*"
-                  (change)="onFileSelected($event)"
-                  hidden
-               />
             </div>
          </div>
          <p>{{ownUserInfo()?.username}} ({{ownUserInfo()?.name}} {{ownUserInfo()?.surname}})</p>
@@ -42,7 +38,7 @@
       @switch (currentForm) 
       {
          @case ("Profile") {
-            <app-profile></app-profile>
+            <app-profile (backgroundChangeRequested)="onBackgroundChangeRequested()"></app-profile>
          }
          @case ("Security") {
             <app-security></app-security>
@@ -51,4 +47,3 @@
       }
    </div>
 </div>
-

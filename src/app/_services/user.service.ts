@@ -75,26 +75,26 @@ export class UserService {
     return this.http.put(`${this.baseUrl}/change-password`, changePasswordDTO);
   }
 
-  updateProfilePhoto(file: string){
-    return this.http.post<void>(`${this.baseUrl}/change-password`, {params: { file }}).pipe(
+  updateProfilePhoto(file: FormData){
+    return this.http.post<void>(`${this.baseUrl}/profile-photo`, file ).pipe(
         catchError(handleError)
     );
   }
 
   deleteProfilePhoto(): Observable<void>{
-    return this.http.delete<void>(`${this.baseUrl}/change-password`).pipe(
+    return this.http.delete<void>(`${this.baseUrl}/profile-photo`).pipe(
         catchError(handleError)
     );
   }
 
-  updateBackgroundPhoto(file: string){
-    return this.http.post<void>(`${this.baseUrl}/change-password`, {params: { file }}).pipe(
+  updateBackgroundPhoto(file: FormData){
+    return this.http.post<void>(`${this.baseUrl}/bg-photo`, file ).pipe(
         catchError(handleError)
     );
   }
   
   deleteBackgroundPhoto(): Observable<void>{
-    return this.http.delete<void>(`${this.baseUrl}/change-password`).pipe(
+    return this.http.delete<void>(`${this.baseUrl}/bg-photo`).pipe(
         catchError(handleError)
     );
   }

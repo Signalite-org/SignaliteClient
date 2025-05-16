@@ -4,15 +4,13 @@ import { environment } from '../../environments/environment';
 import { LoginDTO } from '../_models/LoginDTO';
 
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, map, mapTo, switchMap, take, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, take } from 'rxjs';
 import { LoginResponseDTO } from '../_models/LoginResponseDTO';
 import { TokenResponseDTO } from '../_models/TokenResponseDTO';
 import { RegisterDTO } from '../_models/RegisterDTO';
 import { PresenceService } from './presence.service';
 import { NotificationsService } from './notifications.service';
 import { handleError } from '../_utils/error.handler';
-import { OwnUserDTO } from '../_models/OwnUserDTO';
-import { UserService } from './user.service';
 
 
 @Injectable({
@@ -29,7 +27,6 @@ export class AccountService {
     private http: HttpClient,
     private presenceService: PresenceService,
     private notificationsService: NotificationsService,
-    private userService: UserService,
     private router: Router
   ) {
     console.log('AccountService constructed');
@@ -43,7 +40,7 @@ export class AccountService {
     console.log('Sending login request with payload:', payload);
     
     return this.http.post<LoginResponseDTO>(`${this.baseUrl}/api/auth/login`, payload).pipe(
-      switchMap((response: LoginResponseDTO) => {
+      map((response: LoginResponseDTO) => {
         console.log('Login successful, response:', response);
         const user = this.setUserData(response);
         this.startRefreshTokenTimer();
@@ -52,13 +49,7 @@ export class AccountService {
         console.log('Starting connections after login');
         this.presenceService.createHubConnection(user.accessToken);
         this.notificationsService.createHubConnection(user.accessToken);
-
-        return this.userService.getUserInfo() as Observable<OwnUserDTO>;
-      }),
-      tap((ownUser: OwnUserDTO) => {
-        this.userService.setOwnUser(ownUser);
-      }),
-      map(() => void 0)
+      })
     );
   }
 
