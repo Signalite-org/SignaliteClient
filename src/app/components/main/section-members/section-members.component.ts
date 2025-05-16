@@ -25,6 +25,7 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
  
   // Sygnały do przechowywania danych
   members = signal<UserBasicInfo[]>([]);
+  owner = signal<UserBasicInfo>({id: -1, username: ""})
   loading = signal(false);
   error = signal<string | null>(null);
   onlineUsersIds = signal<number[]>([]);
@@ -47,7 +48,13 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
       console.log(loadedMembers)
 
       if (loadedMembers.owner.id !== -1) {
-        this.members.set([...loadedMembers.members, loadedMembers.owner]);
+        if (this.isGroupPrivate()) {
+           this.members.set([...loadedMembers.members, loadedMembers.owner]);
+        }
+        else {
+          this.members.set([...loadedMembers.members]);
+          this.owner.set(loadedMembers.owner)
+        }
         console.log(this.members())
         this.loading.set(false)
       }

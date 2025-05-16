@@ -9,19 +9,31 @@
 }
 
 @if (groupId() > 0) {
-  <header>
-    Members
-  </header>
-}
-<div class="content">
+  <div class="content">
   @if (loading()) {
     <div class="loading"></div>
   } @else if (error()) {
-  } @else if (members().length === 0) {
+  } @else if (members().length === 0 && owner().id === -1) {
     <div class="empty-state">
       Brak członków w tej grupie
     </div>
   } @else {
+    @if (!isGroupPrivate()) {
+    <header>
+      Owner
+    </header>
+     <app-card-member 
+        [user]="owner()" 
+        [isOnline]="isUserOnline(owner().id)"
+        [isPrivate]="isGroupPrivate()"
+        (startDeletingUser)="onStartAdd()"
+        (emitedUser)="setUser($event)">
+      </app-card-member>
+    }
+    @if (members().length !== 0) {
+    <header class="membersHeader">
+      Members
+    </header>
     @for (member of this.members(); track member.id) {
       <app-card-member 
         [user]="member" 
@@ -31,5 +43,7 @@
         (emitedUser)="setUser($event)">
       </app-card-member>
     }
+    } 
   }
 </div>
+}

@@ -24,3 +24,7 @@ header {
   all: unset;
   font-size: clamp(1.5rem, 1.5vw, 1.6rem);
 }
+
+.membersHeader {
+  margin-top: 1rem;
+}
