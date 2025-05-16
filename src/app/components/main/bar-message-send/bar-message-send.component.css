@@ -84,7 +84,7 @@ button:hover {
   bottom: 100%; /* Position it at the top edge of the button */
   left: 50%;
   transform: translateX(-50%); /* Center it horizontally over the button */
-  background-color: white;
+  background-color: #3b4e86;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   padding: 10px;
