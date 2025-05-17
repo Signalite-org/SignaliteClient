@@ -26,7 +26,6 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
   // SUBSCRIPTIONS
   private newMessageSubscription?: Subscription;
   private editMessageSubscription?: Subscription;
-  //private groupsSubscription?: Subscription;
 
   // CONSTRUCTOR
   constructor(private groupsService: GroupService, private notifiactionService: NotificationsService, private toastr: ToastrService) {
@@ -85,6 +84,33 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
         this.notifiactionService.clearUpdatedGroup();
       }
     });
+
+    effect(() => {
+      const newFriend = this.notifiactionService.friendRequestsAccepted()
+      if (newFriend) {
+        this.toastr.info(`${newFriend.name} has accepted your friend request`);
+        this.notifiactionService.clearFriendRequestAccepted()
+      }
+    });
+
+     effect(() => {
+      const deletedUser = this.notifiactionService.userDeletedFromGroup()
+      console.log(deletedUser?.userId)
+      if (deletedUser) {
+        
+        if (this.currentUser()?.id === deletedUser.userId) {
+          this.groupsService.fetchGroups()
+          toastr.info("You have been deleted from group")
+          this.groupDeleted.emit(deletedUser.groupId)
+        }
+        else {
+          this.groupsService.getGroupMembers(deletedUser.groupId)
+          toastr.info("User has been removed from group")
+        }
+        this.notifiactionService.clearUserDeletedFromGroup();
+      }
+    });
+
 }
 
   ngOnInit() {

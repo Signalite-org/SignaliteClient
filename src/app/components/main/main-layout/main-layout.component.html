@@ -35,6 +35,7 @@
       (groupUpdated)="handleGroupUpdated($event)"
       (onGroupFriendClicked)="currentGroupId.set($event)"
       [editMessageTrigger]="triggerEditMessagesForAllGroups"
+      [currentUser]="userInfo()"
       >
     </section-group-friends>
 

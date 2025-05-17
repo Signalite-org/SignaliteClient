@@ -5,3 +5,11 @@
 <section>
   <div id="userName">{{ user()?.username }}</div>
 </section>
+@if (currentUserId() !== user()!.id && !isPrivate()) {
+<div class="iconContainer">
+  <div (click)="showUserDeleteConfirmation()" class="clickableIcon">
+    <mat-icon  class="dropdown-icon">clear</mat-icon>
+  </div>   
+</div>
+}
+

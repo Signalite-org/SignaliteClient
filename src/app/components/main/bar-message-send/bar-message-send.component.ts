@@ -1,16 +1,16 @@
-import {Component, input, ViewChild, ElementRef, EventEmitter, Output} from '@angular/core';
+import {Component, input, ViewChild, ElementRef, EventEmitter, Output, signal} from '@angular/core';
 import {MatIcon} from '@angular/material/icon';
 import {MessageService} from '../../../_services/message.service';
 import {SendMessageDTO} from '../../../_models/SendMessageDTO';
 import {ReactiveFormsModule} from '@angular/forms';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {MessageDTO} from '../../../_models/MessageDTO';
-import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import {UserDTO} from '../../../_models/UserDTO';
 import {UserBasicInfo} from '../../../_models/UserBasicInfo';
 import {MessagePostResponse} from '../../../_models/MessagePostResponse';
 import {AttachmentDTO} from '../../../_models/AttachmentDTO';
 import { GroupService } from '../../../_services/group.service';
+import { HostListener } from '@angular/core';
 
 @Component({
   selector: 'app-bar-message-send',
@@ -27,6 +27,16 @@ export class BarMessageSendComponent {
 
   currentUser = input<UserDTO | null>();
   currentGroupId = input(-1);
+  emojiView = signal(false)
+
+  emojis: string[] = [
+    '🫃', '🧙‍♂️', '👨‍🦯‍➡️', '✈️',
+    '🏙️', '🗣️', '🔥', '✍️', 
+    '⚰️', '👮‍♂️', '💃', '👀',
+    '✨', '👽', '🦸‍♂️', '🗿',
+    '🙏', '✅', '❌', '😳',
+    '💀', '🤡', '👉', '👌'
+  ];
 
   selectedFile:File|undefined;
 
@@ -41,6 +51,19 @@ export class BarMessageSendComponent {
     this.messageForm = this.fb.group({
       message: ['', Validators.required],
     });
+  }
+
+  addEmoji(emoji: string) {
+    const messageControl = this.messageForm.get('message');
+    const currentValue = messageControl?.value || '';
+    messageControl?.setValue(currentValue + emoji);
+  }
+
+  @HostListener('document:click')
+  onDocumentClick() {
+    if (this.emojiView()) {
+      this.emojiView.set(false);
+    }
   }
 
   async sendMessage(message:string) {
@@ -111,6 +134,13 @@ export class BarMessageSendComponent {
 
   triggerFileInput() {
     this.fileInputRef.nativeElement.click();
+  }
+
+  toggleEmojisView(event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation(); 
+    }
+    this.emojiView.set(!this.emojiView())
   }
 
   onFileSelected(event: Event) {

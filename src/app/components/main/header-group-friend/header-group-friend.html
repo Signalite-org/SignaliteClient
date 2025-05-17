@@ -22,21 +22,28 @@
     }
     @if (areOptionsVisible()) {
       <div class="options-dropdown">
-        <button class="option-btn rename-btn" (click)="showAddingUserInput()">
-          <mat-icon>add</mat-icon>
-          Add user
-        </button>
+        @if (!isPrivate()) {
+          <button class="option-btn rename-btn" (click)="showAddingUserInput()">
+            <mat-icon>add</mat-icon>
+            Add user
+          </button>
+        }
         @if (isAddingUser()) {
           <div class="rename-container">
-            <input type="text" [(ngModel)]="username" maxlength="32" placeholder="Username" class="rename-input">
+            <input type="text" [(ngModel)]="username" maxlength="16" placeholder="Username" class="rename-input">
             <button class="save-btn" (click)="addUser()">Add</button>
           </div>
         }
         <button class="option-btn delete-btn" (click)="showGroupDeleteConfirmation()">
           <mat-icon>delete</mat-icon>
-          Delete group
+          @if (!isPrivate()) {
+            Delete group
+          } @else {
+            Remove friend
+          } 
         </button>
-        <label class="option-btn photo-btn">
+        @if(!isPrivate()) {
+          <label class="option-btn photo-btn">
           <mat-icon>photo_camera</mat-icon>
           Change photo
           <input type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
@@ -50,6 +57,7 @@
             <input type="text" [(ngModel)]="newGroupName" maxlength="32" placeholder="New name" class="rename-input">
             <button class="save-btn" (click)="renameGroup()">Save</button>
           </div>
+        }
         }
       </div>
     }
