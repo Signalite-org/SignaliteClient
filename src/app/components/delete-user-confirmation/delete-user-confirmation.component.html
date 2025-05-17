@@ -1,0 +1,12 @@
+<div class="backdrop" (click)="onCancel()"></div>
+<dialog open>
+  <form (ngSubmit)="onSubmit()">
+    <div class="actions-container">
+      <h2 for="title">Are you sure, you want to remove {{user().username}} from this group?</h2>
+      <p class="actions">
+        <button type="button" (click)="onCancel()">Cancel</button>
+        <button type="submit">Delete</button>
+      </p>
+    </div>
+  </form>
+</dialog>

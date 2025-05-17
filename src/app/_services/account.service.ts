@@ -4,7 +4,7 @@ import { environment } from '../../environments/environment';
 import { LoginDTO } from '../_models/LoginDTO';
 
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, map, take } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, take, throwError } from 'rxjs';
 import { LoginResponseDTO } from '../_models/LoginResponseDTO';
 import { TokenResponseDTO } from '../_models/TokenResponseDTO';
 import { RegisterDTO } from '../_models/RegisterDTO';
@@ -23,10 +23,13 @@ export class AccountService {
   public get currentUser() {
     return this._currentUser.asReadonly();
   }
+
+  private _isRefreshingToken = signal<boolean>(false);
+  public get isRefreshingToken() {
+    return this._isRefreshingToken.asReadonly();
+  }
   constructor(
     private http: HttpClient,
-    private presenceService: PresenceService,
-    private notificationsService: NotificationsService,
     private router: Router
   ) {
     console.log('AccountService constructed');
@@ -47,8 +50,6 @@ export class AccountService {
         this._currentUser.set(user); 
         // Start the presence and notifications hub connections after login
         console.log('Starting connections after login');
-        this.presenceService.createHubConnection(user.accessToken);
-        this.notificationsService.createHubConnection(user.accessToken);
       })
     );
   }
@@ -59,12 +60,6 @@ export class AccountService {
   }
 
   logout() {
-    console.log('Logging out');
-    // Stop the presence hub connection
-    this.presenceService.stopHubConnection();
-    // Stop the notifications hub connection
-    this.notificationsService.stopHubConnection();
-    
     // Clear user data
     localStorage.removeItem('user');
     this._currentUser.set(null);
@@ -74,10 +69,12 @@ export class AccountService {
   }
 
   refreshToken(): Observable<void> {
+    this._isRefreshingToken.set(true);
+
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
       this.logout();
-      throw new Error('No refresh token available');
+      return throwError(() => new Error('No refresh token available'));
     }
   
     const payload = { refreshToken };
@@ -91,10 +88,15 @@ export class AccountService {
         });
         this._currentUser.set(updatedUser); // Make sure to update the current user
         this.startRefreshTokenTimer();
-        
-        // Always reconnect both services with the new token
-        this.presenceService.createHubConnection(user.accessToken);
-        this.notificationsService.createHubConnection(user.accessToken);
+        this._isRefreshingToken.set(false);
+      }),
+      catchError(error => {
+        this._isRefreshingToken.set(false);
+        console.error('Failed to refresh token:', error);
+        if (error.status === 401) {
+          this.logout();
+        }
+        return throwError(() => error);
       })
     );
   }
@@ -134,9 +136,6 @@ export class AccountService {
       this._currentUser.set(user);
       this.startRefreshTokenTimer();
       
-      // Start the presence hub connection if we have a stored user
-      this.presenceService.createHubConnection(user.accessToken);
-      this.notificationsService.createHubConnection(user.accessToken);
     }
   }
 

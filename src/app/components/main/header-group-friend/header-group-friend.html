@@ -1,3 +1,17 @@
+@if (isDeleting()) {
+  <div class="backdrop" (click)="hideGroupDeleteConfirmation()"></div>
+  <dialog open>
+    <form (ngSubmit)="deleteGroup()">
+      <p>
+        <h2 for="title">Are you sure, you want to delete this group?</h2>
+        <p class="actions">
+          <button type="button" (click)="hideGroupDeleteConfirmation()">Cancel</button>
+          <button type="submit">Delete</button>
+        </p>
+    </form>
+  </dialog>
+}
+
 <header>
   <div class="name-with-options">
     @if (groupFriendName() !== "") {
@@ -8,11 +22,28 @@
     }
     @if (areOptionsVisible()) {
       <div class="options-dropdown">
-        <button class="option-btn delete-btn" (click)="deleteGroup()">
+        @if (!isPrivate()) {
+          <button class="option-btn rename-btn" (click)="showAddingUserInput()">
+            <mat-icon>add</mat-icon>
+            Add user
+          </button>
+        }
+        @if (isAddingUser()) {
+          <div class="rename-container">
+            <input type="text" [(ngModel)]="username" maxlength="16" placeholder="Username" class="rename-input">
+            <button class="save-btn" (click)="addUser()">Add</button>
+          </div>
+        }
+        <button class="option-btn delete-btn" (click)="showGroupDeleteConfirmation()">
           <mat-icon>delete</mat-icon>
-          Delete group
+          @if (!isPrivate()) {
+            Delete group
+          } @else {
+            Remove friend
+          } 
         </button>
-        <label class="option-btn photo-btn">
+        @if(!isPrivate()) {
+          <label class="option-btn photo-btn">
           <mat-icon>photo_camera</mat-icon>
           Change photo
           <input type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
@@ -27,18 +58,10 @@
             <button class="save-btn" (click)="renameGroup()">Save</button>
           </div>
         }
+        }
       </div>
     }
   </div>
- 
-  @if (!isPrivate() && groupId() > 0) {
-    <div class="addUserContainer">
-      <div class="input-button-group">
-        <input type="text" placeholder="username" maxlength="32" [(ngModel)]="username" class="username-input">
-        <button (click)="addUser()" class="add-user-btn">Add User</button>
-      </div>
-    </div>
-  }
   @if(isInFullChatMode()) {
     <mat-icon (click)="returnToNormalModeEvent.emit()" svgIcon="return" class="return-icon"></mat-icon>
   }

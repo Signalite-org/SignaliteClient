@@ -1,9 +1,10 @@
-import { Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserBasicInfo } from '../_models/UserBasicInfo';
+import { AccountService } from './account.service';
 
 
 @Injectable({
@@ -13,6 +14,8 @@ export class PresenceService {
   private hubConnection?: HubConnection;
   private readonly hubUrl = environment.hubUrl;
   private handlersRegistered = false;
+  private connectionActive = false;
+  private reconnectAttemptInProgress = false;
 
   // simple ids of online users
   private _onlineUserIds = signal<number[]>([])
@@ -28,29 +31,52 @@ export class PresenceService {
   
   constructor(private router: Router) {
     console.log('PresenceService constructed');
+    
+    // Get AccountService via inject to avoid circular dependency
+    const accountService = inject(AccountService);
+    
+    // Create an effect to monitor the currentUser signal
+    effect(() => {
+      const user = accountService.currentUser();
+      const isRefreshing = accountService.isRefreshingToken();
+      
+      console.log('PresenceService detected auth state change, user:', user ? 'exists' : 'null', 
+                 'isRefreshing:', isRefreshing);
+      
+      if (user?.accessToken && !isRefreshing) {
+        console.log('PresenceService: User authenticated, creating hub connection');
+        this.createHubConnection(user.accessToken);
+      } else if (!user && this.connectionActive) {
+        console.log('PresenceService: User logged out, stopping hub connection');
+        this.stopHubConnection();
+      }
+    });
   }
 
   createHubConnection(token: string) {
     if (!token) {
       console.error('No token provided for hub connection');
-      return;
+      return Promise.reject('No token provided');
     }
 
-    // If a connection already exists, just return
-  if (this.hubConnection) {
-    console.log('presence hub connection already exists, not creating a new one');
-    return;
-  }
-    console.log('Creating presence hub connection...');
-
+    // Important: Always recreate the connection when this method is called
+    // even if one exists, to ensure we're using the latest token
+    if (this.hubConnection) {
+      console.log('Stopping existing presence hub connection before creating a new one');
+      this.stopHubConnection();
+    }
+    
+    console.log('Creating presence hub connection with token:', token.substring(0, 15) + '...');
+    
     this.hubConnection = new HubConnectionBuilder()
       .withUrl(`${this.hubUrl}/presence`, {
         accessTokenFactory: () => token
       })
       .withAutomaticReconnect()
       .build();
+      
     this.registerSignalRHandlers();
-    return this.retryConnection(token)
+    return this.retryConnection(token);
   }
 
   private startHubConnection() {
@@ -59,13 +85,16 @@ export class PresenceService {
     }
 
     return this.hubConnection.start()
-    .then(() => {
-      console.log('✅ Successfully connected to presence hub');
-    })
-    .catch(error => {
-      console.error('❌ Error starting presence hub connection:', error);
-      throw error; // Re-throw to propagate the error
-    });
+      .then(() => {
+        console.log('✅ Successfully connected to presence hub');
+        this.connectionActive = true;
+      })
+      .catch(error => {
+        console.error('❌ Error starting presence hub connection:', error);
+        this.connectionActive = false;
+        this.handleConnectionError(error);
+        throw error; // Re-throw to propagate the error
+      });
   }
 
   private registerSignalRHandlers() {
@@ -121,26 +150,48 @@ export class PresenceService {
       });
     });
 
+    this.hubConnection.onclose((error) => {
+      console.log('Notifications hub connection closed', error);
+      this.connectionActive = false;
+      if (error) {
+        this.handleConnectionError(error);
+      }
+    });
+
     this.handlersRegistered = true;
     console.log('✅ Presence handlers registered');
   }
 
   stopHubConnection() {
     if (this.hubConnection) {
-      console.log('Stopping hub connection...');
-      this.hubConnection.stop()
-        .catch(error => console.error('Error stopping hub connection:', error))
+      console.log('Stopping presence hub connection...');
+      
+      return this.hubConnection.stop()
+        .catch(error => console.error('Error stopping presence hub connection:', error))
         .finally(() => {
           this.hubConnection = undefined;
-          this.handlersRegistered = false; // Reset this flag
-          console.log('Hub connection stopped');
+          this.handlersRegistered = false;
+          this.connectionActive = false;
+          console.log('Presence hub connection stopped and reset');
         });
     }
+    return Promise.resolve();
   }
 
   reconnect(token: string) {
-    this.stopHubConnection();
-    this.createHubConnection(token);
+    if (this.reconnectAttemptInProgress) {
+      console.log('Reconnect attempt already in progress, skipping');
+      return;
+    }
+    
+    this.reconnectAttemptInProgress = true;
+    
+    console.log('Reconnecting presence hub with new token');
+    this.stopHubConnection()
+      .then(() => this.createHubConnection(token))
+      .finally(() => {
+        this.reconnectAttemptInProgress = false;
+      });
   }
   
   // Helper method to check if a user is online
@@ -162,5 +213,36 @@ export class PresenceService {
           throw err;
         }
       });
+  }
+
+  private handleConnectionError(error: any) {
+    if (!error) return;
+    
+    // Check if this is an auth error
+    const errorMessage = error.toString().toLowerCase();
+    if (errorMessage.includes('unauthorized') || 
+        errorMessage.includes('401') || 
+        errorMessage.includes('status code \'401\'')) {
+      
+      console.log('Detected 401 error in presence hub connection');
+      
+      // Get fresh token from AccountService
+      const accountService = inject(AccountService);
+      
+      // Only attempt token refresh if not already refreshing
+      if (!accountService.isRefreshingToken()) {
+        console.log('Attempting token refresh after 401');
+        accountService.refreshToken().subscribe({
+          next: () => {
+            console.log('Token refreshed after 401, hub will reconnect via effect');
+          },
+          error: (refreshError) => {
+            console.error('Failed to refresh token after 401:', refreshError);
+          }
+        });
+      } else {
+        console.log('Token refresh already in progress, waiting...');
+      }
+    }
   }
 }

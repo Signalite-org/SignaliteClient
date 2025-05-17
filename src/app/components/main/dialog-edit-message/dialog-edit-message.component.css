@@ -1,0 +1,106 @@
+:host {
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  z-index: 5;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+form {
+  all: unset;
+  color: white;
+}
+
+p {
+  font-size: clamp(1.4rem, 1.1vw, 2rem);
+  margin-top: 1em;
+  color: white;
+}
+
+.background {
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  z-index: 7;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background: rgba(0,0,0,0.7);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  align-content: center;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px); /* For Safari support */
+}
+
+.content {
+  position: absolute;
+
+  z-index: 10;
+  margin-left: auto;
+  margin-right: auto;
+  width: 20em;
+  min-height: 10em;
+  height: fit-content;
+  max-width: 90%;
+  max-height: 95%;
+
+  background-color: rgba(27, 27, 27, 0.85);
+  border-radius: 5px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  left: 50%;
+  top: 50%;
+  border: 0.1em solid #504e97;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 100px #6563bf;
+}
+
+.content textarea {
+  color: #FFFFFFD2;
+  background-color: rgb(27, 27, 27);
+  width: 90%;
+  min-height: 10em;
+  max-width: 95%;
+  padding: 1em;
+  font-size: clamp(1.2rem, 1vw, 1.5rem);
+  margin: 1em;
+  font-family: SansSerif, sans-serif;
+}
+
+#back {
+  color: white;
+  background: transparent;
+  justify-self: flex-start;
+  place-self: flex-end;
+  border: none;
+}
+
+#button {
+  color: white;
+  background: #43434c;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  min-width: 4em;
+  margin-bottom: 1em;
+  border: none;
+}
+
+#button:hover {
+  box-shadow: 0 0 10px white;
+}
+
+button:hover {
+  cursor: pointer;
+}

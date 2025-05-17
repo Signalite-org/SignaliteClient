@@ -31,14 +31,19 @@
       [groupsViewEnabled]="isGroupsViewEnabled()"
       class="left" [class.hidden]="hideLeftColumn()"
       (groupDeleted)="handleGroupDeleted($event)"
-      (groupUpdated)="handleGroupUpdated()"
+      (groupUpdated)="handleGroupUpdated($event)"
       (onGroupFriendClicked)="currentGroupId.set($event)"
+      [editMessageTrigger]="triggerEditMessagesForAllGroups"
+      [currentUser]="userInfo()"
       >
     </section-group-friends>
 
     <app-section-chat
       [currentGroup]="currentGroupId()"
       [newMessageTrigger]="triggerNewMessageForCurrentGroup"
+      [deleteMessageTrigger]="triggerDeletedMessageForCurrentGroup"
+      [editMessageTrigger]="triggerEditMessageForCurrentGroup"
+      (onMessageModified)="triggerEditMessagesForAllGroups.emit([$event])"
     ></app-section-chat>
 
     <app-section-members

@@ -5,8 +5,6 @@
 </header>
 
 <div class="message" [class.message-right]="isOwnMessage" [class.message-left]="!isOwnMessage">
-
-
   @if(isOwnMessage) {
 
     <!-- ------------ -->
@@ -67,11 +65,21 @@
         <p>{{attachmentName()}}</p>
       </a>
       <div id="file-details">type: {{attachmentType().split('/')[attachmentType().split('/').length-1]}}, size: {{attachmentSize().toFixed(2)}} MB</div>
-
     </div>
     @if(isOwnMessage) {
       <div> <!-- Empty div for correct grid layout --> </div>
     }
+  }
+
+  @if(showConfirmDialog()) {
+    <div class="dialog">
+      {{dialogText}}
+      <div id="dialogButtons">
+        <button (click)="onMessageDeletedEvent.emit()">Yes</button>
+        <button (click)="showConfirmDialog.set(false)">No</button>
+      </div>
+    </div>
+    <div> <!-- Empty div for correct grid layout --> </div>
   }
 
   <!-- ------------------- -->
@@ -86,11 +94,13 @@
   </div>
 
   <div id="edit">
-    @if (isOwnMessage) {
-      <mat-icon svgIcon="edit"></mat-icon>
-      <mat-icon svgIcon="trash"></mat-icon>
+    @if (isOwnMessage && !showConfirmDialog()) {
+      <mat-icon svgIcon="edit" (click)="onMessageEditClickedEvent.emit()"></mat-icon>
+      <mat-icon svgIcon="trash" (click)="showConfirmDialog.set(true)"></mat-icon>
     }
   </div>
+
+
 </div>
 
 

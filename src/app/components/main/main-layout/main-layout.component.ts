@@ -24,7 +24,9 @@ import {NotificationsService} from '../../../_services/notifications.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import {NgOptimizedImage} from '@angular/common';
-import { NewGroupComponent } from '../new-group/new-group.component';
+import {MessageEdit} from '../../../_models/MessageEdit';
+import {MessageDelete} from '../../../_models/MessageDelete';
+import { ToastrService } from 'ngx-toastr';
 import { RouterModule } from '@angular/router';
 
 enum ChatLayoutStyle {
@@ -49,12 +51,13 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private accountService: AccountService,
     private userService: UserService,
     private notificationsService: NotificationsService,
+    private toastr: ToastrService
   ) {
     this.userId.set(this.accountService.currentUser()?.userId ?? -1);
 
     effect(() => {
       const messages = this.notificationsService.messagesReceived();
-      
+
       // Only process if there are new messages
       if (messages.length > 0 && messages.length > this.lastProcessedMessagesLength) {
         // Process all the messages
@@ -63,13 +66,13 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             this.triggerNewMessageForCurrentGroup.emit(messages[i].message);
           }
         }
-        
+
         // Emit all messages for global handling
         this.triggerNewMessagesForAllGroups.emit(messages);
-        
+
         // Clear the messages from notifications service
         this.notificationsService.clearReceivedMessages();
-        
+
         // Update our processed length
         this.lastProcessedMessagesLength = 0; // Reset to 0 since we cleared the messages
       }
@@ -86,7 +89,34 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     )
     this.setupResizeListener();
 
+    //////////////////////////
+    // SETUP OF LIVE EVENTS //
+    //////////////////////////
 
+    // On messages deleted
+    this.notificationsService.messageDeleted$.subscribe( messages => {
+      for(let i = 0; i < messages.length; i++) {
+        if(messages[i].groupId == this.currentGroupId()) {
+          this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
+        }
+      }
+      this.notificationsService.clearDeletedMessages();
+    })
+
+    // On message edited
+    this.notificationsService.messageModified$.subscribe( messages => {
+      for(let i = 0; i < messages.length; i++) {
+        if(messages[i].groupId == this.currentGroupId()) {
+          const modifiedMessage : MessageEdit = {
+            messageId: messages[i].message.id,
+            content: messages[i].message.content ?? ''
+          }
+          this.triggerEditMessageForCurrentGroup.emit(modifiedMessage);
+        }
+      }
+      this.triggerEditMessagesForAllGroups.emit(messages);
+      this.notificationsService.clearModifiedMessages();
+    })
   }
 
   ngOnDestroy() {
@@ -104,6 +134,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   // NOTIFICATIONS - EVENTS
   @Output() triggerNewMessageForCurrentGroup = new EventEmitter<MessageDTO>();
   @Output() triggerNewMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
+  @Output() triggerDeletedMessageForCurrentGroup = new EventEmitter<number>();
+  @Output() triggerDeletedMessagesForAllGroups = new EventEmitter<MessageDelete[]>();
+  @Output() triggerEditMessageForCurrentGroup = new EventEmitter<MessageEdit>();
+  @Output() triggerEditMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
 
   protected userInfo : WritableSignal<UserDTO | null> = signal(null);
   protected userId : WritableSignal<number> = signal(-1);
@@ -141,15 +175,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected handleGroupUpdated() {
-    let groupId = this.currentGroupId()
-    this.currentGroupId.set(-1)
-    // Ustawiam minimalne opoznienie zeby sie zrefreshowała grupa
-    setTimeout(() => {
-      this.currentGroupId.set(groupId)
-    }, 1);
+  protected handleGroupUpdated(groupId: number) {
+    let currentGroupId = this.currentGroupId()
+    if (currentGroupId === groupId) {
+      this.currentGroupId.set(-1)
+      // Ustawiam minimalne opoznienie zeby sie zrefreshowała grupa
+      setTimeout(() => {
+        this.currentGroupId.set(groupId)
+      }, 1);
+    }
   }
-
 
   private updateLayout() {
     const content = this.el.nativeElement.querySelector('#content');

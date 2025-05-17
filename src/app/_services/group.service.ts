@@ -64,13 +64,39 @@ export class GroupService {
         const userAddedToGroup = this.notificationService.userAddedToGroup()
         if (userAddedToGroup.id > 0) {
           let newGroupMembers = this._groupMembers()
-          console.log(`new group members: ${newGroupMembers.members}`)
+          console.log('New group members:', JSON.stringify(newGroupMembers.members, null, 2))
           newGroupMembers?.members.push(userAddedToGroup)
           this._groupMembers.update(() => newGroupMembers)
-          console.log(`group members signał: ${this._groupMembers().members}`)
+          console.log('Group members signal after update:', JSON.stringify(this._groupMembers().members, null, 2))
         }
       });
+
+      effect(() => {
+        const newFriendGroup = this.notificationService.friendRequestsAccepted()
+        if (newFriendGroup) {
+          this._groups.update(groups => [...groups, newFriendGroup])
+        }
+      });
+
+
     }
+    
+  moveGroupToTop(groupId: number): void {
+    const currentGroups = this._groups();
+    const groupIndex = currentGroups.findIndex(group => group.id === groupId);
+  
+    if (groupIndex !== -1) {
+      const [groupToMove] = currentGroups.slice(groupIndex, groupIndex + 1);
+    
+      const updatedGroups = [
+        groupToMove, 
+        ...currentGroups.slice(0, groupIndex), 
+        ...currentGroups.slice(groupIndex + 1)
+      ];
+    
+      this._groups.set(updatedGroups);
+    }
+  }
     
     // Metoda do odświeżania listy grup
     fetchGroups() {
@@ -94,7 +120,6 @@ export class GroupService {
           profilePhotoUrl: undefined
         }
       };
-      
       // Tworzymy obiekt MessageOfGroupDTO
       const messageOfGroupDTO: MessageOfGroupDTO = {
         groupId: groupId,

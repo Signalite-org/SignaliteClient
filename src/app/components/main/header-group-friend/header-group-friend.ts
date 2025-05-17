@@ -24,6 +24,8 @@ export class HeaderGroupFriend {
   userId = signal(-1);
   areOptionsVisible = signal(false);
   isRenaming = signal(false);
+  isAddingUser = signal(false);
+  isDeleting = signal(false);
   newGroupName = signal("");
   selectedFile = signal<File | null>(null)
   
@@ -63,6 +65,7 @@ export class HeaderGroupFriend {
     if (!target.closest('.options-dropdown') && !target.closest('.group-name')) {
       this.areOptionsVisible.set(false);
       this.isRenaming.set(false);
+      this.isAddingUser.set(false);
     }
   }
   
@@ -74,12 +77,25 @@ export class HeaderGroupFriend {
     this.areOptionsVisible.update(value => !value);
     if (!this.areOptionsVisible()) {
       this.isRenaming.set(false);
+      this.isAddingUser.set(false);
     }
   }
   
   // Show rename input
   showRenameInput() {
-    this.isRenaming.set(true);
+    this.isRenaming.set(!this.isRenaming());
+  }
+
+  showAddingUserInput() {
+    this.isAddingUser.set(!this.isAddingUser());
+  }
+
+  hideGroupDeleteConfirmation() {
+    this.isDeleting.set(false)
+  }
+
+  showGroupDeleteConfirmation() {
+    this.isDeleting.set(true)
   }
   
   // Rename group
@@ -102,22 +118,67 @@ export class HeaderGroupFriend {
       }
     });
   }
+
+  // Add user to group
+  addUser() {
+    // Sprawdź czy nazwa użytkownika nie jest pusta
+    if (!this.username().trim()) {
+      this.toastr.warning('Wprowadź nazwę użytkownika');
+      return;
+    }
+   
+    // Sprawdź czy mamy poprawne ID grupy
+    if (this.groupId() <= 0) {
+      this.toastr.error('Nieprawidłowe ID grupy');
+      return;
+    }
+   
+    // Najpierw pobierz ID użytkownika na podstawie nazwy
+    this.userService.getUserByUsername(this.username()).subscribe({
+      next: (user) => {
+        if (!user || user.id <= 0) {
+          this.toastr.error('Nie znaleziono użytkownika o podanej nazwie');
+          return;
+        }
+       
+        // Ustaw ID użytkownika
+        this.userId.set(user.id);
+       
+        // Teraz dodaj użytkownika do grupy
+        this.groupService.addUserToGroup(this.groupId(), user.id).subscribe({
+          next: () => {
+            this.isAddingUser.set(false);
+            this.toastr.success(`Użytkownik ${this.username()} został dodany do grupy`);
+            this.username.set(''); // Wyczyść pole po dodaniu
+          },
+          error: (error) => {
+            console.error('Błąd podczas dodawania użytkownika do grupy:', error);
+            this.toastr.error(error);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Błąd podczas wyszukiwania użytkownika:', error);
+        this.toastr.error(error);
+      }
+    });
+  }
   
   // Delete group
   deleteGroup() {
-    if (confirm('Are you sure you want to delete this group?')) {
-      this.groupService.deleteGroup(this.groupId()).subscribe({
-        next: () => {
-          this.toastr.success('Group deleted successfully');
-          this.returnToNormalModeEvent.emit(); // Return to normal mode after deletion
-          this.groupDeleted.emit(this.groupId())
-        },
-        error: (error) => {
-          console.error('Error deleting group:', error);
-          this.toastr.error(error);
-        }
-      });
-    }
+    this.groupService.deleteGroup(this.groupId()).subscribe({
+      next: () => {
+        this.toastr.success('Group deleted successfully');
+        this.returnToNormalModeEvent.emit(); // Return to normal mode after deletion
+        this.groupDeleted.emit(this.groupId())
+        this.hideGroupDeleteConfirmation();
+      },
+      error: (error) => {
+        console.error('Error deleting group:', error);
+        this.toastr.error(error);
+        this.hideGroupDeleteConfirmation();
+      }
+    });
   }
   
   onFileSelected(event: Event) {
@@ -159,47 +220,5 @@ export class HeaderGroupFriend {
   }
 
 
-  // Add user to group
-  addUser() {
-    // Sprawdź czy nazwa użytkownika nie jest pusta
-    if (!this.username().trim()) {
-      this.toastr.warning('Wprowadź nazwę użytkownika');
-      return;
-    }
-   
-    // Sprawdź czy mamy poprawne ID grupy
-    if (this.groupId() <= 0) {
-      this.toastr.error('Nieprawidłowe ID grupy');
-      return;
-    }
-   
-    // Najpierw pobierz ID użytkownika na podstawie nazwy
-    this.userService.getUserByUsername(this.username()).subscribe({
-      next: (user) => {
-        if (!user || user.id <= 0) {
-          this.toastr.error('Nie znaleziono użytkownika o podanej nazwie');
-          return;
-        }
-       
-        // Ustaw ID użytkownika
-        this.userId.set(user.id);
-       
-        // Teraz dodaj użytkownika do grupy
-        this.groupService.addUserToGroup(this.groupId(), user.id).subscribe({
-          next: () => {
-            this.toastr.success(`Użytkownik ${this.username()} został dodany do grupy`);
-            this.username.set(''); // Wyczyść pole po dodaniu
-          },
-          error: (error) => {
-            console.error('Błąd podczas dodawania użytkownika do grupy:', error);
-            this.toastr.error(error);
-          }
-        });
-      },
-      error: (error) => {
-        console.error('Błąd podczas wyszukiwania użytkownika:', error);
-        this.toastr.error(error);
-      }
-    });
-  }
+  
 }

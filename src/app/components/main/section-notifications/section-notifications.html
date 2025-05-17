@@ -1,2 +1,18 @@
-
-
+<header>
+    <label class="notification-label">
+      <div class="icon-container" (click)="toggleFriendRequests()">
+        <mat-icon 
+          svgIcon="notification" 
+          class="toggler-off notification-icon" 
+          [class.active]="showFriendRequests()"
+        ></mat-icon>
+        @if (pendingRequestsCount() > 0) {
+          <span class="notification-badge">{{ pendingRequestsCount() }}</span>
+        }
+      </div>
+    </label>
+  </header>
+  
+  @if (showFriendRequests()) {
+    <app-friend-requests-list (close)="closeFriendRequests()"></app-friend-requests-list>
+  }

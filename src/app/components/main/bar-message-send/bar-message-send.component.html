@@ -6,6 +6,24 @@
       placeholder="Type your message..."
     >
 
+    <button type="button" class="emojiContainer" (click)="toggleEmojisView($event)">
+      @if(emojiView()) {
+    <div class="emoji-panel" (click)="$event.stopPropagation()">
+    <div class="emoji-grid">
+      @for(emoji of emojis; track emoji) {
+        <button
+          type="button"
+          class="emoji-btn"
+          (click)="addEmoji(emoji)">
+          {{emoji}}
+         </button>
+        }
+      </div>
+    </div>
+  } 
+      <mat-icon svgIcon="emoji"></mat-icon>
+    </button>
+
     @if(selectedFile) {
       <div id="fileName" (click)="triggerFileInput()">
         {{selectedFile.name}}
@@ -32,4 +50,5 @@
 
   <!-- Hidden file input -->
   <input type="file" #fileInput (change)="onFileSelected($event)" hidden>
+
 </form>
