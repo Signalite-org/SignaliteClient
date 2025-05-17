@@ -17,22 +17,23 @@ import { AccountService } from '../../../_services/account.service';
 })
 export class ProfileComponent implements OnInit {
   @Output() backgroundChangeRequested = new EventEmitter<void>();
-  previewBackgroundUrl?: string | ArrayBuffer | null = null;
+  
+  protected previewBackgroundUrl?: string | ArrayBuffer | null = null;
 
-  profileForm: FormGroup;
-  profileUsernameFocused: boolean = false;
-  profileEmailFocused: boolean = false;
-  profileNameFocused: boolean = false;
-  profileSurnameFocused: boolean = false;
+  protected profileForm: FormGroup;
+  protected profileUsernameFocused: boolean = false;
+  protected profileEmailFocused: boolean = false;
+  protected profileNameFocused: boolean = false;
+  protected profileSurnameFocused: boolean = false;
 
-  isLoading: boolean = false;
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
+  protected isLoading: boolean = false;
+  protected errorMessage: string | null = null;
+  protected successMessage: string | null = null;
 
   readonly minLengthUsername: number = 4;
   readonly maxLengthUsername: number = 16;
 
-  readonly ownUser;
+  protected readonly ownUser;
 
   constructor(private fb: FormBuilder, private userService: UserService, private accountService: AccountService) {
     this.ownUser = this.userService.ownUser;
@@ -75,6 +76,7 @@ export class ProfileComponent implements OnInit {
     let step = '';
     let isUsernameTaken = false;
     let isEmailTaken = false;
+
     this.accountService.existsUserByUsername(loginData.username).pipe(
       tap(() => step = 'existsUserByUsername'),
       switchMap((usernameExists: boolean) => {
@@ -120,10 +122,5 @@ export class ProfileComponent implements OnInit {
         this.profileForm.enable();
       })
     ).subscribe();
-
-  }
-
-  onSubmitupdateBackground() {
-
   }
 }

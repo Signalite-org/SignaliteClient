@@ -1,33 +1,43 @@
-<app-change-image
-  *ngIf="showImagePicker"
-  [defaultImage]="defaultImage"
-  [shapeDefaultImage]="shape"
-  (closed)="showImagePicker = false"
-  (imageSelected)="onImageSelected($event)"
-  (defaultSelected)="onDefaultImageSelected()"
-></app-change-image>
-
 <div class="background"></div>
 
-<div class="content">
-   <div class="navbar">
-      <div class="profile">
-         <div class="profile-image">
-            <img [src]="previewProfileUrl || 'assets/images/default-user.jpg'"  alt="Profile" />
-            <div class="edit" (click)="onProfileChangeRequested()">
-               <mat-icon>edit</mat-icon>
-            </div>
-         </div>
-         <p>{{ownUserInfo()?.username}} ({{ownUserInfo()?.name}} {{ownUserInfo()?.surname}})</p>
-      </div>
+@if(isMobileView && navbarVisible){
+   <div class="overlay" (click)="toggleNavbar()"  @fadeAnimation></div>
+}
 
-      <div class="navigation">
-         <p (click)="selectForm('Profile')" [ngClass]="{ 'active-bar': currentForm === 'Profile' }">Profile</p>
-         <p (click)="selectForm('Security')" [ngClass]="{ 'active-bar': currentForm === 'Security' }">Security</p>
-         <p (click)="logout()">Log out</p>
+<div class="content">
+   <app-change-image
+      *ngIf="showImagePicker"
+      [isLoading]="isLoading"
+      [defaultImage]="defaultImage"
+      [shapeDefaultImage]="shape"
+      (closed)="showImagePicker = false"
+      (imageSelected)="onImageSelected($event)"
+      (defaultSelected)="onDefaultImageSelected()"
+   ></app-change-image>
+
+   <div class="nav" [class.hidden]="isMobileView && !navbarVisible">
+      <div class="menu-toggle" (click)="toggleNavbar()">
+         <mat-icon class="menu-icon">menu</mat-icon>
       </div>
-      
+      <div class="navbar">
+         <div class="profile">
+            <div class="profile-image">
+               <img [src]="previewProfileUrl || 'assets/images/default-user.jpg'"  alt="Profile" />
+               <div class="edit" (click)="onProfileChangeRequested()">
+                  <mat-icon>edit</mat-icon>
+               </div>
+            </div>
+            <p>{{ownUserInfo()?.username}} ({{ownUserInfo()?.name}} {{ownUserInfo()?.surname}})</p>
+         </div>
+
+         <div class="navigation">
+            <p (click)="selectForm('Profile'); hideNavbarIfMobile()" [ngClass]="{ 'active-bar': currentForm === 'Profile' }">Profile</p>
+            <p (click)="selectForm('Security'); hideNavbarIfMobile()" [ngClass]="{ 'active-bar': currentForm === 'Security' }">Security</p>
+            <p (click)="logout()">Log out</p>
+         </div>
+      </div>
    </div>
+
    <div class="content-section">
       <div class="info-section">
          <p>{{currentForm}}</p>

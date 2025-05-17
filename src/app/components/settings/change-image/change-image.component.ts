@@ -9,16 +9,20 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './change-image.component.css'
 })
 export class ChangeImageComponent {
+  @Input() isLoading: boolean = false
   @Input() defaultImage?: string | null = null;
   @Input() shapeDefaultImage: 'circle' | 'rectangle' = 'circle';
+
   @Output() closed = new EventEmitter<void>();
   @Output() imageSelected = new EventEmitter<File>();
   @Output() defaultSelected = new EventEmitter<void>();
 
-  isDragging = false;
+  protected isDragging : boolean = false;
 
   onBackgroundClick() {
-    this.closed.emit();
+    if(!this.isLoading){
+      this.closed.emit();
+    }   
   }
 
   onBoxClick(event: MouseEvent) {
@@ -32,6 +36,7 @@ export class ChangeImageComponent {
     }
   }
 
+  // -------- Drag and drop image ----------
   onDragOver(event: DragEvent) {
     event.preventDefault();
     this.isDragging = true;
@@ -50,6 +55,7 @@ export class ChangeImageComponent {
       this.imageSelected.emit(file);
     }
   }
+  // -----------------------------------------
 
   selectDefaultImage() {
     this.defaultSelected.emit();

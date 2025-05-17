@@ -7,25 +7,41 @@ import { UserService } from '../../_services/user.service';
 import { RouterModule } from '@angular/router';
 import { AccountService } from '../../_services/account.service';
 import { ChangeImageComponent } from './change-image/change-image.component';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
   imports: [CommonModule, MatIconModule, ProfileComponent, SecurityComponent, ChangeImageComponent, RouterModule],
   templateUrl: './settings.component.html',
-  styleUrl: './settings.component.css'
+  styleUrl: './settings.component.css',
+  standalone: true,
+  animations: [
+    trigger('fadeAnimation', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('300ms 0ms', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('300ms 0ms', style({ opacity: 0 }))
+      ])
+    ]),
+  ]
 })
 export class SettingsComponent implements OnInit {
-  currentForm: 'Profile' | 'Security' = 'Profile';
-  previewProfileUrl?: string | ArrayBuffer | null = null;
+  @ViewChild(ProfileComponent) private profileComponentRef?: ProfileComponent;
+  
+  protected currentForm: 'Profile' | 'Security' = 'Profile';
 
-  selectedFile: File | null = null;
-  isLoading: boolean = false;
+  protected previewProfileUrl?: string | ArrayBuffer | null = null;
+  protected selectedFile: File | null = null;
+  
+  protected showImagePicker: boolean = false;
+  protected imageChangeContext: 'profile' | 'background' = 'profile';
+  
+  protected isLoading: boolean = false;
 
-  showImagePicker: boolean = false;
-  imageChangeContext: 'profile' | 'background' | null = null;
-  @ViewChild(ProfileComponent) profileComponentRef?: ProfileComponent;
-
-  readonly ownUserInfo;
+  protected readonly ownUserInfo;
 
   constructor(private userService: UserService, private accountService: AccountService) {
     this.ownUserInfo = this.userService.ownUser;
@@ -43,17 +59,49 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  isMobileView = false;
+  navbarVisible = false;
 
+  ngOnInit() {
+    this.checkScreenSize();
+    window.addEventListener('resize', this.checkScreenSize.bind(this));
   }
+
+  ngOnDestroy() {
+    window.removeEventListener('resize', this.checkScreenSize.bind(this));
+  }
+
+  checkScreenSize() {
+    this.isMobileView = window.innerWidth <= 768;
+    if (!this.isMobileView) {
+      this.navbarVisible = false;
+    }
+  }
+
+  toggleNavbar() {
+    this.navbarVisible = !this.navbarVisible;
+  }
+
+  closeNavbar(){
+    if(this.navbarVisible)
+      this.navbarVisible = false
+  }
+
+  hideNavbarIfMobile() {
+
+    if (this.isMobileView) {
+      this.navbarVisible = false;
+    }
+  }
+
 
   selectForm(form: 'Profile' | 'Security') {
     this.currentForm = form;
   }
 
   get defaultImage(): string {
-    return this.imageChangeContext === 'profile' 
-      ? 'assets/images/default-user.jpg' 
+    return this.imageChangeContext === 'profile'
+      ? 'assets/images/default-user.jpg'
       : 'assets/images/background0.png';
   }
 
@@ -65,53 +113,69 @@ export class SettingsComponent implements OnInit {
     const formData = new FormData();
     formData.append('file', file);
 
-    if(this.imageChangeContext === "profile"){
-      this.userService.updateProfilePhoto(formData).subscribe({
-          next: () => {
-            this.previewProfileUrl = URL.createObjectURL(file)
-          },
-          error: (err) => {
-            console.error(err);
-          }
+    this.isLoading = true;
+    if (this.imageChangeContext === "profile") {
+      this.userService.updateProfilePhoto(formData).pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.showImagePicker = false;
+        })
+      ).subscribe({
+        next: () => {
+          this.previewProfileUrl = URL.createObjectURL(file)
+        },
+        error: (err) => {
+          console.error(err);
+        }
       });
-    } else if(this.imageChangeContext === "background"){
-      this.userService.updateBackgroundPhoto(formData).subscribe({
-          next: () => {
-            this.profileComponentRef?.setBackgroundImage(URL.createObjectURL(file));
-            console.log("yes")
-          },
-          error: (err) => {
-            console.error(err);
-          }
+    } else {
+      this.userService.updateBackgroundPhoto(formData).pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.showImagePicker = false;
+        })
+      ).subscribe({
+        next: () => {
+          this.profileComponentRef?.setBackgroundImage(URL.createObjectURL(file));
+        },
+        error: (err) => {
+          console.error(err);
+        }
       });
     }
-    
-    this.showImagePicker = false;
   }
 
   onDefaultImageSelected() {
-    if(this.imageChangeContext === "profile"){
-      this.userService.deleteProfilePhoto().subscribe({
+    this.isLoading = true;
+    if (this.imageChangeContext === "profile") {
+      this.userService.deleteProfilePhoto().pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.showImagePicker = false;
+        })
+      ).subscribe({
         next: () => {
           this.previewProfileUrl = null;
         },
         error: (err) => {
           console.error(err);
         }
-    });
-    } else if(this.imageChangeContext == "background"){
-      this.userService.deleteBackgroundPhoto().subscribe({
+      });
+    } else {
+      this.userService.deleteBackgroundPhoto().pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.showImagePicker = false;
+        })
+      ).subscribe({
         next: () => {
           this.profileComponentRef?.setBackgroundImage(null);
         },
         error: (err) => {
           console.error(err);
         }
-    });
+      });
     }
-    
-
-    this.showImagePicker = false;
   }
 
   onProfileChangeRequested(): void {

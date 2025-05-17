@@ -13,16 +13,16 @@ import { finalize } from 'rxjs';
   styleUrl: './security.component.css'
 })
 export class SecurityComponent {
-  changePasswordForm: FormGroup;
-  oldPasswordFocused: boolean = false;
-  newPasswordFocused: boolean = false;
-  confirmNewPasswordFocused: boolean = false;
+  protected changePasswordForm: FormGroup;
+  protected oldPasswordFocused: boolean = false;
+  protected newPasswordFocused: boolean = false;
+  protected confirmNewPasswordFocused: boolean = false;
 
-  isLoading: boolean = false;
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
+  protected isLoading: boolean = false;
+  protected errorMessage: string | null = null;
+  protected successMessage: string | null = null;
 
-  readonly minLengthPassword: number = 8;
+  protected readonly minLengthPassword: number = 8;
 
   constructor(private fb: FormBuilder, private userService: UserService) {
     this.changePasswordForm = this.fb.group({
@@ -61,11 +61,8 @@ export class SecurityComponent {
           else{
             this.errorMessage = 'Unexpected error occurred. Please try again.';
           }
-            
           console.error(error);
         }
       });
-  
-      
     }
 }

@@ -82,5 +82,8 @@
             <button type="submit" class="button-style"
                 [disabled]="changePasswordForm.invalid || isLoading">Update</button>
         </div>
+        <div class="loader-position" *ngIf="isLoading">
+            <div class="loader"></div>
+        </div>
     </form>
 </div>
