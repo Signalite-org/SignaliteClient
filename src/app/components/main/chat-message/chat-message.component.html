@@ -1,4 +1,4 @@
-<header [class.headerLeft]="!isOwnMessage" [class.headerRight]="isOwnMessage">
+<header [class.unloaded]="messageCenter() || (messageEnd() && !messageStart())" [class.headerLeft]="!isOwnMessage" [class.headerRight]="isOwnMessage">
   <div class="userName">
     {{ userName() }}
   </div>
@@ -17,7 +17,11 @@
     <!-- ----------- -->
     <!-- PROFILE PIC -->
     <!-- ----------- -->
-    <div class="userImageContainer" [class.userImageContainerRight]="isOwnMessage" [class.userImageContainerLeft]="!isOwnMessage">
+    <div class="userImageContainer"
+         [class.hidden]="messageCenter() || (!messageStart() && messageEnd())"
+         [class.userImageContainerRight]="isOwnMessage"
+         [class.userImageContainerLeft]="!isOwnMessage"
+    >
       <img class="userImage" fill sizes="10vw" alt="user image" [ngSrc]="profileImageURL()">
     </div>
 
@@ -26,7 +30,11 @@
     <!-- ----------- -->
     <!-- PROFILE PIC -->
     <!-- ----------- -->
-    <div class="userImageContainer" [class.userImageContainerRight]="isOwnMessage" [class.userImageContainerLeft]="!isOwnMessage">
+    <div class="userImageContainer"
+         [class.hidden]="messageCenter() || (!messageStart() && messageEnd())"
+         [class.userImageContainerRight]="isOwnMessage"
+         [class.userImageContainerLeft]="!isOwnMessage"
+  >
       <img class="userImage" fill sizes="10vw" alt="user image" [ngSrc]="profileImageURL()">
     </div>
 
@@ -89,11 +97,19 @@
     <div> <!-- Empty div for correct grid layout --> </div>
   }
 
-  <div class="date" [class.dateRight]="isOwnMessage" [class.dateLeft]="!isOwnMessage">
+  <div class="date"
+       [class.hidden]="messageCenter() || (messageStart() && !messageEnd())"
+       [class.date-hidden]="messageCenter() || (messageStart() && !messageEnd())"
+       [class.date-visible]="messageEnd()"
+       [class.marginBottom]="!messageCenter() && !messageStart()"
+       [class.dateRight]="isOwnMessage"
+       [class.dateLeft]="!isOwnMessage"
+  >
     {{ date() }}
   </div>
 
-  <div id="edit">
+
+  <div id="edit" class="edit-middle">
     @if (isOwnMessage && !showConfirmDialog()) {
       <mat-icon svgIcon="edit" (click)="onMessageEditClickedEvent.emit()"></mat-icon>
       <mat-icon svgIcon="trash" (click)="showConfirmDialog.set(true)"></mat-icon>
@@ -102,6 +118,3 @@
 
 
 </div>
-
-
-

@@ -151,6 +151,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   hideRightColumn = signal(false);
   hideLeftColumn= signal(false);
+  displayMembersOnTop = signal(false);
+  skipStartAnimation = signal(true);
+
   private resizeObserver: ResizeObserver | null = null;
   protected currentChatLayout:WritableSignal<ChatLayoutStyle> = signal(ChatLayoutStyle.ALL_VISIBLE);
 
@@ -238,7 +241,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.layoutCenterOnly();
       this.updateLayout();
     }
+  }
 
+  onUserClickedChat(): void {
+    if(this.currentChatLayout() == this.ChatLayoutStyle.RIGHT_HIDDEN) {
+      this.switchToFullChatMode();
+    }
   }
 
   protected readonly ChatLayoutStyle = ChatLayoutStyle;

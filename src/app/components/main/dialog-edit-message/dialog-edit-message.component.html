@@ -3,7 +3,7 @@
 <form class="content" [formGroup]="messageForm"
       (ngSubmit)="messageEdit(messageForm.value.messageTextArea)">
 
-  <button id="back" (click)="onClose.emit()">
+  <button type="button" id="back" (click)="onClose.emit()">
 
     <mat-icon svgIcon="exit"></mat-icon>
   </button>

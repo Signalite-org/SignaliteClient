@@ -18,6 +18,7 @@
       [isInFullChatMode]="currentChatLayout() == ChatLayoutStyle.CENTER_ONLY"
       (groupDeleted)="handleGroupDeleted($event)"
       [groupId]="currentGroupId()"
+      (showMembersAndNotifications)="displayMembersOnTop.set(true); skipStartAnimation.set(false);"
       class="header">
     </app-header-group-friend>
 
@@ -43,6 +44,7 @@
       [deleteMessageTrigger]="triggerDeletedMessageForCurrentGroup"
       [editMessageTrigger]="triggerEditMessageForCurrentGroup"
       (onMessageModified)="triggerEditMessagesForAllGroups.emit([$event])"
+      (click)="onUserClickedChat()"
     ></app-section-chat>
 
     <app-section-members
@@ -74,5 +76,19 @@
       [class.hidden]="hideRightColumn()">
     </div>
   </div>
+
+
+  <div
+    [class.hiddenGrid]="!displayMembersOnTop() && !skipStartAnimation()"
+    [class.hidden]="skipStartAnimation()"
+    class="membersOnTop"
+    [class.fadeInGrid]="!skipStartAnimation() && displayMembersOnTop()"
+  >
+    <div class="closeMembersOnTop" (click)="displayMembersOnTop.set(false)"></div>
+    <app-section-notifications class="header getBackground"></app-section-notifications>
+    <div class="closeMembersOnTop" (click)="displayMembersOnTop.set(false)"></div>
+    <app-section-members class="getBackground" [groupId]="currentGroupId()"></app-section-members>
+  </div>
+
 </div>
 

@@ -55,6 +55,9 @@
     }
   </div>
   @if(isInFullChatMode()) {
-    <mat-icon (click)="returnToNormalModeEvent.emit()" svgIcon="return" class="return-icon"></mat-icon>
+    <div>
+      <mat-icon (click)="showMembersAndNotifications.emit()" svgIcon="ellipsisHorizontal" class="return-icon"></mat-icon>
+      <mat-icon (click)="returnToNormalModeEvent.emit()" svgIcon="return" class="return-icon"></mat-icon>
+    </div>
   }
 </header>

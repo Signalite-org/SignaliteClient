@@ -207,9 +207,10 @@ header {
 }
 
 .return-icon {
-  color: #4169e1;
+  color: #c5d2ff;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-left: 0.8em;
 }
 
 .return-icon:hover {
