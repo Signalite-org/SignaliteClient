@@ -1,0 +1,7 @@
+<app-incoming-call-dialog 
+      [call]="incomingCall" 
+      (accept)="acceptCall($event)" 
+      (decline)="declineCall($event)">
+    </app-incoming-call-dialog>
+    
+    <app-active-call-window *ngIf="isCallActive"></app-active-call-window>

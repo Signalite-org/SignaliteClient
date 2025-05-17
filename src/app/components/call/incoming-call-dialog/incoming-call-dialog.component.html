@@ -1,0 +1,22 @@
+<div class="call-dialog-backdrop" *ngIf="call">
+      <div class="call-dialog">
+        <div class="call-dialog-header">
+          <h3>Incoming Call</h3>
+        </div>
+        <div class="call-dialog-content">
+          <div class="caller-info">
+            <p>{{ call.callerUsername }} is calling you</p>
+          </div>
+          <div class="call-actions">
+            <button class="decline-btn" (click)="onDecline()">
+              <mat-icon>call_end</mat-icon>
+              Decline
+            </button>
+            <button class="accept-btn" (click)="onAccept()">
+              <mat-icon>call</mat-icon>
+              Accept
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>

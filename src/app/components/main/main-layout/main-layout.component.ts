@@ -27,6 +27,7 @@ import {NgOptimizedImage} from '@angular/common';
 import {MessageEdit} from '../../../_models/MessageEdit';
 import {MessageDelete} from '../../../_models/MessageDelete';
 import { ToastrService } from 'ngx-toastr';
+import { CallManagerComponent } from '../../call/call-manager/call-manager.component';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -36,7 +37,7 @@ enum ChatLayoutStyle {
 
 @Component({
   selector: 'app-main-layout',
-  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage],
+  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage, CallManagerComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })

@@ -1,0 +1,6 @@
+<button class="call-button" 
+            [disabled]="!isUserOnline || callInProgress" 
+            (click)="initiateCall()"
+            [class.disabled]="!isUserOnline || callInProgress">
+      <mat-icon>call</mat-icon>
+</button>

@@ -1,0 +1,17 @@
+.call-button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 8px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 10px;
+}
+    
+.disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

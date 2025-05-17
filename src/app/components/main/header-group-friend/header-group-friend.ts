@@ -5,12 +5,15 @@ import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../_services/user.service';
 import { ToastrService } from 'ngx-toastr';
 import { DomSanitizer } from '@angular/platform-browser';
+import { CallButtonComponent } from '../../call/call-button/call-button.component';
+import { AccountService } from '../../../_services/account.service';
 
 @Component({
   selector: 'app-header-group-friend',
   imports: [
     MatIcon,
-    FormsModule
+    FormsModule,
+    CallButtonComponent
   ],
   templateUrl: './header-group-friend.html',
   styleUrl: './header-group-friend.css'
@@ -29,11 +32,15 @@ export class HeaderGroupFriend {
   newGroupName = signal("");
   selectedFile = signal<File | null>(null)
   
+  // Add property to track the other user's ID in a private chat
+  otherUserId: WritableSignal<number> = signal(-1);
+
   constructor(
     private groupService: GroupService, 
     private userService: UserService, 
     private toastr: ToastrService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private accountService: AccountService
   ) {
     effect(() => {
       console.log(this.groupId());
@@ -43,6 +50,27 @@ export class HeaderGroupFriend {
           this.groupFriendName.set(group.name);
           this.isPrivate.set(group.isPrivate);
           this.newGroupName.set(group.name); // Initialize rename input
+
+          if (group.isPrivate) {
+            const members = this.groupService.groupMembers()
+            console.log("[Header]Header members read: ",members)
+            const currentUserId = this.accountService.currentUser()?.userId || -1;
+            console.log("[Header]Header current user id read:", currentUserId)
+            const otherUser = members.members.find(m => m.id !== currentUserId);
+            if(otherUser)
+            {
+              this.otherUserId.set(otherUser.id)
+              console.log("[Header]Other user id set to member with id: ", otherUser.id, "Current otherUserId signal in header value: ",this.otherUserId())
+            }
+
+            else{
+              this.otherUserId.set(members.owner.id)
+              console.log("[Header]Other user id set to owner with id: ", members.owner.id, "Current otherUserId signal in header value: ",this.otherUserId())
+            }
+            
+          } else {
+            this.otherUserId.set(-1);
+          }
         });
       }
       else {
@@ -50,6 +78,7 @@ export class HeaderGroupFriend {
           this.isPrivate.set(false);
           this.newGroupName.set(""); // Initialize rename input
           this.username.set("")
+          this.otherUserId.set(-1);
       }
     });
   }

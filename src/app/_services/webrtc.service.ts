@@ -29,6 +29,9 @@ export class WebRtcService {
   
   // Media streams 
   private localStream: MediaStream | null = null;
+  public getLocalStream(): MediaStream | null {
+  return this.localStream;
+}
   private remoteStream: MediaStream | null = null;
 
   // Connection tracking

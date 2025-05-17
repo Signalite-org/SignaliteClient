@@ -1,0 +1,70 @@
+<div class="call-window" *ngIf="isCallActive" [class.minimized]="isMinimized">
+      <div class="call-header" (mousedown)="startDrag($event)">
+        <div class="call-status">
+          <span>{{ callState }}</span>
+          <span *ngIf="callState === 'connected'">
+            ({{ callDuration }})
+          </span>
+        </div>
+        <div class="call-controls-header">
+          <button (click)="toggleMinimize()" class="control-btn minimize-btn">
+            <mat-icon>{{ isMinimized ? 'maximize' : 'minimize' }}</mat-icon>
+          </button>
+          <button (click)="hangUp()" class="control-btn end-btn">
+            <mat-icon>call_end</mat-icon>
+          </button>
+        </div>
+      </div>
+      
+      <div class="call-content" *ngIf="!isMinimized">
+        <div class="video-container">
+          <div class="remote-video-wrapper">
+            <video #remoteVideo autoplay playsinline></video>
+            <div class="no-video-indicator" *ngIf="!hasRemoteVideo">
+              <mat-icon>videocam_off</mat-icon>
+            </div>
+          </div>
+          
+          <div class="local-video-wrapper">
+            <video #localVideo autoplay muted playsinline></video>
+            <div class="no-video-indicator" *ngIf="!hasLocalVideo">
+              <mat-icon>videocam_off</mat-icon>
+            </div>
+          </div>
+        </div>
+        
+        <div class="call-controls-main">
+          <button (click)="toggleMicrophone()" class="control-btn" [class.muted]="isAudioMuted">
+            <mat-icon>{{ isAudioMuted ? 'mic_off' : 'mic' }}</mat-icon>
+          </button>
+          <button (click)="toggleCamera()" class="control-btn" [class.muted]="isVideoDisabled">
+            <mat-icon>{{ isVideoDisabled ? 'videocam_off' : 'videocam' }}</mat-icon>
+          </button>
+          <button (click)="showDeviceSelection = !showDeviceSelection" class="control-btn">
+            <mat-icon>settings</mat-icon>
+          </button>
+        </div>
+        
+        <div class="device-selection" *ngIf="showDeviceSelection">
+          <div class="device-select-group">
+            <label for="audioDevice">Audio Input:</label>
+            <select id="audioDevice" [(ngModel)]="selectedAudioDeviceId" (change)="onAudioDeviceChange($event)">
+              <option [value]="null">Default Microphone</option>
+              <option *ngFor="let device of audioDevices" [value]="device.deviceId">{{ device.label }}</option>
+            </select>
+          </div>
+          
+          <div class="device-select-group" *ngIf="videoDevices.length > 0">
+            <label for="videoDevice">Video Input:</label>
+            <select id="videoDevice" [(ngModel)]="selectedVideoDeviceId" (change)="onVideoDeviceChange($event)">
+              <option [value]="null">Default Camera</option>
+              <option *ngFor="let device of videoDevices" [value]="device.deviceId">{{ device.label }}</option>
+            </select>
+          </div>
+          
+          <button (click)="refreshDevices()" class="refresh-btn">
+            <mat-icon>refresh</mat-icon> Refresh Devices
+          </button>
+        </div>
+      </div>
+    </div>
