@@ -1,6 +1,9 @@
-<button class="call-button" 
-            [disabled]="!isUserOnline || callInProgress" 
-            (click)="initiateCall()"
-            [class.disabled]="!isUserOnline || callInProgress">
-      <mat-icon>call</mat-icon>
-</button>
+<div class="call-controls">      
+      <button class="call-button" 
+              [disabled]="!isUserOnline || callInProgress" 
+              (click)="showOptions ? toggleOptions() : initiateCall()"
+              [class.disabled]="!isUserOnline || callInProgress"
+              [title]="getButtonTooltip()">
+        <mat-icon>call</mat-icon>
+      </button>
+    </div>

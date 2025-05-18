@@ -43,44 +43,49 @@ export class HeaderGroupFriend {
     private accountService: AccountService
   ) {
     effect(() => {
-      console.log(this.groupId());
-      const id = this.groupId();
-      if(id > 0) {
-        groupService.getGroupBasicInfo(id).subscribe(group => {
-          this.groupFriendName.set(group.name);
-          this.isPrivate.set(group.isPrivate);
-          this.newGroupName.set(group.name); // Initialize rename input
+    const id = this.groupId();
+    if(id > 0) {
+      groupService.getGroupBasicInfo(id).subscribe(group => {
+        this.groupFriendName.set(group.name);
+        this.isPrivate.set(group.isPrivate);
+        this.newGroupName.set(group.name);
 
-          if (group.isPrivate) {
-            const members = this.groupService.groupMembers()
-            console.log("[Header]Header members read: ",members)
-            const currentUserId = this.accountService.currentUser()?.userId || -1;
-            console.log("[Header]Header current user id read:", currentUserId)
-            const otherUser = members.members.find(m => m.id !== currentUserId);
-            if(otherUser)
-            {
-              this.otherUserId.set(otherUser.id)
-              console.log("[Header]Other user id set to member with id: ", otherUser.id, "Current otherUserId signal in header value: ",this.otherUserId())
-            }
-
-            else{
-              this.otherUserId.set(members.owner.id)
-              console.log("[Header]Other user id set to owner with id: ", members.owner.id, "Current otherUserId signal in header value: ",this.otherUserId())
-            }
-            
-          } else {
-            this.otherUserId.set(-1);
-          }
-        });
-      }
-      else {
-          this.groupFriendName.set("");
-          this.isPrivate.set(false);
-          this.newGroupName.set(""); // Initialize rename input
-          this.username.set("")
+        // If it's a private group, fetch members
+        if (group.isPrivate) {
+          this.groupService.getGroupMembers(id);
+        } else {
           this.otherUserId.set(-1);
+        }
+      });
+    } else {
+      this.groupFriendName.set("");
+      this.isPrivate.set(false);
+      this.newGroupName.set("");
+      this.username.set("");
+      this.otherUserId.set(-1);
+    }
+  });
+
+  effect(() => {
+    const members = this.groupService.groupMembers();
+    const isPrivate = this.isPrivate();
+    
+    // Only process if this is a private group and we have valid members data
+    if (isPrivate && members && members.members && members.members.length > 0) {
+      const currentUserId = this.accountService.currentUser()?.userId || -1;
+      console.log("[Header]Processing group members - current user:", currentUserId);
+      
+      const otherUser = members.members.find(m => m.id !== currentUserId);
+      if(otherUser) {
+        this.otherUserId.set(otherUser.id);
+        console.log("[Header]Other user id set to member with id: ", otherUser.id);
+      } else if (members.owner && members.owner.id !== currentUserId) {
+        this.otherUserId.set(members.owner.id);
+        console.log("[Header]Other user id set to owner with id: ", members.owner.id);
       }
-    });
+    }
+  });
+
   }
   
   returnToNormalModeEvent = output<void>()
