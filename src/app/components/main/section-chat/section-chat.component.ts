@@ -18,6 +18,7 @@ import {Subscription} from 'rxjs';
 import {DialogEditMessageComponent} from '../dialog-edit-message/dialog-edit-message.component';
 import {MessageEdit} from '../../../_models/MessageEdit';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
+import {MessageDelete} from '../../../_models/MessageDelete';
 
 @Component({
   selector: 'app-section-chat',
@@ -34,6 +35,7 @@ export class SectionChatComponent implements AfterViewInit {
   TODO update last messages when removing
   */
   @Output() onMessageModified = new EventEmitter<MessageOfGroupDTO>();
+  @Output() onLastMessageDeleted = new EventEmitter<MessageDelete>();
 
   readonly MAX_CACHED_MESSAGES: number = 20;
 
@@ -185,6 +187,7 @@ export class SectionChatComponent implements AfterViewInit {
 
     // TODO update last message in section group-friends
 
+
     // Top message id == -1 when there are now 0 messages
     //     in the whole conversation
     if(this.topMessageId() == -1) {
@@ -228,11 +231,29 @@ export class SectionChatComponent implements AfterViewInit {
           // WE ARE deleting the message
           // Message has not yet been deleted from db
           else {
+
             if(thread.items.length <= 1) {
               this.topMessageId.set(-1);
-            } else {
-              this.topMessageId.set(thread.items[1].id);
+              const topMessage:MessageDelete = {
+                groupId: this.currentGroup(),
+                messageId: 1,
+                senderId: 1,
+                lastMessage: undefined
+              };
+              this.onLastMessageDeleted.emit(topMessage);
             }
+
+            else {
+              this.topMessageId.set(thread.items[1].id);
+              const topMessage:MessageDelete = {
+                groupId: this.currentGroup(),
+                messageId: 1,
+                senderId: 1,
+                lastMessage: thread.items[1]
+              };
+              this.onLastMessageDeleted.emit(topMessage);
+            }
+
           }
 
           if(this.cachedMessages.length != 0) {

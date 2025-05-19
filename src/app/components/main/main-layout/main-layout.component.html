@@ -35,6 +35,7 @@
       (groupUpdated)="handleGroupUpdated($event)"
       (onGroupFriendClicked)="currentGroupId.set($event)"
       [editMessageTrigger]="triggerEditMessagesForAllGroups"
+      [deleteMessageTrigger]="triggerDeletedMessagesForAllGroups"
       [currentUser]="userInfo()"
       >
     </section-group-friends>
@@ -45,6 +46,7 @@
       [deleteMessageTrigger]="triggerDeletedMessageForCurrentGroup"
       [editMessageTrigger]="triggerEditMessageForCurrentGroup"
       (onMessageModified)="triggerEditMessagesForAllGroups.emit([$event])"
+      (onLastMessageDeleted)="triggerDeletedMessagesForAllGroups.emit([$event])"
       (click)="onUserClickedChat()"
     ></app-section-chat>
 

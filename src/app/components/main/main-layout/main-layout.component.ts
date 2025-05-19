@@ -99,6 +99,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
           this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
         }
       }
+      this.triggerDeletedMessagesForAllGroups.emit(messages);
       this.notificationsService.clearDeletedMessages();
     })
 
@@ -146,6 +147,23 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   protected isGroupsViewEnabled : WritableSignal<boolean> = signal(false);
   protected currentGroupId : WritableSignal<number> = signal(0);
 
+  protected handleGroupDeleted(groupId: number) {
+    if (this.currentGroupId() === groupId) {
+      this.currentGroupId.set(-1)
+    }
+  }
+
+  protected handleGroupUpdated(groupId: number) {
+    let currentGroupId = this.currentGroupId()
+    if (currentGroupId === groupId) {
+      this.currentGroupId.set(-1)
+      // Ustawiam minimalne opoznienie zeby sie zrefreshowała grupa
+      setTimeout(() => {
+        this.currentGroupId.set(groupId)
+      }, 1);
+    }
+  }
+
   /////////////////////
   // LAYOUT HANDLING //
   /////////////////////
@@ -168,24 +186,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.layoutAllVisible();
     }
     this.updateLayout();
-  }
-
-
-  protected handleGroupDeleted(groupId: number) {
-    if (this.currentGroupId() === groupId) {
-      this.currentGroupId.set(-1)
-    }
-  }
-
-  protected handleGroupUpdated(groupId: number) {
-    let currentGroupId = this.currentGroupId()
-    if (currentGroupId === groupId) {
-      this.currentGroupId.set(-1)
-      // Ustawiam minimalne opoznienie zeby sie zrefreshowała grupa
-      setTimeout(() => {
-        this.currentGroupId.set(groupId)
-      }, 1);
-    }
   }
 
   private updateLayout() {
