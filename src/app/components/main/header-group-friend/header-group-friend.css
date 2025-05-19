@@ -1,18 +1,41 @@
 /* Header styling */
 header {
+  z-index: 0;
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
+
 }
 
 /* Name with options */
 .name-with-options {
   position: relative;
   display: flex;
+  flex-direction: row;
   align-items: center;
+  flex: 1 1 100%;
+  word-wrap: break-word;
+  min-width: 0; /* critical for truncation */
+
+}
+
+.group-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: clamp(1.5rem, 1.2vw, 1.8rem);
 }
 
 .group-name {
+
+  flex: 0 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis !important;
+
   display: flex;
   align-items: center;
   font-weight: 600;
@@ -21,6 +44,8 @@ header {
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.2s ease;
+
+  min-width: 0;
 }
 
 .group-name:hover {
@@ -28,6 +53,7 @@ header {
 }
 
 .dropdown-icon {
+  flex-shrink: 0;
   margin-left: 5px;
   font-size: 18px;
   color: #4169e1;
@@ -37,7 +63,6 @@ header {
 .name-with-options:hover .dropdown-icon {
   transform: translateY(2px);
 }
-
 
 
 /* Poprawione wyrównanie dla photo-btn */
@@ -112,7 +137,6 @@ header {
 }
 
 
-
 /* Set a fixed width for the options dropdown instead of just min-width */
 .options-dropdown {
   position: absolute;
@@ -122,7 +146,7 @@ header {
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 10;
+  z-index: 200;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -174,7 +198,7 @@ header {
 /* Add user container styling */
 .addUserContainer {
   display: flex;
-  align-items: top;
+
 }
 
 .input-button-group {
@@ -238,7 +262,6 @@ header {
   bottom: 0;
   z-index: 5;
 }
-
 
 
 .backdrop {
@@ -329,3 +352,19 @@ button[type="submit"]:active {
     padding: 16px;
   }
 }
+
+#group-full-name {
+  word-break: break-word;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: none;
+  border: none;
+  text-align: center;
+  cursor: text;
+  transition: background-color 0.2s ease;
+  color: #333;
+  font-family: inherit;
+  font-size: inherit;
+}
+

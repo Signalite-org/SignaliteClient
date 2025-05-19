@@ -1,4 +1,5 @@
 /* friend-requests-list.component.css */
+
 .backdrop {
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
@@ -164,13 +165,13 @@ button[disabled] {
     width: 90%;
     padding: 16px;
   }
-  
+
   .request-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .request-actions {
     width: 100%;
     justify-content: flex-end;

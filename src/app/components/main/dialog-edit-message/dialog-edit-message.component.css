@@ -80,6 +80,8 @@ p {
 }
 
 #back {
+  position: absolute;
+  top: 0;
   color: white;
   background: transparent;
   justify-self: flex-start;

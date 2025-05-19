@@ -120,7 +120,7 @@
 .membersOnTop {
   display: grid;
   grid-template-columns: minmax(0,1fr) 60%;
-  grid-template-rows: max-content 1fr;
+  grid-template-rows: 100%;
 
   color: white;
   margin: 0;
@@ -131,6 +131,7 @@
   width: 100%;
   height: 100%;
 
+  z-index: 30;
 }
 
 .membersOnTop app-section-members {
@@ -150,7 +151,4 @@
   background-color: rgba(0,0,0,0.6);
 }
 
-.getBackground > * {
-  backdrop-filter: blur(0);
-}
 

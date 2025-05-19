@@ -85,8 +85,7 @@
     class="membersOnTop"
     [class.fadeInGrid]="!skipStartAnimation() && displayMembersOnTop()"
   >
-    <div class="closeMembersOnTop" (click)="displayMembersOnTop.set(false)"></div>
-    <app-section-notifications class="header getBackground"></app-section-notifications>
+
     <div class="closeMembersOnTop" (click)="displayMembersOnTop.set(false)"></div>
     <app-section-members class="getBackground" [groupId]="currentGroupId()"></app-section-members>
   </div>
