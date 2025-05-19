@@ -10,6 +10,10 @@
   align-items: center;
   overflow: hidden;
   flex-shrink: 0;
+
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
 }
 
 :host:hover {
@@ -35,6 +39,10 @@ section {
   overflow: hidden;
   display: block;
   width: 100%;
+
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
 }
 
 #userName {

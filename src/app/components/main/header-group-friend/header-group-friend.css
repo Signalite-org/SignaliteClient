@@ -27,6 +27,10 @@ header {
   min-width: 0;
   flex: 1 1 auto;
   font-size: clamp(1.5rem, 1.2vw, 1.8rem);
+
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
 }
 
 .group-name {
