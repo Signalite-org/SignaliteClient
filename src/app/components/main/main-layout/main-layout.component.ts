@@ -107,16 +107,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     //////////////////////////
 
     // On messages deleted
-    this.subscriptions.push(
-      this.notificationsService.messageDeleted$.subscribe(messages => {
-        for(let i = 0; i < messages.length; i++) {
-          if(messages[i].groupId == this.currentGroupId()) {
-            this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
-          }
+    this.notificationsService.messageDeleted$.subscribe( messages => {
+      for(let i = 0; i < messages.length; i++) {
+        if(messages[i].groupId == this.currentGroupId()) {
+          this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
         }
-        this.notificationsService.clearDeletedMessages();
-      })
-    );
+      }
+      this.triggerDeletedMessagesForAllGroups.emit(messages);
+      this.notificationsService.clearDeletedMessages();
+    })
 
     // On message edited
     this.subscriptions.push(
@@ -171,28 +170,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   protected isGroupsViewEnabled : WritableSignal<boolean> = signal(false);
   protected currentGroupId : WritableSignal<number> = signal(0);
 
-  /////////////////////
-  // LAYOUT HANDLING //
-  /////////////////////
-
-  hideRightColumn = signal(false);
-  hideLeftColumn= signal(false);
-  private resizeObserver: ResizeObserver | null = null;
-  protected currentChatLayout:WritableSignal<ChatLayoutStyle> = signal(ChatLayoutStyle.ALL_VISIBLE);
-
-  protected returnToNormalChatLayout() {
-    const width:number = this.el.nativeElement.querySelector('#content').offsetWidth;
-    console.log(width);
-    this.updateLayout();
-    if (width < 700) {
-      this.layoutRightHidden();
-    } else {
-      this.layoutAllVisible();
-    }
-    this.updateLayout();
-  }
-
-
   protected handleGroupDeleted(groupId: number) {
     if (this.currentGroupId() === groupId) {
       this.currentGroupId.set(-1)
@@ -208,6 +185,30 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.currentGroupId.set(groupId)
       }, 1);
     }
+  }
+
+  /////////////////////
+  // LAYOUT HANDLING //
+  /////////////////////
+
+  hideRightColumn = signal(false);
+  hideLeftColumn= signal(false);
+  displayMembersOnTop = signal(false);
+  skipStartAnimation = signal(true);
+
+  private resizeObserver: ResizeObserver | null = null;
+  protected currentChatLayout:WritableSignal<ChatLayoutStyle> = signal(ChatLayoutStyle.ALL_VISIBLE);
+
+  protected returnToNormalChatLayout() {
+    const width:number = this.el.nativeElement.querySelector('#content').offsetWidth;
+    console.log(width);
+    this.updateLayout();
+    if (width < 700) {
+      this.layoutRightHidden();
+    } else {
+      this.layoutAllVisible();
+    }
+    this.updateLayout();
   }
 
   private updateLayout() {
@@ -264,7 +265,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.layoutCenterOnly();
       this.updateLayout();
     }
+  }
 
+  onUserClickedChat(): void {
+    if(this.currentChatLayout() == this.ChatLayoutStyle.RIGHT_HIDDEN) {
+      this.switchToFullChatMode();
+    }
   }
 
   protected readonly ChatLayoutStyle = ChatLayoutStyle;

@@ -27,8 +27,10 @@ export class ChatMessageComponent implements OnInit {
   @Output() onMessageDeletedEvent = new EventEmitter<void>();
   @Output() onMessageEditClickedEvent = new EventEmitter<void>();
 
-  isInCompactMode = input(false)
-  isMessageMerged = input(false)
+  isInCompactMode = input(false);
+  messageStart = input(true);
+  messageCenter = input(false);
+  messageEnd = input(true);
 
   userName = input('loading user name...');
   message = input('loading message... ');

@@ -29,10 +29,10 @@ export class HeaderGroupFriend {
   isDeleting = signal(false);
   newGroupName = signal("");
   selectedFile = signal<File | null>(null)
-  
+
   constructor(
-    private groupService: GroupService, 
-    private userService: UserService, 
+    private groupService: GroupService,
+    private userService: UserService,
     private toastr: ToastrService,
     private notificationService: NotificationsService,
     private sanitizer: DomSanitizer
@@ -63,10 +63,11 @@ export class HeaderGroupFriend {
       }
     });
   }
-  
-  returnToNormalModeEvent = output<void>()
-  groupDeleted = output<number>()
-  
+
+  returnToNormalModeEvent = output<void>();
+  showMembersAndNotifications = output<void>();
+  groupDeleted = output<number>();
+
   // Close dropdown when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -78,7 +79,7 @@ export class HeaderGroupFriend {
       this.isAddingUser.set(false);
     }
   }
-  
+
   // Toggle options dropdown
   toggleOptions(event?: MouseEvent) {
     if (event) {
@@ -90,7 +91,7 @@ export class HeaderGroupFriend {
       this.isAddingUser.set(false);
     }
   }
-  
+
   // Show rename input
   showRenameInput() {
     this.isRenaming.set(!this.isRenaming());
@@ -107,14 +108,14 @@ export class HeaderGroupFriend {
   showGroupDeleteConfirmation() {
     this.isDeleting.set(true)
   }
-  
+
   // Rename group
   renameGroup() {
     if (!this.newGroupName().trim()) {
       this.toastr.warning('Group name cannot be empty');
       return;
     }
-    
+
     this.groupService.modifyGroupName(this.groupId(), this.newGroupName()).subscribe({
       next: () => {
         this.groupFriendName.set(this.newGroupName());
@@ -136,13 +137,13 @@ export class HeaderGroupFriend {
       this.toastr.warning('Wprowadź nazwę użytkownika');
       return;
     }
-   
+
     // Sprawdź czy mamy poprawne ID grupy
     if (this.groupId() <= 0) {
       this.toastr.error('Nieprawidłowe ID grupy');
       return;
     }
-   
+
     // Najpierw pobierz ID użytkownika na podstawie nazwy
     this.userService.getUserByUsername(this.username()).subscribe({
       next: (user) => {
@@ -150,10 +151,10 @@ export class HeaderGroupFriend {
           this.toastr.error('Nie znaleziono użytkownika o podanej nazwie');
           return;
         }
-       
+
         // Ustaw ID użytkownika
         this.userId.set(user.id);
-       
+
         // Teraz dodaj użytkownika do grupy
         this.groupService.addUserToGroup(this.groupId(), user.id).subscribe({
           next: () => {
@@ -173,7 +174,7 @@ export class HeaderGroupFriend {
       }
     });
   }
-  
+
   // Delete group
   deleteGroup() {
     this.groupService.deleteGroup(this.groupId()).subscribe({
@@ -190,7 +191,7 @@ export class HeaderGroupFriend {
       }
     });
   }
-  
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -198,24 +199,24 @@ export class HeaderGroupFriend {
       this.uploadGroupPhoto();
     }
   }
-  
+
   uploadGroupPhoto() {
     if (!this.selectedFile) {
       this.toastr.warning('No file selected');
       return;
     }
-  
+
     // Check file type
     if (!this.selectedFile()!.type.match(/image\/(jpeg|jpg|png)/)) {
       this.toastr.error('Invalid file type. Please select an image file (JPEG, PNG)');
       return;
     }
-  
+
     if (this.selectedFile()!.size > 10 * 1024 * 1024) {
       this.toastr.error('File is too large. Maximum size is 10MB');
       return;
     }
-  
+
     this.groupService.updateGroupPhoto(this.groupId(), this.selectedFile()!).subscribe({
       next: () => {
         this.toastr.success('Group photo updated successfully');
@@ -230,5 +231,5 @@ export class HeaderGroupFriend {
   }
 
 
-  
+
 }

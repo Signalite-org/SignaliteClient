@@ -16,7 +16,7 @@
 img {
   border-radius: 50%;
 
-  object-fit: scale-down;
+  object-fit: cover !important;
   aspect-ratio: 1/1;
 }
 

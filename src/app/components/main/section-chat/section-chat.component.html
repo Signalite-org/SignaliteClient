@@ -38,6 +38,30 @@
         [attachmentSize]="message.attachment?.fileSize ?? 0"
         (onMessageDeletedEvent)="deleteMessage(message.id, false)"
         (onMessageEditClickedEvent)="messageToModify.set(message); showModifyMessageDialog.set(true);"
+
+        [messageStart]="
+      $index === cachedMessages().length - 1 ||
+      !(
+        formatDateTime(message.lastModification) === formatDateTime(cachedMessages()[$index + 1].lastModification) &&
+        message.sender.username === cachedMessages()[$index + 1].sender.username
+      )
+    "
+        [messageCenter]="
+      ($index < cachedMessages().length - 1 &&
+        formatDateTime(message.lastModification) === formatDateTime(cachedMessages()[$index + 1].lastModification) &&
+        message.sender.username === cachedMessages()[$index + 1].sender.username) &&
+      ($index > 0 &&
+        formatDateTime(message.lastModification) === formatDateTime(cachedMessages()[$index - 1].lastModification) &&
+        message.sender.username === cachedMessages()[$index - 1].sender.username)
+    "
+        [messageEnd]="
+      $index === 0 ||
+      !(
+        formatDateTime(message.lastModification) === formatDateTime(cachedMessages()[$index - 1].lastModification) &&
+        message.sender.username === cachedMessages()[$index - 1].sender.username
+      )
+    "
+
       >
       </app-chat-message>
     </div>

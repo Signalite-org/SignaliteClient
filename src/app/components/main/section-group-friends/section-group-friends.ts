@@ -27,6 +27,7 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
   // SUBSCRIPTIONS
   private newMessageSubscription?: Subscription;
   private editMessageSubscription?: Subscription;
+  private deleteMessageSubscription?: Subscription;
 
   // CONSTRUCTOR
   constructor(private groupsService: GroupService, private notificationService: NotificationsService, private toastr: ToastrService) {
@@ -58,6 +59,16 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
         })
       }
     })
+
+    effect(() => {
+      const emitter = this.deleteMessageTrigger();
+      this.deleteMessageSubscription?.unsubscribe();
+      if (emitter) {
+        this.deleteMessageSubscription = emitter.subscribe((messages: MessageDelete[]) => {
+          this.handleDeletedMessages(messages);
+        })
+      }
+    });
 
     // Effect for added to group notifications
     effect(() => {
@@ -99,7 +110,7 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
       const deletedUser = this.notificationService.userDeletedFromGroup()
       console.log(deletedUser?.userId)
       if (deletedUser) {
-        
+
         if (this.currentUser()?.id === deletedUser.userId) {
           this.groupsService.fetchGroups()
           toastr.info("You have been deleted from group")
@@ -128,6 +139,7 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
   // EVENT HANDLING
   newMessageTrigger = input<EventEmitter<MessageOfGroupDTO[]>>();
   editMessageTrigger=input<EventEmitter<MessageOfGroupDTO[]>>();
+  deleteMessageTrigger=input<EventEmitter<MessageDelete[]>>();
 
   handleNewMessages(newMessages: MessageOfGroupDTO[]) {
     for(let i = 0; i < newMessages.length; i++) {
@@ -157,6 +169,23 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
             messages[i].message.sender.username,
             messages[i].message?.content ?? 'sent file',
             messages[i].message.id
+          );
+          this.updateFilteredGroups()
+          break;
+        }
+      }
+    }
+  }
+
+  handleDeletedMessages(messages: MessageDelete[]) {
+    for(let i = 0; i < messages.length; i++) {
+      for(let j = 0; j < this.groupsService.groups().length; j++) {
+        if(this.groupsService.groups()[j].id == messages[i].groupId){
+          this.groupsService.updateLastMessage(
+            messages[i].groupId,
+            messages[i].lastMessage?.sender.username ?? '',
+            messages[i].lastMessage == undefined ? 'no last messages' : messages[i].lastMessage?.content ?? 'sent file',
+            messages[i].lastMessage?.id ?? -1
           );
           this.updateFilteredGroups()
           break;
