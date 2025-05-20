@@ -107,15 +107,17 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     //////////////////////////
 
     // On messages deleted
-    this.notificationsService.messageDeleted$.subscribe( messages => {
-      for(let i = 0; i < messages.length; i++) {
-        if(messages[i].groupId == this.currentGroupId()) {
-          this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
+    this.subscriptions.push(
+      this.notificationsService.messageDeleted$.subscribe(messages => {
+        for(let i = 0; i < messages.length; i++) {
+          if(messages[i].groupId == this.currentGroupId()) {
+            this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
+          }
         }
-      }
-      this.triggerDeletedMessagesForAllGroups.emit(messages);
-      this.notificationsService.clearDeletedMessages();
-    })
+        this.triggerDeletedMessagesForAllGroups.emit(messages);
+        this.notificationsService.clearDeletedMessages();
+      })
+    );
 
     // On message edited
     this.subscriptions.push(
