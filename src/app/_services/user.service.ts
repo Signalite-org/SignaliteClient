@@ -22,10 +22,9 @@ export class UserService {
     private http: HttpClient,
   ) { 
 
-    
   }
-
-   setOwnUser(user: OwnUserDTO | null): void {
+  
+  setOwnUser(user: OwnUserDTO | null): void {
     this._ownUser.set(user);
   }
 
@@ -77,24 +76,36 @@ export class UserService {
 
   updateProfilePhoto(file: FormData){
     return this.http.post<void>(`${this.baseUrl}/profile-photo`, file ).pipe(
+        switchMap(() => this.getUserInfo()),
+        tap(user => this._ownUser.set(user as OwnUserDTO)),
+        map(() => void 0),
         catchError(handleError)
     );
   }
 
   deleteProfilePhoto(): Observable<void>{
     return this.http.delete<void>(`${this.baseUrl}/profile-photo`).pipe(
+        switchMap(() => this.getUserInfo()),
+        tap(user => this._ownUser.set(user as OwnUserDTO)),
+        map(() => void 0),
         catchError(handleError)
     );
   }
 
   updateBackgroundPhoto(file: FormData){
     return this.http.post<void>(`${this.baseUrl}/bg-photo`, file ).pipe(
+        switchMap(() => this.getUserInfo()),
+        tap(user => this._ownUser.set(user as OwnUserDTO)),
+        map(() => void 0),
         catchError(handleError)
     );
   }
   
   deleteBackgroundPhoto(): Observable<void>{
     return this.http.delete<void>(`${this.baseUrl}/bg-photo`).pipe(
+        switchMap(() => this.getUserInfo()),
+        tap(user => this._ownUser.set(user as OwnUserDTO)),
+        map(() => void 0),
         catchError(handleError)
     );
   }

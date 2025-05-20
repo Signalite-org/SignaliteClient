@@ -109,6 +109,11 @@
     object-fit: cover;
 }
 
+.profile p{
+    text-align: center;
+    margin: 0 10px;
+}
+
 .edit{
     display: flex;
     position: absolute;

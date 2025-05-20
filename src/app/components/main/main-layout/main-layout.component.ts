@@ -31,6 +31,7 @@ import {MessageDelete} from '../../../_models/MessageDelete';
 import { ToastrService } from 'ngx-toastr';
 import { RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { OwnUserDTO } from '../../../_models/OwnUserDTO';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -85,17 +86,19 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     });
   }
 
+  get ownUser() {
+    return this.userService.ownUser();
+  }
+
   ngOnInit() {
-    this.userInfo$ = this.userService.getUserInfo(this.userId());
-    
-    // Use takeUntilDestroyed to automatically unsubscribe when component is destroyed
-    this.userInfo$.pipe(
+    this.userService.refreshOwnUser().pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(info => {
-      this.userInfo.set(info);
       this.fullName.set(`${info.username} (${info.name} ${info.surname})`);
       this.currentUserProfileImageURL.set(info.profilePhotoUrl ?? "../../../../assets/images/default-user.jpg");
     });
+
+    // Use takeUntilDestroyed to automatically unsubscribe when component is destroyed
     
     this.setupResizeListener();
 
@@ -149,8 +152,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  private userInfo$!: Observable<UserDTO>;
-
   //////////////////
   // DATA BINDING //
   //////////////////
@@ -163,7 +164,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   @Output() triggerEditMessageForCurrentGroup = new EventEmitter<MessageEdit>();
   @Output() triggerEditMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
 
-  protected userInfo : WritableSignal<UserDTO | null> = signal(null);
   protected userId : WritableSignal<number> = signal(-1);
   protected fullName : WritableSignal<string> = signal("");
   protected currentUserProfileImageURL : WritableSignal<string>  = signal("../../../../assets/images/default-user.jpg");

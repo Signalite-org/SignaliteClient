@@ -34,7 +34,7 @@
       (groupUpdated)="handleGroupUpdated($event)"
       (onGroupFriendClicked)="currentGroupId.set($event)"
       [editMessageTrigger]="triggerEditMessagesForAllGroups"
-      [currentUser]="userInfo()"
+      [currentUser]="ownUser"
       >
     </section-group-friends>
 
@@ -67,7 +67,7 @@
       class="footer"
       (click)="switchToFullChatMode()"
       [currentGroupId]="currentGroupId()"
-      [currentUser]="userInfo()"
+      [currentUser]="ownUser"
       (triggerSentNewMessage)="this.triggerNewMessageForCurrentGroup.emit($event);"
     >
     </app-bar-message-send>

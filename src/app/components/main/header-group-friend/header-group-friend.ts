@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../_services/user.service';
 import { ToastrService } from 'ngx-toastr';
 import { DomSanitizer } from '@angular/platform-browser';
+import { NotificationsService } from '../../../_services/notifications.service';
 
 @Component({
   selector: 'app-header-group-friend',
@@ -33,8 +34,17 @@ export class HeaderGroupFriend {
     private groupService: GroupService, 
     private userService: UserService, 
     private toastr: ToastrService,
+    private notificationService: NotificationsService,
     private sanitizer: DomSanitizer
   ) {
+
+    this.notificationService.userUpdated$.subscribe(updatedUser => {
+      const isPrivateChat = this.isPrivate();
+      if (updatedUser.id > 0 && isPrivateChat) {
+        this.groupFriendName.set(updatedUser.username);
+      }
+    })
+
     effect(() => {
       console.log(this.groupId());
       const id = this.groupId();

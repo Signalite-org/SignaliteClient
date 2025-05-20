@@ -41,15 +41,15 @@ export class SettingsComponent implements OnInit {
   
   protected isLoading: boolean = false;
 
-  protected readonly ownUserInfo;
+  get ownUser() {
+    return this.userService.ownUser();
+  }
 
   constructor(private userService: UserService, private accountService: AccountService) {
-    this.ownUserInfo = this.userService.ownUser;
-
     this.isLoading = true;
     this.userService.refreshOwnUser().subscribe({
       next: () => {
-        this.previewProfileUrl = this.userService.ownUser()?.profilePhotoUrl;
+        this.previewProfileUrl = this.ownUser?.profilePhotoUrl;
         this.isLoading = false;
       },
       error: (err) => {

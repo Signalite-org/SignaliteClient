@@ -33,10 +33,11 @@ export class ProfileComponent implements OnInit {
   readonly minLengthUsername: number = 4;
   readonly maxLengthUsername: number = 16;
 
-  protected readonly ownUser;
+  get ownUser() {
+    return this.userService.ownUser();
+  }
 
   constructor(private fb: FormBuilder, private userService: UserService, private accountService: AccountService) {
-    this.ownUser = this.userService.ownUser;
 
     this.profileForm = this.fb.group({
       username: ['', [Validators.required, notEmptyValidator(), Validators.minLength(this.minLengthUsername), Validators.maxLength(this.maxLengthUsername)]],
@@ -46,10 +47,9 @@ export class ProfileComponent implements OnInit {
     });
 
     effect(() => {
-      const userData = this.ownUser();
+      const userData = this.ownUser;
       if (userData) {
         this.profileForm.patchValue(userData);
-        console.log(userData)
         this.previewBackgroundUrl = userData.backgroundPhotoUrl;
       }
     });
@@ -80,13 +80,13 @@ export class ProfileComponent implements OnInit {
     this.accountService.existsUserByUsername(loginData.username).pipe(
       tap(() => step = 'existsUserByUsername'),
       switchMap((usernameExists: boolean) => {
-        if(this.ownUser()?.username !== loginData.username)
+        if(this.ownUser?.username !== loginData.username)
           isUsernameTaken = usernameExists;
         return this.accountService.existsUserByEmail(loginData.email);
       }),
       tap(() => step = 'existsUserByEmail'),
       switchMap((emailExists: boolean) => {
-        if(this.ownUser()?.email !== loginData.email)
+        if(this.ownUser?.email !== loginData.email)
           isEmailTaken = emailExists;
 
         if (isUsernameTaken && isEmailTaken) {
@@ -121,6 +121,6 @@ export class ProfileComponent implements OnInit {
         this.isLoading = false;
         this.profileForm.enable();
       })
-    ).subscribe();
+    ).subscribe(() => {});
   }
 }

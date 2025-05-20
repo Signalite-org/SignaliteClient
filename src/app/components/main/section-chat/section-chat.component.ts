@@ -18,6 +18,7 @@ import {Subscription} from 'rxjs';
 import {DialogEditMessageComponent} from '../dialog-edit-message/dialog-edit-message.component';
 import {MessageEdit} from '../../../_models/MessageEdit';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
+import { NotificationsService } from '../../../_services/notifications.service';
 
 @Component({
   selector: 'app-section-chat',
@@ -90,6 +91,7 @@ export class SectionChatComponent implements AfterViewInit {
     groupService: GroupService,
     messageService: MessageService,
     accountService: AccountService,
+    private notificationService: NotificationsService,
   ) {
     this.groupService = groupService;
     this.messageService = messageService;
@@ -104,6 +106,25 @@ export class SectionChatComponent implements AfterViewInit {
       }
       else {
         this.cachedMessages.set([])
+      }
+    });
+
+     this.notificationService.userUpdated$.subscribe(updatedUser => {
+      if (updatedUser.id > 0) {
+        this.cachedMessages.update(messages =>
+          messages.map(message => 
+            message.sender.id === updatedUser.id
+              ? {
+                  ...message,
+                  sender: {
+                    ...message.sender,
+                    username: updatedUser.username,
+                    profilePhotoUrl: updatedUser.profilePhotoUrl
+                  }
+                }
+              : message
+          )
+        );
       }
     });
 
