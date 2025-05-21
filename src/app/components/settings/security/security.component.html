@@ -1,0 +1,89 @@
+<div class="container-content">
+    <h1 class="header">Change Password</h1>
+    <form [formGroup]="changePasswordForm" (ngSubmit)="onSubmitChangePassword()">
+        <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="succes-message">
+            {{ successMessage }}
+        </div>
+        <div class="form-box form-begin">
+            <label class="form-label">Old password</label>
+            <input formControlName="oldPassword" name="oldPassword" class="form-input" type="password"
+            (focus)="oldPasswordFocused = true"
+            (blur)="oldPasswordFocused = false"
+            [class.is-invalid]="changePasswordForm.get('oldPassword')?.invalid && (changePasswordForm.get('oldPassword')?.touched || changePasswordForm.get('oldPassword')?.dirty)"
+            required>
+            <!-- Validation -->
+            <ul class="error-box"
+                *ngIf="oldPasswordFocused && changePasswordForm.get('oldPassword')?.errors && (changePasswordForm.get('oldPassword')?.touched || changePasswordForm.get('oldPassword')?.dirty)">
+                <li *ngIf="changePasswordForm.get('oldPassword')?.errors?.['required']">
+                    Old password is required.
+                </li>
+                <li *ngIf="changePasswordForm.get('oldPassword')?.errors?.['isEmpty']">
+                    Old password is empty
+                </li>
+            </ul>
+        </div>
+        <div class="form-box">
+            <label class="form-label">New password</label>
+            <input formControlName="newPassword" name="newPassword" class="form-input" type="password" 
+            (focus)="newPasswordFocused = true"
+            (blur)="newPasswordFocused = false"
+            [class.is-invalid]="changePasswordForm.get('newPassword')?.invalid && (changePasswordForm.get('newPassword')?.touched || changePasswordForm.get('newPassword')?.dirty)"
+            required>
+            <!-- Validation -->
+            <ul class="error-box"
+                *ngIf="newPasswordFocused && changePasswordForm.get('newPassword')?.errors && (changePasswordForm.get('newPassword')?.touched || changePasswordForm.get('newPassword')?.dirty)">
+                <li *ngIf="changePasswordForm.get('newPassword')?.errors?.['required']">
+                    Password is required.
+                </li>
+                <li *ngIf="changePasswordForm.get('newPassword')?.errors?.['minlength']">
+                    Password must be at least {{minLengthPassword}} characters long.
+                </li>
+                <li *ngIf="changePasswordForm.get('newPassword')?.errors?.['isEmpty']">
+                    Password is empty.
+                </li>
+                <li *ngIf="changePasswordForm.get('newPassword')?.errors?.['lowercase']">
+                    Password must contain at least one lowercase letter.
+                </li>
+                <li *ngIf="changePasswordForm.get('newPassword')?.errors?.['uppercase']">
+                    Password must contain at least one uppercase letter.
+                </li>
+                <li *ngIf="changePasswordForm.get('newPassword')?.errors?.['special']">
+                    Password must contain at least one special character.
+                </li>
+                <li *ngIf="changePasswordForm.get('newPassword')?.errors?.['digits']">
+                    Password must contain at least one number.
+                </li>
+            </ul>
+        </div>
+        <div class="form-box">
+            <label class="form-label">Confirm new password</label>
+            <input formControlName="confirmNewPassword" name="confirmNewPassword" class="form-input" type="password"
+            (focus)="confirmNewPasswordFocused = true"
+            (blur)="confirmNewPasswordFocused = false"
+            [class.is-invalid]="(changePasswordForm.get('confirmNewPassword')?.invalid || changePasswordForm.errors?.['fieldsMismatch']) &&
+            (changePasswordForm.get('confirmNewPassword')?.touched || changePasswordForm.get('confirmNewPassword')?.dirty)" required>
+             <!-- Validation -->
+            <ul class="error-box"
+                *ngIf="confirmNewPasswordFocused && 
+                (changePasswordForm.get('confirmNewPassword')?.errors || changePasswordForm.errors?.['fieldsMismatch']) && 
+                (changePasswordForm.get('confirmNewPassword')?.touched || changePasswordForm.get('confirmNewPassword')?.dirty)">
+                <li *ngIf="changePasswordForm.get('confirmNewPassword')?.errors?.['required']">
+                    Confirm new password is required.
+                </li>
+                <li *ngIf="changePasswordForm.errors?.['fieldsMismatch']">
+                    Passwords do not match.
+                </li>
+            </ul>
+        </div>
+        <div class="button-box-update-form" >
+            <button type="submit" class="button-style"
+                [disabled]="changePasswordForm.invalid || isLoading">Update</button>
+        </div>
+        <div class="loader-position" *ngIf="isLoading">
+            <div class="loader"></div>
+        </div>
+    </form>
+</div>

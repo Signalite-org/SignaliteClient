@@ -10,6 +10,7 @@ import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
 import { NotificationsService } from '../../../_services/notifications.service';
 import { ToastrService } from 'ngx-toastr';
 import {MessageDelete} from '../../../_models/MessageDelete';
+import { UserService } from '../../../_services/user.service';
 
 @Component({
   selector: 'section-group-friends',
@@ -29,7 +30,8 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
   private deleteMessageSubscription?: Subscription;
 
   // CONSTRUCTOR
-  constructor(private groupsService: GroupService, private notifiactionService: NotificationsService, private toastr: ToastrService) {
+  constructor(private groupsService: GroupService, private notificationService: NotificationsService, private toastr: ToastrService) {
+
     // Ten efekt odpowiada za zaladowanie w dobre miejsce grup (prywatne/wieloosobowe) do opdowiednich tabów
     effect(() => {
       this.updateFilteredGroups();
@@ -70,42 +72,42 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
 
     // Effect for added to group notifications
     effect(() => {
-        const addedToGroup = this.notifiactionService.addedToGroup();
+        const addedToGroup = this.notificationService.addedToGroup();
         if (addedToGroup.id > 0) {
           this.toastr.info("You've been added to a new group!");
-          this.notifiactionService.clearAddedToGroup();
+          this.notificationService.clearAddedToGroup();
         }
     });
 
 
     effect(() => {
-      const deletedGroupId = this.notifiactionService.deletedGroup()
+      const deletedGroupId = this.notificationService.deletedGroup()
       if (deletedGroupId > 0) {
         this.groupDeleted.emit(deletedGroupId)
         this.toastr.info('Group has been deleted!');
-        this.notifiactionService.clearDeletedGroup();
+        this.notificationService.clearDeletedGroup();
       }
     });
 
     effect(() => {
-      const updatedGroup = this.notifiactionService.groupUpdated()
+      const updatedGroup = this.notificationService.groupUpdated()
       if (updatedGroup.id > 0) {
         this.groupUpdated.emit(updatedGroup.id)
         this.toastr.info('Group has been updated!');
-        this.notifiactionService.clearUpdatedGroup();
+        this.notificationService.clearUpdatedGroup();
       }
     });
 
     effect(() => {
-      const newFriend = this.notifiactionService.friendRequestsAccepted()
+      const newFriend = this.notificationService.friendRequestsAccepted()
       if (newFriend) {
         this.toastr.info(`${newFriend.name} has accepted your friend request`);
-        this.notifiactionService.clearFriendRequestAccepted()
+        this.notificationService.clearFriendRequestAccepted()
       }
     });
 
-     effect(() => {
-      const deletedUser = this.notifiactionService.userDeletedFromGroup()
+    effect(() => {
+      const deletedUser = this.notificationService.userDeletedFromGroup()
       console.log(deletedUser?.userId)
       if (deletedUser) {
 
@@ -118,10 +120,9 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
           this.groupsService.getGroupMembers(deletedUser.groupId)
           toastr.info("User has been removed from group")
         }
-        this.notifiactionService.clearUserDeletedFromGroup();
+        this.notificationService.clearUserDeletedFromGroup();
       }
     });
-
 }
 
   ngOnInit() {

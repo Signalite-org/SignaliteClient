@@ -1,4 +1,4 @@
-import { effect, Injectable, signal } from "@angular/core";
+import { effect, Injectable, signal, untracked } from "@angular/core";
 import { environment } from "../../environments/environment";
 import { HttpClient } from "@angular/common/http";
 import { BehaviorSubject, catchError, Observable, tap } from "rxjs";
@@ -8,6 +8,8 @@ import { GroupMembersDTO } from "../_models/GroupMembersDTO";
 import { MessageOfGroupDTO } from "../_models/MessageOfGroupDTO";
 import { MessageDTO } from "../_models/MessageDTO";
 import { NotificationsService } from "./notifications.service";
+import { UserService } from "./user.service";
+import { UserBasicInfo } from "../_models/UserBasicInfo";
 
 @Injectable({
     providedIn: 'root'
@@ -25,7 +27,7 @@ export class GroupService {
     public get groupMembers() {
       return this._groupMembers.asReadonly()
     }
-    
+
     // BehaviorSubject dla aktualizacji wiadomości
     private lastMessageUpdatedSubject = new BehaviorSubject<MessageOfGroupDTO[]>([]);
     
@@ -34,10 +36,73 @@ export class GroupService {
  
     constructor(
       private http: HttpClient,
-      private notificationService: NotificationsService
+      private notificationService: NotificationsService,
+      private userService: UserService
     ) { 
       // Inicjalizacja listy grup przy tworzeniu serwisu
       this.fetchGroups();
+
+      this.notificationService.userUpdated$.subscribe(modifiedUser => {        
+        if (modifiedUser.id > 0) {
+          const updatedUser: UserBasicInfo = {
+            id: modifiedUser.id,
+            username: modifiedUser.username,
+            profilePhotoUrl: modifiedUser.profilePhotoUrl,
+          };
+
+          const currentMembers = this._groupMembers();
+
+          // Update members
+          const updatedMembers = currentMembers.members.map(member =>
+            member.id === updatedUser.id ? updatedUser : member
+          );
+
+          // Update owner
+          const updatedOwner = currentMembers.owner.id === updatedUser.id ? updatedUser : currentMembers.owner;
+
+          this._groupMembers.update(() => ({
+            members: updatedMembers,
+            owner: updatedOwner
+          }));
+          
+          if (modifiedUser.username && modifiedUser.oldUsername) {
+            const oldUsername = modifiedUser.oldUsername;
+            const newUsername = modifiedUser.username;
+
+            this._groups.update(groups =>
+              groups.map(group => {
+                let updatedLastMessage = group.lastMessage;
+
+                if (updatedLastMessage) {
+                  const colonIndex = updatedLastMessage.indexOf(":");
+                  if (colonIndex !== -1) {
+                    const senderPart = updatedLastMessage.substring(0, colonIndex);
+                    const messagePart = updatedLastMessage.substring(colonIndex);
+
+                    if (senderPart === oldUsername) {
+                      updatedLastMessage = newUsername + messagePart;
+                    }
+                  }
+                }
+
+                if (group.isPrivate && group.name === oldUsername) {
+                  return {
+                    ...group,
+                    name: newUsername,
+                    photoUrl: updatedUser.profilePhotoUrl,
+                    lastMessage: updatedLastMessage
+                  };
+                }
+
+                return {
+                  ...group,
+                  lastMessage: updatedLastMessage
+                };
+              })
+            );
+          }
+        }
+      });
 
       effect(() => {
         const updatedGroup = this.notificationService.groupUpdated()
@@ -77,7 +142,6 @@ export class GroupService {
           this._groups.update(groups => [...groups, newFriendGroup])
         }
       });
-
 
     }
     

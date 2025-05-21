@@ -36,7 +36,7 @@
       (onGroupFriendClicked)="currentGroupId.set($event)"
       [editMessageTrigger]="triggerEditMessagesForAllGroups"
       [deleteMessageTrigger]="triggerDeletedMessagesForAllGroups"
-      [currentUser]="userInfo()"
+      [currentUser]="ownUser"
       >
     </section-group-friends>
 
@@ -57,19 +57,21 @@
     </app-section-members>
 
     <!-- ROW 3 -->
-    <div
-      class="footer left" [class.hidden]="hideLeftColumn()">
-      <app-card-current-user
-        [userName]='fullName()'
-        [userImageURL]='currentUserProfileImageURL()'>
-      </app-card-current-user>
+    <div class="settings-button" [routerLink]="['/settings']">
+      <div
+        class="footer left" [class.hidden]="hideLeftColumn()">
+        <app-card-current-user
+          [userName]='fullName()'
+          [userImageURL]='currentUserProfileImageURL()'>
+        </app-card-current-user>
+      </div>
     </div>
 
     <app-bar-message-send
       class="footer"
       (click)="switchToFullChatMode()"
       [currentGroupId]="currentGroupId()"
-      [currentUser]="userInfo()"
+      [currentUser]="ownUser"
       (triggerSentNewMessage)="this.triggerNewMessageForCurrentGroup.emit($event);"
     >
     </app-bar-message-send>

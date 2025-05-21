@@ -1,9 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import {Injectable, WritableSignal} from '@angular/core';
-import {Observable, catchError, map} from 'rxjs';
+import {Injectable, signal, WritableSignal} from '@angular/core';
+import {Observable, catchError, map, switchMap, tap} from 'rxjs';
 import { environment } from '../../environments/environment';
 import {UserDTO} from '../_models/UserDTO';
 import {handleError} from '../_utils/error.handler';
+import { ChangePasswordDTO } from '../_models/ChangePasswordDTO';
+import { OwnUserDTO } from '../_models/OwnUserDTO';
+import { ModifyUserDTO } from '../_models/ModifyUserDTO';
 
 
 @Injectable({
@@ -11,13 +14,45 @@ import {handleError} from '../_utils/error.handler';
 })
 export class UserService {
   private baseUrl = `${environment.apiUrl}/api/User`;
-  private currentUserInfo : UserDTO | null = null;
+
+  private _ownUser = signal<OwnUserDTO | null>(null);
+  readonly ownUser = this._ownUser.asReadonly();
 
   constructor(
     private http: HttpClient,
-  ) { }
+  ) { 
 
-  getUserInfo(userId: number): Observable<UserDTO> {
+  }
+  
+  setOwnUser(user: OwnUserDTO | null): void {
+    this._ownUser.set(user);
+  }
+
+  refreshOwnUser(): Observable<OwnUserDTO> {
+    return this.getUserInfo().pipe(
+      map(user => {
+        const own = user as OwnUserDTO;
+        this._ownUser.set(own);
+        return own;
+      }),
+      catchError((err) => {
+        console.error(err);
+        throw err;
+      })
+    );
+  }
+
+  
+  modifyUser(modifyUserDTO : ModifyUserDTO): Observable<void>{
+    return this.http.put<void>(`${this.baseUrl}/modify-user`,  modifyUserDTO).pipe(
+        switchMap(() => this.getUserInfo()),
+        tap(user => this._ownUser.set(user as OwnUserDTO)),
+        map(() => void 0),
+        catchError(handleError)
+    );
+  }
+
+  getUserInfo(userId?: number): Observable<UserDTO | OwnUserDTO> {
     return this.http.get<UserDTO>(`${this.baseUrl}/get-user-info?userId=${userId}`)
       .pipe(
         catchError(handleError)
@@ -31,9 +66,47 @@ export class UserService {
           );
     }
 
-    checkUserExists(username: string): Observable<boolean> {
-      return this.http.get<boolean>(`${this.baseUrl}/user-exists/${username}`);
-    }
+  checkUserExists(username: string): Observable<boolean> { //Delete this later!!!
+    return this.http.get<boolean>(`${this.baseUrl}/user-exists/${username}`);
+  }
 
+  changePassword(changePasswordDTO: ChangePasswordDTO){
+    return this.http.put(`${this.baseUrl}/change-password`, changePasswordDTO);
+  }
 
+  updateProfilePhoto(file: FormData){
+    return this.http.post<void>(`${this.baseUrl}/profile-photo`, file ).pipe(
+        switchMap(() => this.getUserInfo()),
+        tap(user => this._ownUser.set(user as OwnUserDTO)),
+        map(() => void 0),
+        catchError(handleError)
+    );
+  }
+
+  deleteProfilePhoto(): Observable<void>{
+    return this.http.delete<void>(`${this.baseUrl}/profile-photo`).pipe(
+        switchMap(() => this.getUserInfo()),
+        tap(user => this._ownUser.set(user as OwnUserDTO)),
+        map(() => void 0),
+        catchError(handleError)
+    );
+  }
+
+  updateBackgroundPhoto(file: FormData){
+    return this.http.post<void>(`${this.baseUrl}/bg-photo`, file ).pipe(
+        switchMap(() => this.getUserInfo()),
+        tap(user => this._ownUser.set(user as OwnUserDTO)),
+        map(() => void 0),
+        catchError(handleError)
+    );
+  }
+  
+  deleteBackgroundPhoto(): Observable<void>{
+    return this.http.delete<void>(`${this.baseUrl}/bg-photo`).pipe(
+        switchMap(() => this.getUserInfo()),
+        tap(user => this._ownUser.set(user as OwnUserDTO)),
+        map(() => void 0),
+        catchError(handleError)
+    );
+  }
 }

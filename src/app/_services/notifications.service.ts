@@ -2,7 +2,7 @@ import { effect, inject, Injectable, signal } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { FriendRequest } from '../_models/FriendRequest';
 import { GroupBasicInfoDTO} from '../_models/GroupBasicInfoDTO';
 import { FriendRequestAccepted } from '../_models/FriendRequestAccepted';
@@ -15,6 +15,7 @@ import {MessageDelete} from '../_models/MessageDelete';
 import { GroupService } from './group.service';
 import { UserDeletedFromGroup } from '../_models/UserDeletedFromGroupNot';
 import { AccountService } from './account.service';
+import { UserModifiedNotification } from '../_models/UserModifiedNotification';
 
 @Injectable({
   providedIn: 'root'
@@ -28,7 +29,16 @@ export class NotificationsService {
   private reconnectAttemptInProgress = false;
 
   private defaultGroup: GroupBasicInfoDTO = {id: -1, name: "", photoUrl: "", isPrivate: false}
-  private defaultUser: UserBasicInfo = {id: -1, username: "", profilePhotoUrl: ""}
+  private defaultBasicUser: UserBasicInfo = {id: -1, username: "", profilePhotoUrl: ""}
+  private defaultUser: UserModifiedNotification = {
+    id: -1, 
+    name: "", 
+    surname: "", 
+    username: "",
+    profilePhotoUrl: "",
+    backgroundPhotoUrl: "",
+    oldUsername: "",
+  }
 
   constructor(private router: Router) {
     console.log('NotificationsService constructed');
@@ -91,10 +101,13 @@ export class NotificationsService {
     return this._messagesReceived.asReadonly();
   }
 
-  private _userAddedToGroup = signal<UserBasicInfo>(this.defaultUser);
+  private _userAddedToGroup = signal<UserBasicInfo>(this.defaultBasicUser);
   public get userAddedToGroup() {
     return this._userAddedToGroup.asReadonly();
   }
+
+  private userUpdated = new BehaviorSubject<UserModifiedNotification>(this.defaultUser);
+  public userUpdated$ = this.userUpdated.asObservable();
 
   private messagesDeletedSource = new BehaviorSubject<MessageDelete[]>([]);
   messageDeleted$ = this.messagesDeletedSource.asObservable();
@@ -204,6 +217,7 @@ export class NotificationsService {
 
     this.hubConnection.on('UserUpdated', (notification) => {
       console.log('📬 Received UserUpdated notification:', notification);
+      this.userUpdated.next(notification);
     });
 
     this.hubConnection.on('MessageDeleted', (message: MessageDelete) => { //GroupId, MessageId
@@ -277,7 +291,11 @@ export class NotificationsService {
   }
 
   clearUserAddedToGroup() {
-    this._userAddedToGroup.set(this.defaultUser)
+    this._userAddedToGroup.set(this.defaultBasicUser)
+  }
+
+  clearUserUpdated(){
+    this.userUpdated.next(this.defaultUser)
   }
 
   clearReceivedMessages() {

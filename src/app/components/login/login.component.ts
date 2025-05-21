@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import {Router, RouterOutlet} from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { LoginDTO } from '../../_models/LoginDTO';
 import { RegisterDTO } from '../../_models/RegisterDTO';
 import { CommonModule } from '@angular/common';
@@ -105,7 +105,7 @@ export class LoginComponent {
     });
   }
 
-  toggleForm(form: 'login' | 'registerMain' | 'registerExtra') {
+  selectForm(form: 'login' | 'registerMain' | 'registerExtra') {
     if (!this.isLoading){
       this.errorMessage = null;
       this.successMessage = null;
@@ -130,7 +130,7 @@ export class LoginComponent {
 
     this.isLoading = true;
     this.errorMessage = null;
-    this.loginForm.disable()
+    this.loginForm.disable();
 
     this.accountService.login(loginData).subscribe({
       next: () => {
@@ -170,7 +170,7 @@ export class LoginComponent {
         this.registerMainForm.enable();
 
         if(!result){
-          this.toggleForm('registerExtra')
+          this.selectForm('registerExtra')
         }
         else {
           this.errorMessage = 'Email is used.';
@@ -223,7 +223,7 @@ export class LoginComponent {
               this.successMessage = "Create account."
               setTimeout(() => {
                 this.registerExtraForm.enable();
-                this.toggleForm('login')
+                this.selectForm('login')
               }, 1000);
             },
             error: (error) => {

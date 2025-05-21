@@ -1,0 +1,105 @@
+<div class="container-content">
+    <div clsss="backgorund-image">
+        <img class="image" [src]="previewBackgroundUrl || 'assets/images/background0.png'">
+        <div class="button-box-update-image">
+            <button type="submit" class="button-style" (click)="requestBackgroundChange()">Change</button>
+        </div>
+    </div>
+    <h1 class="header">Edit Profile</h1>
+
+    <form [formGroup]="profileForm"  (ngSubmit)="onSubmitUpdateProfile()">
+        <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="succes-message">
+            {{ successMessage }}
+        </div>
+        <div class="form-box form-begin">
+            <label class="form-label">Username</label>
+            <input formControlName="username" name="username" class="form-input" type="text"
+                placeholder="Enter a username" (focus)="profileUsernameFocused = true"
+                (blur)="profileUsernameFocused = false"
+                [class.is-invalid]="profileForm.get('username')?.invalid && (profileForm.get('username')?.touched || profileForm.get('username')?.dirty)"
+                required>
+
+            <!-- Validation -->
+            <ul class="error-box"
+                *ngIf="profileUsernameFocused && profileForm.get('username')?.errors && (profileForm.get('username')?.touched || profileForm.get('username')?.dirty)">
+                <li *ngIf="profileForm.get('username')?.errors?.['required']">
+                    Username is required.
+                </li>
+                <li *ngIf="profileForm.get('username')?.errors?.['isEmpty']">
+                    Username is empty.
+                </li>
+                <li
+                    *ngIf="profileForm.get('username')?.errors?.['minlength'] || profileForm.get('username')?.errors?.['maxlength']">
+                    Username must be between {{minLengthUsername}} and {{maxLengthUsername}} characters.
+                </li>
+            </ul>
+        </div>
+        <div class="form-box">
+            <label class="form-label">Email</label>
+            <input formControlName="email" name="email" class="form-input" type="email" placeholder="Enter a email"
+                (focus)="profileEmailFocused = true" (blur)="profileEmailFocused = false"
+                [class.is-invalid]="profileForm.get('email')?.invalid && (profileForm.get('email')?.touched || profileForm.get('email')?.dirty)"
+                required>
+
+            <!-- Validation -->
+            <ul class="error-box"
+                *ngIf="profileEmailFocused && profileForm.get('email')?.errors && (profileForm.get('email')?.touched || profileForm.get('email')?.dirty)">
+                <li *ngIf="profileForm.get('email')?.errors?.['required']">
+                    Email is required.
+                </li>
+                <li *ngIf="profileForm.get('email')?.errors?.['isEmpty']">
+                    Email is empty.
+                </li>
+                <li *ngIf="profileForm.get('email')?.errors?.['email']">
+                    Invalid email address.
+                </li>
+            </ul>
+        </div>
+        <div class="form-box">
+            <label class="form-label">Name</label>
+            <input formControlName="name" name="name" class="form-input" type="text" placeholder="Enter a name"
+                (focus)="profileNameFocused = true" (blur)="profileNameFocused = false"
+                [class.is-invalid]="profileForm.get('name')?.invalid && (profileForm.get('name')?.touched || profileForm.get('name')?.dirty)"
+                required>
+
+            <!-- Validation -->
+            <ul class="error-box"
+                *ngIf="profileNameFocused && profileForm.get('name')?.errors && (profileForm.get('name')?.touched || profileForm.get('name')?.dirty)">
+                <li *ngIf="profileForm.get('name')?.errors?.['required']">
+                    Name is required.
+                </li>
+                <li *ngIf="profileForm.get('name')?.errors?.['isEmpty']">
+                    Name is empty.
+                </li>
+            </ul>
+        </div>
+        <div class="form-box">
+            <label class="form-label">Surname</label>
+            <input formControlName="surname" name="surname" class="form-input" type="text" placeholder="Enter a surname"
+                (focus)="profileSurnameFocused = true" (blur)="profileSurnameFocused = false"
+                [class.is-invalid]="profileForm.get('surname')?.invalid && (profileForm.get('surname')?.touched || profileForm.get('surname')?.dirty)"
+                required>
+
+            <!-- Validation -->
+            <ul class="error-box"
+                *ngIf="profileSurnameFocused && profileForm.get('surname')?.errors && (profileForm.get('surname')?.touched || profileForm.get('surname')?.dirty)">
+                <li *ngIf="profileForm.get('surname')?.errors?.['required']">
+                    Name is required.
+                </li>
+                <li *ngIf="profileForm.get('surname')?.errors?.['isEmpty']">
+                    Name is empty.
+                </li>
+            </ul>
+        </div>
+        <div class="button-box-update-form">
+            <button type="submit" class="button-style" 
+            [disabled]="profileForm.invalid || isLoading">Update</button>
+        </div>
+        <div class="loader-position" *ngIf="isLoading">
+            <div class="loader"></div>
+        </div>
+    </form>
+</div>

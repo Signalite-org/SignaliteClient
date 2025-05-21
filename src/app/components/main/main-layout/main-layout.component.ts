@@ -7,6 +7,8 @@ import {
   signal,
   WritableSignal, EventEmitter, Output,
   effect,
+  DestroyRef,
+  inject,
 } from '@angular/core';
 import { NavigationFriendsGroups } from '../navigation-friends-groups/navigation-friends-groups';
 import { HeaderGroupFriend } from '../header-group-friend/header-group-friend';
@@ -19,7 +21,7 @@ import {SectionMembersComponent} from '../section-members/section-members.compon
 import {AccountService} from '../../../_services/account.service';
 import {UserService} from '../../../_services/user.service';
 import {UserDTO} from '../../../_models/UserDTO';
-import {Observable} from 'rxjs';
+import {Observable, Subscription} from 'rxjs';
 import {NotificationsService} from '../../../_services/notifications.service';
 import {MessageDTO} from '../../../_models/MessageDTO';
 import {MessageOfGroupDTO} from '../../../_models/MessageOfGroupDTO';
@@ -27,6 +29,9 @@ import {NgOptimizedImage} from '@angular/common';
 import {MessageEdit} from '../../../_models/MessageEdit';
 import {MessageDelete} from '../../../_models/MessageDelete';
 import { ToastrService } from 'ngx-toastr';
+import { RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { OwnUserDTO } from '../../../_models/OwnUserDTO';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -36,13 +41,16 @@ enum ChatLayoutStyle {
 
 @Component({
   selector: 'app-main-layout',
-  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage],
+  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage, RouterModule],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
 
   private lastProcessedMessagesLength = 0;
+  private subscriptions: Subscription[] = [];
+  private destroyRef = inject(DestroyRef);
+  private effectRef: ReturnType<typeof effect> | null = null;
 
   constructor(
     private renderer: Renderer2,
@@ -51,10 +59,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private notificationsService: NotificationsService,
     private toastr: ToastrService
-  ) {
+  ){
     this.userId.set(this.accountService.currentUser()?.userId ?? -1);
 
-    effect(() => {
+    this.effectRef = effect(() => {
       const messages = this.notificationsService.messagesReceived();
 
       // Only process if there are new messages
@@ -78,14 +86,20 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     });
   }
 
+  get ownUser() {
+    return this.userService.ownUser();
+  }
+
   ngOnInit() {
-    this.userInfo$ = this.userService.getUserInfo(this.userId());
-    this.userInfo$.subscribe( info => {
-          this.userInfo.set(info);
-          this.fullName.set(`${info.username} (${info.name} ${info.surname})`);
-          this.currentUserProfileImageURL.set(info.profilePhotoUrl ?? "../../../../assets/images/default-user.jpg")
-      }
-    )
+    this.userService.refreshOwnUser().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(info => {
+      this.fullName.set(`${info.username} (${info.name} ${info.surname})`);
+      this.currentUserProfileImageURL.set(info.profilePhotoUrl ?? "../../../../assets/images/default-user.jpg");
+    });
+
+    // Use takeUntilDestroyed to automatically unsubscribe when component is destroyed
+    
     this.setupResizeListener();
 
     //////////////////////////
@@ -93,39 +107,51 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     //////////////////////////
 
     // On messages deleted
-    this.notificationsService.messageDeleted$.subscribe( messages => {
-      for(let i = 0; i < messages.length; i++) {
-        if(messages[i].groupId == this.currentGroupId()) {
-          this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
+    this.subscriptions.push(
+      this.notificationsService.messageDeleted$.subscribe(messages => {
+        for(let i = 0; i < messages.length; i++) {
+          if(messages[i].groupId == this.currentGroupId()) {
+            this.triggerDeletedMessageForCurrentGroup.emit(messages[i].messageId);
+          }
         }
-      }
-      this.triggerDeletedMessagesForAllGroups.emit(messages);
-      this.notificationsService.clearDeletedMessages();
-    })
+        this.triggerDeletedMessagesForAllGroups.emit(messages);
+        this.notificationsService.clearDeletedMessages();
+      })
+    );
 
     // On message edited
-    this.notificationsService.messageModified$.subscribe( messages => {
-      for(let i = 0; i < messages.length; i++) {
-        if(messages[i].groupId == this.currentGroupId()) {
-          const modifiedMessage : MessageEdit = {
-            messageId: messages[i].message.id,
-            content: messages[i].message.content ?? ''
+    this.subscriptions.push(
+      this.notificationsService.messageModified$.subscribe(messages => {
+        for(let i = 0; i < messages.length; i++) {
+          if(messages[i].groupId == this.currentGroupId()) {
+            const modifiedMessage : MessageEdit = {
+              messageId: messages[i].message.id,
+              content: messages[i].message.content ?? ''
+            }
+            this.triggerEditMessageForCurrentGroup.emit(modifiedMessage);
           }
-          this.triggerEditMessageForCurrentGroup.emit(modifiedMessage);
         }
-      }
-      this.triggerEditMessagesForAllGroups.emit(messages);
-      this.notificationsService.clearModifiedMessages();
-    })
+        this.triggerEditMessagesForAllGroups.emit(messages);
+        this.notificationsService.clearModifiedMessages();
+      })
+    );
   }
 
   ngOnDestroy() {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
     }
+    
+    // Clean up all subscriptions
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    
+    // Clean up the effect - Angular should handle this through DestroyRef,
+    // but adding explicit cleanup for safety
+    if (this.effectRef) {
+      // Effect cleanup is handled by Angular's destroy hook
+      // No manual cleanup needed when using the inject(DestroyRef) pattern
+    }
   }
-
-  private userInfo$!: Observable<UserDTO>;
 
   //////////////////
   // DATA BINDING //
@@ -139,7 +165,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   @Output() triggerEditMessageForCurrentGroup = new EventEmitter<MessageEdit>();
   @Output() triggerEditMessagesForAllGroups = new EventEmitter<MessageOfGroupDTO[]>();
 
-  protected userInfo : WritableSignal<UserDTO | null> = signal(null);
   protected userId : WritableSignal<number> = signal(-1);
   protected fullName : WritableSignal<string> = signal("");
   protected currentUserProfileImageURL : WritableSignal<string>  = signal("../../../../assets/images/default-user.jpg");
