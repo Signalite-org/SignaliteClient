@@ -57,7 +57,7 @@
     </app-section-members>
 
     <!-- ROW 3 -->
-    <div class="settings-button" [routerLink]="['/settings']">
+    <div class="settings-button" [routerLink]="['/settings']" [class.hidden]="hideLeftColumn()">
       <div
         class="footer left" [class.hidden]="hideLeftColumn()">
         <app-card-current-user
