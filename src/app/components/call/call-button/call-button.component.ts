@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, Input, OnInit } from '@angular/core';
+import { Component, computed, effect, Input, OnInit, signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { PresenceService } from '../../../_services/presence.service';
 import { WebRtcService } from '../../../_services/webrtc.service';
@@ -14,20 +14,26 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './call-button.component.css'
 })
 export class CallButtonComponent implements OnInit {
-  @Input() otherUserId: number = 0;
-  
+  private _otherUserId = signal<number>(0);
+  @Input() 
+  set otherUserId(value: number) {
+    this._otherUserId.set(value);
+  }
+  get otherUserId(): number {
+    return this._otherUserId();
+  }
   isUserOnline: boolean = false;
   callInProgress: boolean = false;
   showOptions: boolean = false;
-  onlineUserIds: number[] = []; // For debugging
   
   audioEnabled: boolean = true;
   videoEnabled: boolean = true;
 
   private onlineStatus = computed(() => {
     const onlineIds = this.presenceService.onlineUserIds();
-    const isOnline = this.otherUserId > 0 && onlineIds.includes(this.otherUserId);
-    console.log(`[CallButton] User ${this.otherUserId} online status: ${isOnline}`, onlineIds);
+    const userId = this._otherUserId(); // Use the signal
+    const isOnline = userId > 0 && onlineIds.includes(userId);
+    console.log(`[CallButton] User ${userId} online status: ${isOnline}`, onlineIds);
     return isOnline;
   });
 
@@ -51,10 +57,6 @@ export class CallButtonComponent implements OnInit {
   }
   
   ngOnInit() {
-    // Check if the other user is online
-    setTimeout(() => {
-      this.checkOnlineStatus();
-    }, 500);
     
   }
 
@@ -62,26 +64,21 @@ export class CallButtonComponent implements OnInit {
     this.showOptions = !this.showOptions;
   }
 
-  private checkOnlineStatus() {
-    if (this.otherUserId > 0) {
-      this.isUserOnline = this.presenceService.isUserOnline(this.otherUserId);
-      this.onlineUserIds = this.presenceService.onlineUserIds();
-    }
-  }
-
   getButtonTooltip(): string {
-    if (this.otherUserId <= 0) return 'Invalid user';
+    const userId = this._otherUserId();
+    if (userId <= 0) return 'Invalid user';
     if (!this.isUserOnline) return 'User is offline';
     if (this.callInProgress) return 'Call in progress';
     return 'Start call';
   }
   
   initiateCall() {
-    if (this.isUserOnline && !this.callInProgress && this.otherUserId > 0) {
+    const userId = this._otherUserId();
+    if (this.isUserOnline && !this.callInProgress && userId > 0) {
       // Start local media stream first
       this.webRtcService.startLocalStream(false).then(() => {
         // Then initiate call
-        this.webRtcService.startCall(this.otherUserId);
+        this.webRtcService.startCall(userId);
       }).catch(error => {
         console.error('Failed to get media:', error);
       });
@@ -105,19 +102,22 @@ export class CallButtonComponent implements OnInit {
   initiateCallWithoutMedia() {
     if (!this.canMakeCall()) return;
     
-    this.webRtcService.startCallWithoutMedia(this.otherUserId)
+    const userId = this._otherUserId();
+    this.webRtcService.startCallWithoutMedia(userId)
       .catch(error => {
         console.error('Failed to start call without media:', error);
       });
   }
 
-  private canMakeCall(): boolean {
-    return this.isUserOnline && !this.callInProgress && this.otherUserId > 0;
+ private canMakeCall(): boolean {
+    const userId = this._otherUserId();
+    return this.isUserOnline && !this.callInProgress && userId > 0;
   }
 
   private startCall(audioOnly: boolean, audioEnabled: boolean, videoEnabled: boolean) {
     // Determine if we should request video
     const requestVideo = !audioOnly && videoEnabled;
+    const userId = this._otherUserId();
     
     this.webRtcService.startLocalStream(audioOnly || !videoEnabled)
       .then(stream => {
@@ -133,7 +133,7 @@ export class CallButtonComponent implements OnInit {
         }
         
         // Start the call
-        this.webRtcService.startCall(this.otherUserId);
+        this.webRtcService.startCall(userId);
       })
       .catch(error => {
         console.error('Failed to get media:', error);

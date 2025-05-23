@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
 import { Subscription } from 'rxjs';
@@ -90,6 +90,7 @@ export class ActiveCallWindowComponent implements OnInit, OnDestroy {
         }
         this.stopCallTimer();
         this.resetState();
+        this.resetPosition();
       })
     );
     
@@ -102,6 +103,13 @@ export class ActiveCallWindowComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.stopCallTimer();
+    this.removeDragListeners();
+  }
+
+  // Listen for window resize to adjust position if needed
+  @HostListener('window:resize', ['$event'])
+  onWindowResize() {
+    this.constrainToViewport();
   }
   
   private initializeVideos() {
@@ -161,22 +169,62 @@ export class ActiveCallWindowComponent implements OnInit, OnDestroy {
   }
   
   startDrag(event: MouseEvent) {
-    this.isDragging = true;
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
-    this.dragOffset.x = event.clientX - rect.left;
-    this.dragOffset.y = event.clientY - rect.top;
+    // Check if the click target is a button or control element
+    const target = event.target as HTMLElement;
+    const isButton = target.closest('button') || 
+                     target.closest('.control-btn') || 
+                     target.closest('mat-icon') ||
+                     target.tagName === 'BUTTON' ||
+                     target.classList.contains('control-btn');
     
-    // Add event listeners for dragging
-    document.addEventListener('mousemove', this.onDrag);
-    document.addEventListener('mouseup', this.stopDrag);
+    // Don't start drag if clicking on buttons or controls
+    if (isButton) {
+      return;
+    }
+    
+    event.preventDefault();
+    event.stopPropagation();
+    
+    this.isDragging = true;
+    const callWindow = document.querySelector('.call-window') as HTMLElement;
+    
+    if (callWindow) {
+      // Add dragging class and no-select class
+      callWindow.classList.add('dragging');
+      document.body.classList.add('no-select');
+      
+      const rect = callWindow.getBoundingClientRect();
+      this.dragOffset.x = event.clientX - rect.left;
+      this.dragOffset.y = event.clientY - rect.top;
+      
+      // Add event listeners for dragging
+      document.addEventListener('mousemove', this.onDrag, { passive: false });
+      document.addEventListener('mouseup', this.stopDrag);
+    }
   }
   
   private onDrag = (event: MouseEvent) => {
     if (this.isDragging) {
+      event.preventDefault();
+      
       const callWindow = document.querySelector('.call-window') as HTMLElement;
       if (callWindow) {
-        const x = event.clientX - this.dragOffset.x;
-        const y = event.clientY - this.dragOffset.y;
+        let x = event.clientX - this.dragOffset.x;
+        let y = event.clientY - this.dragOffset.y;
+        
+        // Get window dimensions
+        const windowRect = callWindow.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Constrain to viewport bounds with some padding
+        const padding = 10;
+        x = Math.max(padding, Math.min(x, viewportWidth - windowRect.width - padding));
+        y = Math.max(padding, Math.min(y, viewportHeight - windowRect.height - padding));
+        
+        // Update position
+        this.position.x = x;
+        this.position.y = y;
         
         callWindow.style.right = 'auto';
         callWindow.style.bottom = 'auto';
@@ -188,8 +236,72 @@ export class ActiveCallWindowComponent implements OnInit, OnDestroy {
   
   private stopDrag = () => {
     this.isDragging = false;
+    
+    const callWindow = document.querySelector('.call-window') as HTMLElement;
+    if (callWindow) {
+      callWindow.classList.remove('dragging');
+    }
+    
+    // Remove no-select class
+    document.body.classList.remove('no-select');
+    
+    this.removeDragListeners();
+  }
+  
+  private removeDragListeners() {
     document.removeEventListener('mousemove', this.onDrag);
     document.removeEventListener('mouseup', this.stopDrag);
+  }
+  
+  private constrainToViewport() {
+    const callWindow = document.querySelector('.call-window') as HTMLElement;
+    if (callWindow && this.position.x !== 0 && this.position.y !== 0) {
+      const rect = callWindow.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      let x = this.position.x;
+      let y = this.position.y;
+      
+      const padding = 10;
+      
+      // Check if window is outside viewport
+      if (rect.right > viewportWidth - padding) {
+        x = viewportWidth - rect.width - padding;
+      }
+      if (rect.bottom > viewportHeight - padding) {
+        y = viewportHeight - rect.height - padding;
+      }
+      if (rect.left < padding) {
+        x = padding;
+      }
+      if (rect.top < padding) {
+        y = padding;
+      }
+      
+      // Update position if needed
+      if (x !== this.position.x || y !== this.position.y) {
+        this.position.x = Math.max(0, x);
+        this.position.y = Math.max(0, y);
+        
+        callWindow.style.left = `${this.position.x}px`;
+        callWindow.style.top = `${this.position.y}px`;
+        callWindow.style.right = 'auto';
+        callWindow.style.bottom = 'auto';
+      }
+    }
+  }
+  
+  private resetPosition() {
+    const callWindow = document.querySelector('.call-window') as HTMLElement;
+    if (callWindow) {
+      // Reset to default bottom-right position
+      callWindow.style.left = 'auto';
+      callWindow.style.top = 'auto';
+      callWindow.style.right = '20px';
+      callWindow.style.bottom = '20px';
+      this.position = { x: 0, y: 0 };
+    }
   }
   
   private startCallTimer() {
