@@ -152,6 +152,15 @@
 }
 
 
+.settings-button{
+  display:flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .settings-button:hover{
   background-color: #ffffff2f;
+  border-radius: 10px 10px 10px 10px;
+  cursor:pointer;
+  
 }
