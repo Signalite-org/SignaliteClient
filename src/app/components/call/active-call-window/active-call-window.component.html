@@ -6,13 +6,14 @@
             ({{ callDuration }})
           </span>
         </div>
-        <div class="call-controls-header">
-          <button (click)="toggleMinimize()" class="control-btn minimize-btn">
-            <mat-icon>{{ isMinimized ? 'maximize' : 'minimize' }}</mat-icon>
-          </button>
+        <div class="call-controls-main">
           <button (click)="hangUp()" class="control-btn end-btn">
             <mat-icon>call_end</mat-icon>
           </button>
+          <button (click)="toggleMinimize()" class="control-btn minimize-btn">
+            <mat-icon>{{ isMinimized ? 'maximize' : 'minimize' }}</mat-icon>
+          </button>
+          
         </div>
       </div>
       

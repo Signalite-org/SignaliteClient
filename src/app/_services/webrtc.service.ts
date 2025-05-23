@@ -26,32 +26,32 @@ export class WebRtcService {
 
   private selectedAudioDevice: string | null = null;
   private selectedVideoDevice: string | null = null;
-  
+
   // Media streams 
   private localStream: MediaStream | null = null;
   public getLocalStream(): MediaStream | null {
-  return this.localStream;
-}
+    return this.localStream;
+  }
   private remoteStream: MediaStream | null = null;
 
   // Connection tracking
   private hubConnection!: HubConnection;
   private peerConnection: RTCPeerConnection | null = null;
-  private currentConnectionId: string = ''; 
+  private currentConnectionId: string = '';
 
   // Configuration
-  private iceServers: IceServer[]  = [];
+  private iceServers: IceServer[] = [];
 
   // Call state
   private currentCall: {
     peer: CallInfo | null;
     state: CallState
-    } =
+  } =
     {
       peer: null,
       state: CallState.Idle
     };
-    // TODO: getter for current call
+  // TODO: getter for current call
 
   private _audioDevices = signal<MediaDevice[]>([]);
   public get audioDevices() {
@@ -69,7 +69,7 @@ export class WebRtcService {
   }
 
   private _incomingCall = signal<CallInfo | null>(null);
-  public get incomingCall(){
+  public get incomingCall() {
     return this._incomingCall.asReadonly();
   }
 
@@ -113,12 +113,12 @@ export class WebRtcService {
   }
 
   constructor(
-    private http: HttpClient, 
-    private accountService: AccountService, 
+    private http: HttpClient,
+    private accountService: AccountService,
     private presenceService: PresenceService
   ) {
     this.log('WebRtcService constructed');
-    
+
     // Try to initialize if we have a token already
     if (this.accountService.currentUser()) {
       this.log('User already logged in, initializing WebRTC service...');
@@ -126,11 +126,11 @@ export class WebRtcService {
         this.log(`Initial WebRTC setup failed: ${error}`);
       });
     }
-    
+
     // Listen for user login/logout to initialize/dispose
     this.setupAuthListeners();
   }
-  
+
   /**
    * Initialize the hub
    */
@@ -149,12 +149,12 @@ export class WebRtcService {
     try {
       this.initializing = true;
       this.log('Initializing WebRTC service...');
-      
+
       // Check for secure context
       if (!window.isSecureContext) {
         this.log('WARNING: Application is not running in a secure context. WebRTC may not work.');
       }
-      
+
       // Get auth token
       const token = this.accountService.getToken();
       if (!token) {
@@ -193,7 +193,7 @@ export class WebRtcService {
 
       // Register for signaling
       await this.registerForSignaling();
-      
+
       this._initialized = true;
       this.log('WebRTC service initialized successfully');
     } catch (error) {
@@ -357,11 +357,11 @@ export class WebRtcService {
   private setupAuthListeners(): void {
     // We need to track when the user logs in and initialize WebRTC
     // and when the user logs out to dispose resources
-    
+
     // Create an effect to watch for user changes
     const authEffect = effect(() => {
       const user = this.accountService.currentUser();
-      
+
       if (user) {
         // User logged in, initialize if not already
         if (!this._initialized && !this.initializing) {
@@ -492,72 +492,100 @@ export class WebRtcService {
    * Start the local media stream (audio/video)
    */
   public async startLocalStream(audioOnly: boolean = false): Promise<MediaStream> {
-    try {
-      const constraints: MediaStreamConstraints = {
-        audio: this.selectedAudioDevice ? { deviceId: { exact: this.selectedAudioDevice } } : true,
-        video: !audioOnly
-          ? (this.selectedVideoDevice
-            ? { width: 640, height: 480, deviceId: { exact: this.selectedVideoDevice } }
-            : { width: 640, height: 480 })
-          : false
-      };
+  try {
+    const constraints: MediaStreamConstraints = {
+      audio: this.selectedAudioDevice ? { deviceId: { exact: this.selectedAudioDevice } } : true,
+      video: !audioOnly
+        ? (this.selectedVideoDevice
+          ? { width: 640, height: 480, deviceId: { exact: this.selectedVideoDevice } }
+          : { width: 640, height: 480 })
+        : false
+    };
 
-      this.log('Requesting media with constraints: ' + JSON.stringify(constraints));
-      this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-      this.log('Media access granted successfully');
-      return this.localStream;
-    } catch (error) {
-      // Cast the error to an appropriate type to access its properties
-      const mediaError = error as Error;
-      const domError = error as DOMException;
+    this.log('Requesting media with constraints: ' + JSON.stringify(constraints));
+    
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    this.localStream = stream;
+    
+    this.log(`Media access granted: ${stream.getAudioTracks().length} audio, ${stream.getVideoTracks().length} video tracks`);
+    return stream;
+  } catch (error) {
+    const mediaError = error as Error;
+    const domError = error as DOMException;
 
-      this.log(`Error getting media: ${domError.name || 'Unknown'} - ${mediaError.message || 'No message'}`);
-
-      // Try with audio only if video failed and we weren't already audio-only
-      if (!audioOnly && domError.name === 'NotFoundError') {
-        this.log('Trying audio-only as fallback...');
-        return this.startLocalStream(true);
-      }
-
-      throw error;
+    // Provide detailed error information
+    let errorDetails = `Error getting media: ${domError.name || 'Unknown'} - ${mediaError.message || 'No message'}`;
+    
+    // Add specific handling for common errors
+    if (domError.name === 'NotReadableError') {
+      errorDetails += ' (Device may be in use by another application or tab)';
+    } else if (domError.name === 'NotAllowedError') {
+      errorDetails += ' (Permission denied)';
+    } else if (domError.name === 'NotFoundError') {
+      errorDetails += ' (No camera/microphone found)';
     }
+    
+    this.log(errorDetails);
+
+    // Try with audio only if video failed and we weren't already audio-only
+    if (!audioOnly && domError.name === 'NotFoundError') {
+      this.log('Trying audio-only as fallback...');
+      try {
+        return await this.startLocalStream(true);
+      } catch (audioError) {
+        this.log(`Audio-only fallback also failed: ${audioError}`);
+        throw audioError;
+      }
+    }
+
+    throw error;
   }
+}
 
   public async checkAvailableDevices(): Promise<{ hasVideo: boolean, hasAudio: boolean }> {
+  try {
+    this.log('Checking available media devices...');
+    
+    // First try to enumerate devices
+    let devices: MediaDeviceInfo[] = [];
     try {
-      this.log('Checking available media devices...');
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const audioDevices = devices
-        .filter(device => device.kind === 'audioinput')
-        .map(device => ({
-          deviceId: device.deviceId,
-          label: device.label || `Microphone ${device.deviceId.slice(0, 5)}...`,
-          kind: device.kind
-        }));
-
-      const videoDevices = devices
-        .filter(device => device.kind === 'videoinput')
-        .map(device => ({
-          deviceId: device.deviceId,
-          label: device.label || `Camera ${device.deviceId.slice(0, 5)}...`,
-          kind: device.kind
-        }));
-
-      this._audioDevices.set(audioDevices);
-      this._videoDevices.set(videoDevices);
-
-      const hasVideo = this.videoDevices().length > 0;
-      const hasAudio = this._audioDevices().length > 0;
-
-      this.log(`Available devices: ${devices.length} total, Video inputs: ${hasVideo ? this.videoDevices().length : 'NO'}, Audio inputs: ${hasAudio ? this._audioDevices().length : 'NO'}`);
-
-      return { hasVideo, hasAudio };
+      devices = await navigator.mediaDevices.enumerateDevices();
     } catch (error) {
-      const typedError = error as Error;
-      this.log(`Error enumerating devices: ${typedError.message || 'Unknown error'}`);
+      this.log(`Error enumerating devices: ${error}`);
       return { hasVideo: false, hasAudio: false };
     }
+    
+    const audioDevices = devices
+      .filter(device => device.kind === 'audioinput')
+      .map(device => ({
+        deviceId: device.deviceId,
+        label: device.label || `Microphone ${device.deviceId.slice(0, 5)}...`,
+        kind: device.kind
+      }));
+
+    const videoDevices = devices
+      .filter(device => device.kind === 'videoinput')
+      .map(device => ({
+        deviceId: device.deviceId,
+        label: device.label || `Camera ${device.deviceId.slice(0, 5)}...`,
+        kind: device.kind
+      }));
+
+    this._audioDevices.set(audioDevices);
+    this._videoDevices.set(videoDevices);
+
+    const hasVideo = videoDevices.length > 0;
+    const hasAudio = audioDevices.length > 0;
+
+    this.log(`Available devices: ${devices.length} total, Video: ${hasVideo ? videoDevices.length : 'NO'}, Audio: ${hasAudio ? audioDevices.length : 'NO'}`);
+
+    return { hasVideo, hasAudio };
+  } catch (error) {
+    const typedError = error as Error;
+    this.log(`Error checking devices: ${typedError.message || 'Unknown error'}`);
+    return { hasVideo: false, hasAudio: false };
   }
+}
 
   // Method to set selected devices
   public setSelectedAudioDevice(deviceId: string): void {
@@ -678,7 +706,7 @@ export class WebRtcService {
         incomingCallInfo.sourceConnectionId
       );
       console.log('Call rejected, notification sent to', incomingCallInfo.callerUsername);
-      
+
       // Reset call state
       this.updateCallState(CallState.Idle);
       this.currentCall.peer = null;
@@ -746,10 +774,10 @@ export class WebRtcService {
 
       if (this.peerConnection.onicegatheringstatechange)
         this.peerConnection.onicegatheringstatechange = null;
-      
+
       if (this.peerConnection.onsignalingstatechange)
         this.peerConnection.onsignalingstatechange = null;
-      
+
       try {
         // Close all data channels
         if (this.peerConnection.getSenders) {
@@ -759,20 +787,20 @@ export class WebRtcService {
             }
           });
         }
-        
+
         // Close the connection
         this.peerConnection.close();
-        
+
         // Log connection state after closure attempt
         this.log(`Peer connection closed. Final state: ${this.peerConnection.connectionState || 'unknown'}`);
       } catch (error) {
         this.log(`Error closing peer connection: ${error}`);
       }
-      
+
       // Clear reference
       this.peerConnection = null;
     }
-  
+
     // Stop remote stream tracks
     if (this.remoteStream) {
       try {
@@ -826,11 +854,36 @@ export class WebRtcService {
   public toggleCamera(disabled: boolean): void {
     if (this.localStream) {
       const videoTracks = this.localStream.getVideoTracks();
+      console.log(`[WebRTC] Toggling ${videoTracks.length} video tracks to ${disabled ? 'disabled' : 'enabled'}`);
+
       videoTracks.forEach(track => {
         track.enabled = !disabled;
+        console.log(`[WebRTC] Video track ${track.label} enabled: ${track.enabled}`);
       });
+
+      // Force UI update by checking track states
+      this.log(`Camera ${disabled ? 'disabled' : 'enabled'} - ${videoTracks.length} tracks affected`);
+    } else {
+      this.log('No local stream available to toggle camera');
     }
   }
+
+  public getMediaState(): { audioMuted: boolean; videoDisabled: boolean; hasAudio: boolean; hasVideo: boolean } {
+    if (!this.localStream) {
+      return { audioMuted: true, videoDisabled: true, hasAudio: false, hasVideo: false };
+    }
+
+    const audioTracks = this.localStream.getAudioTracks();
+    const videoTracks = this.localStream.getVideoTracks();
+
+    return {
+      audioMuted: audioTracks.length === 0 || !audioTracks[0].enabled,
+      videoDisabled: videoTracks.length === 0 || !videoTracks[0].enabled,
+      hasAudio: audioTracks.length > 0,
+      hasVideo: videoTracks.length > 0
+    };
+  }
+
 
   public reconnect(token: string): void {
     this.log('Reconnecting SignalR hub with new token...');
@@ -849,4 +902,123 @@ export class WebRtcService {
       this.initialize();
     }
   }
+
+  public async startCallWithoutMedia(userId: number): Promise<void> {
+  try {
+    if (this.currentCall.state !== CallState.Idle) {
+      throw new Error('Cannot start a call while already in a call');
+    }
+
+    this.updateCallState(CallState.Offering);
+
+    // Check if user is online through presence service
+    if (!this.presenceService.isUserOnline(userId)) {
+      throw new Error(`User with ID ${userId} is not online`);
+    }
+
+    // Create peer info (you might need to get username from another service)
+    this.currentCall.peer = {
+      callerUsername: `User${userId}`, // Replace with actual username lookup
+      callerId: userId,
+      sourceConnectionId: ''
+    };
+
+    // Initialize peer connection without local media
+    this.initializePeerConnectionWithoutMedia();
+
+    // Create offer
+    const offer = await this.peerConnection!.createOffer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: true
+    });
+
+    await this.peerConnection!.setLocalDescription(offer);
+    await this.hubConnection.invoke('SendOffer', userId, JSON.stringify(offer));
+
+    this.log(`Call started without media to user ID: ${userId}`);
+  } catch (error) {
+    this.log(`Error starting call without media: ${error}`);
+    this.updateCallState(CallState.Idle);
+    this.currentCall.peer = null;
+    throw error;
+  }
 }
+
+/**
+ * Accept a call without local media
+ */
+public async acceptCallWithoutMedia(incomingCallInfo: CallInfo): Promise<void> {
+  try {
+    if (this.currentCall.state !== CallState.Incoming) {
+      throw new Error('Cannot accept a call without incoming call');
+    }
+
+    this.currentCall.peer = incomingCallInfo;
+    this.updateCallState(CallState.Answering);
+
+    this.initializePeerConnectionWithoutMedia();
+
+    const offer = incomingCallInfo.offer;
+    if (!offer) {
+      throw new Error('No offer found in incoming call info');
+    }
+    
+    const offerSdp = JSON.parse(offer);
+    await this.peerConnection!.setRemoteDescription(new RTCSessionDescription(offerSdp));
+
+    const answer = await this.peerConnection!.createAnswer();
+    await this.peerConnection!.setLocalDescription(answer);
+
+    await this.hubConnection.invoke('SendAnswer',
+      incomingCallInfo.callerUsername,
+      incomingCallInfo.sourceConnectionId,
+      JSON.stringify(answer)
+    );
+
+    this.log(`Call accepted without media from ${incomingCallInfo.callerUsername}`);
+  } catch (error) {
+    this.log(`Error accepting call without media: ${error}`);
+    this.updateCallState(CallState.Idle);
+    this.currentCall.peer = null;
+    throw error;
+  }
+}
+
+/**
+ * Initialize peer connection without adding local tracks
+ */
+private initializePeerConnectionWithoutMedia(): void {
+  if (this.peerConnection) {
+    this.cleanupPeerConnection();
+  }
+
+  this.peerConnection = new RTCPeerConnection({
+    iceServers: this.iceServers
+  });
+
+  // Set up event handlers
+  this.peerConnection.onicecandidate = this.handleIceCandidate.bind(this);
+  this.peerConnection.ontrack = this.handleTrack.bind(this);
+  this.peerConnection.onconnectionstatechange = this.handleConnectionStateChange.bind(this);
+  this.peerConnection.onicegatheringstatechange = () => {
+    this.log(`ICE gathering state: ${this.peerConnection?.iceGatheringState}`);
+  };
+  this.peerConnection.onsignalingstatechange = () => {
+    this.log(`Signaling state: ${this.peerConnection?.signalingState}`);
+  };
+
+  // Note: We intentionally don't add local tracks here
+  this.log('Peer connection initialized without local media');
+}
+
+public setLocalStream(stream: MediaStream): void {
+  // Stop existing stream tracks if any
+  if (this.localStream) {
+    this.localStream.getTracks().forEach(track => track.stop());
+  }
+  
+  this.localStream = stream;
+  this.log(`Local stream set with ${stream.getAudioTracks().length} audio tracks and ${stream.getVideoTracks().length} video tracks`);
+}
+}
+

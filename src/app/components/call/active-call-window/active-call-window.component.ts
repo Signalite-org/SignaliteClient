@@ -34,7 +34,8 @@ export class ActiveCallWindowComponent implements OnInit, OnDestroy {
   isAudioMuted = false;
   isVideoDisabled = false;
   hasLocalVideo = false;
-  hasRemoteVideo = false;
+  hasRemoteVideo = false
+  hasLocalAudio = false;;
   showDeviceSelection = false;
   
   // Devices
@@ -67,6 +68,10 @@ export class ActiveCallWindowComponent implements OnInit, OnDestroy {
     effect(() => {
       this.videoDevices = this.webRtcService.videoDevices();
     });
+
+    setInterval(() => {
+      this.updateMediaState();
+    }, 1000);
   }
   
   ngOnInit() {
@@ -105,9 +110,18 @@ export class ActiveCallWindowComponent implements OnInit, OnDestroy {
     if (localStream && this.localVideoRef?.nativeElement) {
       this.localVideoRef.nativeElement.srcObject = localStream;
       this.hasLocalVideo = localStream.getVideoTracks().length > 0;
+      this.updateMediaState();
     }
   }
   
+  private updateMediaState() {
+    const mediaState = this.webRtcService.getMediaState();
+    this.isAudioMuted = mediaState.audioMuted;
+    this.isVideoDisabled = mediaState.videoDisabled;
+    this.hasLocalVideo = mediaState.hasVideo;
+    this.hasLocalAudio = mediaState.hasAudio;
+  }
+
   toggleMinimize() {
     this.isMinimized = !this.isMinimized;
   }
@@ -117,13 +131,17 @@ export class ActiveCallWindowComponent implements OnInit, OnDestroy {
   }
   
   toggleMicrophone() {
-    this.isAudioMuted = !this.isAudioMuted;
-    this.webRtcService.toggleMicrophone(this.isAudioMuted);
+    const newMutedState = !this.isAudioMuted;
+    this.webRtcService.toggleMicrophone(newMutedState);
+    // Update state immediately for better UX
+    this.isAudioMuted = newMutedState;
   }
   
   toggleCamera() {
-    this.isVideoDisabled = !this.isVideoDisabled;
-    this.webRtcService.toggleCamera(this.isVideoDisabled);
+    const newDisabledState = !this.isVideoDisabled;
+    this.webRtcService.toggleCamera(newDisabledState);
+    // Update state immediately for better UX
+    this.isVideoDisabled = newDisabledState;
   }
   
   onAudioDeviceChange(event: Event) {
@@ -197,6 +215,7 @@ export class ActiveCallWindowComponent implements OnInit, OnDestroy {
     this.isVideoDisabled = false;
     this.hasLocalVideo = false;
     this.hasRemoteVideo = false;
+    this.hasLocalAudio = false;
     this.showDeviceSelection = false;
   }
 }
