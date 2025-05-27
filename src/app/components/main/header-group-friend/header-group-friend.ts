@@ -179,7 +179,8 @@ export class HeaderGroupFriend {
   deleteGroup() {
     this.groupService.deleteGroup(this.groupId()).subscribe({
       next: () => {
-        this.toastr.success('Group deleted successfully');
+        const successMessage = this.isPrivate() ? 'Friend removed successfully' : 'Group deleted successfully'
+        this.toastr.success(successMessage);
         this.returnToNormalModeEvent.emit(); // Return to normal mode after deletion
         this.groupDeleted.emit(this.groupId())
         this.hideGroupDeleteConfirmation();
