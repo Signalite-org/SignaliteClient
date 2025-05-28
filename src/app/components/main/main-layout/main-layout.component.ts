@@ -29,7 +29,7 @@ import {NgOptimizedImage} from '@angular/common';
 import {MessageEdit} from '../../../_models/MessageEdit';
 import {MessageDelete} from '../../../_models/MessageDelete';
 import { ToastrService } from 'ngx-toastr';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { OwnUserDTO } from '../../../_models/OwnUserDTO';
 
@@ -58,6 +58,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private accountService: AccountService,
     private userService: UserService,
     private notificationsService: NotificationsService,
+    private router: Router,
     private toastr: ToastrService
   ){
     this.userId.set(this.accountService.currentUser()?.userId ?? -1);
@@ -187,6 +188,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.currentGroupId.set(groupId)
       }, 1);
     }
+  }
+
+  protected showProfilePage() {
+    this.router.navigateByUrl('/settings')
   }
 
   /////////////////////

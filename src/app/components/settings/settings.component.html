@@ -42,7 +42,7 @@
       <div class="info-section">
          <p>{{currentForm}}</p>
       </div>
-      <div [routerLink]="['/main']" class="back-button">
+      <div (click)="backToMainView()" class="back-button">
          <p>Back</p>
       </div>
       @switch (currentForm) 

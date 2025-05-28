@@ -53,7 +53,7 @@ export class PresenceService {
     });
   }
 
-  createHubConnection(token: string) {
+  async createHubConnection(token: string) {
     if (!token) {
       console.error('No token provided for hub connection');
       return Promise.reject('No token provided');
@@ -63,7 +63,7 @@ export class PresenceService {
     // even if one exists, to ensure we're using the latest token
     if (this.hubConnection) {
       console.log('Stopping existing presence hub connection before creating a new one');
-      this.stopHubConnection();
+      await this.stopHubConnection();
     }
     
     console.log('Creating presence hub connection with token:', token.substring(0, 15) + '...');

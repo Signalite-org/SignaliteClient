@@ -1,14 +1,16 @@
-import { Component, OnInit, signal, ViewChild, WritableSignal } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { ProfileComponent } from "./profile/profile.component";
 import { SecurityComponent } from './security/security.component';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../_services/user.service';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AccountService } from '../../_services/account.service';
 import { ChangeImageComponent } from './change-image/change-image.component';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { finalize } from 'rxjs';
+import { GroupService } from '../../_services/group.service';
+import { FriendsService } from '../../_services/friends.service';
 
 @Component({
   selector: 'app-settings',
@@ -45,7 +47,7 @@ export class SettingsComponent implements OnInit {
     return this.userService.ownUser();
   }
 
-  constructor(private userService: UserService, private accountService: AccountService) {
+  constructor(private userService: UserService, private accountService: AccountService, private router: Router, private groupService: GroupService, private friendService: FriendsService) {
     this.isLoading = true;
     this.userService.refreshOwnUser().subscribe({
       next: () => {
@@ -92,6 +94,12 @@ export class SettingsComponent implements OnInit {
     if (this.isMobileView) {
       this.navbarVisible = false;
     }
+  }
+
+  backToMainView() {
+    this.groupService.fetchGroups();
+    this.friendService.loadFriendRequests().subscribe();
+    this.router.navigateByUrl('/main')
   }
 
 
