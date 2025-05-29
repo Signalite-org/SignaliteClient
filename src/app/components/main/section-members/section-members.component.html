@@ -8,6 +8,15 @@
     </app-delete-user-confirmation>
 }
 
+@if (areDetailsVisible()) {
+  <app-member-details
+  [userId]="user().id"
+  [isOnline]="isUserOnline(user().id)"
+  (close)="onCloseDetails()"
+  >
+  </app-member-details>
+}
+
 @if (groupId() > 0) {
   <div class="content">
   @if (loading()) {
@@ -27,6 +36,7 @@
         [isOnline]="isUserOnline(owner().id)"
         [isPrivate]="isGroupPrivate()"
         (startDeletingUser)="onStartAdd()"
+        (startShowingUserDetails)="onShowDetails()"
         (emitedUser)="setUser($event)">
       </app-card-member>
     }
@@ -40,6 +50,7 @@
         [isOnline]="isUserOnline(member.id)"
         [isPrivate]="isGroupPrivate()"
         (startDeletingUser)="onStartAdd()"
+        (startShowingUserDetails)="onShowDetails()"
         (emitedUser)="setUser($event)">
       </app-card-member>
     }

@@ -1,0 +1,93 @@
+<!-- member-details.component.html -->
+<div class="backdrop" (click)="onCancel()"></div>
+<dialog open>
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Ładowanie profilu...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (errorMessage() && !isLoading()) {
+    <div class="error-container">
+      <div class="error-icon">⚠️</div>
+      <p>{{ errorMessage() }}</p>
+      <button (click)="loadUserDetails()" class="retry-btn">Spróbuj ponownie</button>
+    </div>
+  }
+
+  <!-- User Profile -->
+  @if (!isLoading() && !errorMessage()) {
+    <div class="user-profile">
+      <!-- Background Image -->
+      <div class="profile-banner"> 
+      <img [src]="userDto().backgroundPhotoUrl ?? '../../../../../assets/images/background0.png'" class="banner-image">
+      </div>
+
+      <!-- Profile Content -->
+      <div class="profile-content">
+        <!-- Avatar Section -->
+        <div class="avatar-section">
+          <div class="avatar-container">
+            <img [src]="userDto().profilePhotoUrl ?? '../../../../../assets/images/default-user.jpg'" 
+                 [alt]="userDto().username + ' avatar'"
+                 class="avatar">
+            
+            <!-- Online Status Indicator -->
+            <div class="status-indicator" [class.online]="isOnline()" [class.offline]="!isOnline()">
+              <div class="status-dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Info -->
+        <div class="user-info">
+          <div class="basic-user-info">
+            <div class="username-section">
+                <h2 class="username">{{ userDto().username }}</h2>
+                <span class="online-text" [class.online]="isOnline()" [class.offline]="!isOnline()">
+                {{ isOnline() ? 'Online' : 'Offline' }}
+                </span>
+            </div>
+            @if (userDto().name || userDto().surname) {
+            <div class="user-details">
+              <p class="full-name">
+                <span class="name">{{ userDto().name }}</span>
+                <span class="surname">{{ userDto().surname }}</span>
+              </p>
+            </div>
+          }
+          </div>
+          <div class="addition-user-info">
+            <div class="friend-indicator" [class.is-friend]="isUserFriend()" [class.not-friend]="!isUserFriend()">
+                <div class="friend-icon">
+                @if (isUserFriend()) {
+                 <mat-icon svgIcon="friends"/>
+                } @else if(!isUserFriend()){
+                 <mat-icon svgIcon="noFriends"/>
+                 }
+                </div>
+                <span class="friend-text">
+                @if (isUserFriend()) {
+                 Friend
+                } @else if(!isUserFriend()){
+                 Not friend
+                 }
+                </span>
+            </div>
+            </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons (optional) -->
+      <div class="profile-actions">
+        @if (!isUserFriend()) {
+            <button class="action-btn primary" (click)="sendFriendRequest()">Send friend request</button>
+        }  
+        <button class="action-btn secondary" (click)="onCancel()">Close</button>
+      </div>
+    </div>
+  }
+</dialog>

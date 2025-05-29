@@ -9,12 +9,14 @@ import { NotificationsService } from '../../../_services/notifications.service';
 import { DeleteUserConfirmationComponent } from "../../delete-user-confirmation/delete-user-confirmation.component";
 import { ToastrService } from 'ngx-toastr';
 import { GroupBasicInfoDTO } from '../../../_models/GroupBasicInfoDTO';
+import { MemberDetailsComponent } from '../card-member/member-details/member-details.component';
 
 @Component({
   selector: 'app-section-members',
   imports: [
     CardMemberComponent,
-    DeleteUserConfirmationComponent
+    DeleteUserConfirmationComponent,
+    MemberDetailsComponent
 ],
   templateUrl: './section-members.component.html',
   styleUrl: './section-members.component.css'
@@ -30,6 +32,7 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   onlineUsersIds = signal<number[]>([]);
   isDeletingUser = signal(false)
+  areDetailsVisible = signal(false)
   user = signal<UserBasicInfo>({id: -1, username: ""})
   isGroupPrivate = signal<boolean>(false)
  
@@ -114,6 +117,14 @@ export class SectionMembersComponent implements OnInit, OnDestroy {
 
   onStartAdd() {
    this.isDeletingUser.set(true)
+  }
+
+  onCloseDetails() {
+    this.areDetailsVisible.set(false)
+  }
+
+  onShowDetails() {
+    this.areDetailsVisible.set(true)
   }
 
   setUser(user: UserBasicInfo) {
