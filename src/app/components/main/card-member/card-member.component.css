@@ -1,19 +1,16 @@
-:host {
+.mainContainer {
   width: 100%;
   height: clamp(3.5rem, 3.5vw, 3.7rem);
-  position: relative;
+  position: relative; /* ← Dodaj to! */
   margin-top: 5px;
   display: flex;
   flex-direction: row;
   background: #4B63AB;
   border-radius: 6px;
   align-items: center;
-  overflow: hidden;
+  overflow: visible;
   flex-shrink: 0;
-}
 
-:host:hover {
-  cursor: pointer;
 }
 
 section {
@@ -51,6 +48,10 @@ img {
 
   height: 70%;
   aspect-ratio: 1/1;
+}
+
+.imageContainer:hover {
+  cursor: pointer;
 }
 
 #userName:hover {
@@ -94,4 +95,31 @@ img {
 
 .iconContainer:hover .clickableIcon {
   opacity: 1; /* Show the icon when hovering over the container */
+  cursor: pointer;
+}
+
+.memberDetails {
+  position: fixed;
+  right: 100%;
+  top: 0;
+  margin-right: 10px;
+  
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  
+  pointer-events: auto;
+  animation: slideInFromRight 0.2s ease-out;
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
