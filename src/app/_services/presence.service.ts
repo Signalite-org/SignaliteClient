@@ -28,6 +28,11 @@ export class PresenceService {
   public get onlineUsers() {
     return this._onlineUsers.asReadonly();
   }
+
+  private _isInitialized = signal<boolean>(false);
+  public get isInitialized() {
+    return this._isInitialized.asReadonly();
+  }
   
   constructor(private router: Router) {
     console.log('PresenceService constructed');
@@ -88,6 +93,7 @@ export class PresenceService {
       .then(() => {
         console.log('✅ Successfully connected to presence hub');
         this.connectionActive = true;
+        this._isInitialized.set(true);
       })
       .catch(error => {
         console.error('❌ Error starting presence hub connection:', error);
@@ -171,12 +177,19 @@ export class PresenceService {
         .finally(() => {
           this.hubConnection = undefined;
           this.handlersRegistered = false;
+          this._isInitialized.set(false);
           this.connectionActive = false;
+          this.resetData();
           console.log('Presence hub connection stopped and reset');
         });
     }
     return Promise.resolve();
   }
+
+  private resetData(): void {
+  this._onlineUserIds.set([]);
+  this._onlineUsers.set([]);
+}
 
   reconnect(token: string) {
     if (this.reconnectAttemptInProgress) {

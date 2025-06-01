@@ -6,12 +6,15 @@ import { UserService } from '../../../_services/user.service';
 import { ToastrService } from 'ngx-toastr';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NotificationsService } from '../../../_services/notifications.service';
+import { CallButtonComponent } from '../../call/call-button/call-button.component';
+import { AccountService } from '../../../_services/account.service';
 
 @Component({
   selector: 'app-header-group-friend',
   imports: [
     MatIcon,
-    FormsModule
+    FormsModule,
+    CallButtonComponent
   ],
   templateUrl: './header-group-friend.html',
   styleUrl: './header-group-friend.css'
@@ -29,13 +32,17 @@ export class HeaderGroupFriend {
   isDeleting = signal(false);
   newGroupName = signal("");
   selectedFile = signal<File | null>(null)
+  
+  // Add property to track the other user's ID in a private chat
+  otherUserId: WritableSignal<number> = signal(-1);
 
   constructor(
     private groupService: GroupService,
     private userService: UserService,
     private toastr: ToastrService,
     private notificationService: NotificationsService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private accountService: AccountService
   ) {
 
     this.notificationService.userUpdated$.subscribe(updatedUser => {
@@ -46,22 +53,49 @@ export class HeaderGroupFriend {
     })
 
     effect(() => {
-      console.log(this.groupId());
-      const id = this.groupId();
-      if(id > 0) {
-        groupService.getGroupBasicInfo(id).subscribe(group => {
-          this.groupFriendName.set(group.name);
-          this.isPrivate.set(group.isPrivate);
-          this.newGroupName.set(group.name); // Initialize rename input
-        });
+    const id = this.groupId();
+    if(id > 0) {
+      groupService.getGroupBasicInfo(id).subscribe(group => {
+        this.groupFriendName.set(group.name);
+        this.isPrivate.set(group.isPrivate);
+        this.newGroupName.set(group.name);
+
+        // If it's a private group, fetch members
+        if (group.isPrivate) {
+          this.groupService.getGroupMembers(id);
+        } else {
+          this.otherUserId.set(-1);
+        }
+      });
+    } else {
+      this.groupFriendName.set("");
+      this.isPrivate.set(false);
+      this.newGroupName.set("");
+      this.username.set("");
+      this.otherUserId.set(-1);
+    }
+  });
+
+  effect(() => {
+    const members = this.groupService.groupMembers();
+    const isPrivate = this.isPrivate();
+    
+    // Only process if this is a private group and we have valid members data
+    if (isPrivate && members && members.members && members.members.length > 0) {
+      const currentUserId = this.accountService.currentUser()?.userId || -1;
+      console.log("[Header]Processing group members - current user:", currentUserId);
+      
+      const otherUser = members.members.find(m => m.id !== currentUserId);
+      if(otherUser) {
+        this.otherUserId.set(otherUser.id);
+        console.log("[Header]Other user id set to member with id: ", otherUser.id);
+      } else if (members.owner && members.owner.id !== currentUserId) {
+        this.otherUserId.set(members.owner.id);
+        console.log("[Header]Other user id set to owner with id: ", members.owner.id);
       }
-      else {
-          this.groupFriendName.set("");
-          this.isPrivate.set(false);
-          this.newGroupName.set(""); // Initialize rename input
-          this.username.set("")
-      }
-    });
+    }
+  });
+
   }
 
   returnToNormalModeEvent = output<void>();

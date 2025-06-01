@@ -25,6 +25,11 @@
         <mat-icon class="dropdown-icon">expand_more</mat-icon>
       </div>
     }
+
+    @if (isPrivate() && otherUserId() > 0) {
+      <app-call-button [otherUserId]="otherUserId()"></app-call-button>
+    }
+
     @if (areOptionsVisible()) {
       <div class="options-dropdown">
         <div id="group-full-name" >

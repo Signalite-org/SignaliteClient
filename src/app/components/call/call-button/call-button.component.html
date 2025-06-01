@@ -1,0 +1,29 @@
+<div class="call-controls">      
+  <button class="call-button" 
+          [disabled]="!isUserOnline || callInProgress" 
+          (click)="showOptions ? initiateCall() : toggleOptions()"
+          [class.disabled]="!isUserOnline || callInProgress"
+          [title]="getButtonTooltip()">
+    <mat-icon>call</mat-icon>
+  </button>
+  
+  <!-- Call options dropdown -->
+  <div class="call-options" *ngIf="showOptions && !callInProgress">
+    <div class="option-title">Call Options</div>
+    <label class="option-item">
+      <input type="checkbox" [(ngModel)]="audioEnabled">
+      <mat-icon>{{ audioEnabled ? 'mic' : 'mic_off' }}</mat-icon>
+      Microphone
+    </label>
+    <label class="option-item">
+      <input type="checkbox" [(ngModel)]="videoEnabled">
+      <mat-icon>{{ videoEnabled ? 'videocam' : 'videocam_off' }}</mat-icon>
+      Camera
+    </label>
+    <div class="option-actions">
+      <button class="option-btn cancel" (click)="toggleOptions()">Cancel</button>
+      <button class="option-btn start" (click)="initiateCallWithOptions()">Start Call</button>
+    </div>
+  </div>
+  
+</div>

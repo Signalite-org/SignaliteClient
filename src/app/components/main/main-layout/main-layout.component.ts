@@ -32,6 +32,8 @@ import { ToastrService } from 'ngx-toastr';
 import { Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { OwnUserDTO } from '../../../_models/OwnUserDTO';
+import { CallManagerComponent } from '../../call/call-manager/call-manager.component';
+import { WebRtcService } from '../../../_services/webrtc.service';
 
 enum ChatLayoutStyle {
   ALL_VISIBLE,
@@ -41,7 +43,7 @@ enum ChatLayoutStyle {
 
 @Component({
   selector: 'app-main-layout',
-  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage, RouterModule],
+  imports: [NavigationFriendsGroups, HeaderGroupFriend, SectionNotifications, SectionGroupFriends, CardCurrentUserComponent, BarMessageSendComponent, SectionChatComponent, SectionMembersComponent, NgOptimizedImage, RouterModule, CallManagerComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
@@ -59,6 +61,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private notificationsService: NotificationsService,
     private router: Router,
+    private webRtcService: WebRtcService,
     private toastr: ToastrService
   ){
     this.userId.set(this.accountService.currentUser()?.userId ?? -1);
@@ -136,6 +139,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.notificationsService.clearModifiedMessages();
       })
     );
+
+    setTimeout(() => {
+      this.checkDevicesIfNeeded();
+    }, 1000);
   }
 
   ngOnDestroy() {
@@ -277,6 +284,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   onUserClickedChat(): void {
     if(this.currentChatLayout() == this.ChatLayoutStyle.RIGHT_HIDDEN) {
       this.switchToFullChatMode();
+    }
+  }
+
+  private checkDevicesIfNeeded() {
+    // Only check if we haven't already
+    if (this.webRtcService.audioDevices().length === 0 && this.webRtcService.videoDevices().length === 0) {
+      this.webRtcService.checkAvailableDevices().catch(error => {
+        console.warn('Initial device check failed:', error);
+      });
     }
   }
 

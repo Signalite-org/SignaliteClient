@@ -4,10 +4,8 @@
   </div>
   <!-- <app-dialog-add-friend-create-group></app-dialog-add-friend-create-group> -->
   <div id="content">
-
-    <!-- main layout is 3x3 grid -->
-
-    <!-- ROW 1 -->
+     <!-- main layout is 3x3 grid -->
+     <!-- ROW 1 -->
     <navigation-friends-groups
       (isGroupsViewEnabledEvent)="isGroupsViewEnabled.set($event)"
       class="header left" [class.hidden]="hideLeftColumn()">
@@ -82,17 +80,17 @@
     </div>
   </div>
 
-
+  <!-- Members overlay for mobile/responsive view -->
   <div
     [class.hiddenGrid]="!displayMembersOnTop() && !skipStartAnimation()"
     [class.hidden]="skipStartAnimation()"
     class="membersOnTop"
     [class.fadeInGrid]="!skipStartAnimation() && displayMembersOnTop()"
   >
-
     <div class="closeMembersOnTop" (click)="displayMembersOnTop.set(false)"></div>
     <app-section-members class="getBackground" [groupId]="currentGroupId()"></app-section-members>
   </div>
 
+  <!-- Call manager for handling video/audio calls -->
+  <app-call-manager></app-call-manager>
 </div>
-
