@@ -77,7 +77,23 @@
     }
   </div>
   @if(isInFullChatMode()) {
-
+    <div>
+        <label class="notification-label">
+          <div class="icon-container" (click)="toggleFriendRequests()">
+            <mat-icon 
+              svgIcon="notification" 
+              class="return-icon" 
+              [class.active]="showFriendRequests()"
+            ></mat-icon>
+            @if (pendingRequestsCount() > 0) {
+              <span class="notification-badge">{{ pendingRequestsCount() }}</span>
+            }
+          </div>
+        </label>
+      </div>
+      @if (showFriendRequests()) {
+        <app-friend-requests-list (close)="closeFriendRequests()"></app-friend-requests-list>
+      }
       <mat-icon (click)="showMembersAndNotifications.emit()" svgIcon="ellipsisHorizontal" class="return-icon"></mat-icon>
       <mat-icon (click)="returnToNormalModeEvent.emit()" svgIcon="return" class="return-icon"></mat-icon>
   }

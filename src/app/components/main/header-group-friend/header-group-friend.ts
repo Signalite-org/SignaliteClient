@@ -1,4 +1,4 @@
-import {Component, effect, EventEmitter, HostListener, input, output, Output, signal, WritableSignal} from '@angular/core';
+import {Component, computed, effect, EventEmitter, HostListener, input, output, Output, signal, WritableSignal} from '@angular/core';
 import {MatIcon} from '@angular/material/icon';
 import {GroupService} from '../../../_services/group.service';
 import { FormsModule } from '@angular/forms';
@@ -8,14 +8,18 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { NotificationsService } from '../../../_services/notifications.service';
 import { CallButtonComponent } from '../../call/call-button/call-button.component';
 import { AccountService } from '../../../_services/account.service';
+import { SectionNotifications } from '../section-notifications/section-notifications';
+import { FriendRequestsListComponent } from "../../friend-requests-list/friend-requests-list.component";
+import { FriendsService } from '../../../_services/friends.service';
 
 @Component({
   selector: 'app-header-group-friend',
   imports: [
     MatIcon,
     FormsModule,
-    CallButtonComponent
-  ],
+    CallButtonComponent,
+    FriendRequestsListComponent
+],
   templateUrl: './header-group-friend.html',
   styleUrl: './header-group-friend.css'
 })
@@ -32,6 +36,9 @@ export class HeaderGroupFriend {
   isDeleting = signal(false);
   newGroupName = signal("");
   selectedFile = signal<File | null>(null)
+
+  showFriendRequests = signal(false);
+  pendingRequestsCount = computed(() => this.friendsService.friendRequests().length);
   
   // Add property to track the other user's ID in a private chat
   otherUserId: WritableSignal<number> = signal(-1);
@@ -41,6 +48,7 @@ export class HeaderGroupFriend {
     private userService: UserService,
     private toastr: ToastrService,
     private notificationService: NotificationsService,
+    private friendsService: FriendsService,
     private sanitizer: DomSanitizer,
     private accountService: AccountService
   ) {
@@ -124,6 +132,14 @@ export class HeaderGroupFriend {
       this.isRenaming.set(false);
       this.isAddingUser.set(false);
     }
+  }
+
+  toggleFriendRequests(): void {
+    this.showFriendRequests.update(value => !value);
+  }
+  
+  closeFriendRequests(): void {
+    this.showFriendRequests.set(false);
   }
 
   // Show rename input
