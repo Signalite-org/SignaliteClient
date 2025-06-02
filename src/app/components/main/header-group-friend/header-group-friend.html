@@ -94,7 +94,7 @@
       @if (showFriendRequests()) {
         <app-friend-requests-list (close)="closeFriendRequests()"></app-friend-requests-list>
       }
-      <mat-icon (click)="showMembersAndNotifications.emit()" svgIcon="ellipsisHorizontal" class="return-icon"></mat-icon>
+      <mat-icon (click)="showMembersAndNotifications.emit()" svgIcon="groupMembers" class="return-icon"></mat-icon>
       <mat-icon (click)="returnToNormalModeEvent.emit()" svgIcon="return" class="return-icon"></mat-icon>
   }
 </header>
