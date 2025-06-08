@@ -129,6 +129,7 @@
 
 .edit:hover{
     background: var(--edit-second-color);
+    cursor: pointer;
 }
 
 .edit:active{
@@ -149,6 +150,7 @@
 .navigation p:hover{
     background: var(--navigation-text-second-color);
     font-size: 2rem;
+    cursor: pointer;
 }
 
 .active-bar{
@@ -188,6 +190,7 @@
 .back-button:hover{
     background-color: var(--button-second-color);
     color: var(--button-text-second-color);
+    cursor: pointer;
 }
 
 .back-button:active{

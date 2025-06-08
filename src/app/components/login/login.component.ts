@@ -220,7 +220,7 @@ export class LoginComponent {
           this.accountService.register(registerDto).subscribe({
             next: () => {
               this.isLoading = false;
-              this.successMessage = "Create account."
+              this.successMessage = "Account is created."
               setTimeout(() => {
                 this.registerExtraForm.enable();
                 this.selectForm('login')
