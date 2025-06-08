@@ -162,6 +162,11 @@ export class SectionGroupFriends implements OnInit, OnDestroy {
 
   handleEditedMessages(messages: MessageOfGroupDTO[]) {
     for(let i = 0; i < messages.length; i++) {
+
+      if(!messages[i].isLast) {
+        continue;
+      }
+
       for(let j = 0; j < this.groupsService.groups().length; j++) {
         if(this.groupsService.groups()[j].id == messages[i].groupId){
           this.groupsService.updateLastMessage(

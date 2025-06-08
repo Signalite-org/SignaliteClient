@@ -38,7 +38,7 @@ export class SectionChatComponent implements AfterViewInit {
   @Output() onMessageModified = new EventEmitter<MessageOfGroupDTO>();
   @Output() onLastMessageDeleted = new EventEmitter<MessageDelete>();
 
-  readonly MAX_CACHED_MESSAGES: number = 20;
+  readonly MAX_CACHED_MESSAGES: number = 30;
 
   currentGroup = input(-1)
   currentUserId: WritableSignal<number> = signal(-1);
@@ -114,7 +114,7 @@ export class SectionChatComponent implements AfterViewInit {
      this.notificationService.userUpdated$.subscribe(updatedUser => {
       if (updatedUser.id > 0) {
         this.cachedMessages.update(messages =>
-          messages.map(message => 
+          messages.map(message =>
             message.sender.id === updatedUser.id
               ? {
                   ...message,
@@ -291,7 +291,7 @@ export class SectionChatComponent implements AfterViewInit {
   messageToModify: WritableSignal<null | MessageDTO> = signal(null);
 
   editMessage(messageText: string, messageId: number, localOnly: boolean = true) {
-    if(messageId < 1) {
+    if(messageId < 1 || messageText.trim() === "") {
       return;
     }
 
@@ -308,19 +308,20 @@ export class SectionChatComponent implements AfterViewInit {
       })
     }
 
-    if(localOnly || trimmedText === "") {
+    if(modifiedMessage) {
+      const messageOfGroup: MessageOfGroupDTO = {
+        groupId: this.currentGroup(),
+        message: modifiedMessage,
+        isLast: this.topMessageId() == modifiedMessage.id
+      }
+      this.onMessageModified.emit(messageOfGroup);
+    }
+
+    if(localOnly) {
       return;
     }
 
     this.messageService.modifyMessage(messageId, messageText).subscribe();
-
-    if(modifiedMessage) {
-      const messageOfGroup: MessageOfGroupDTO = {
-        groupId: this.currentGroup(),
-        message: modifiedMessage
-      }
-      this.onMessageModified.emit(messageOfGroup);
-    }
 
   }
 
