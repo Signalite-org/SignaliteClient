@@ -93,6 +93,10 @@ form{
     color: var(--button-text-second-color);
 }
 
+.button-style:hover:not(:disabled) {
+    cursor: pointer;
+}
+
 .button-style:hover{
     background: var(--button-second-color);
     color: var(--button-text-second-color);

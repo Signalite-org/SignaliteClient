@@ -66,6 +66,7 @@
 .custom-change:hover,
 .default-change:hover {
     background-color: var(--bg-box-second-color);
+    cursor: pointer;
 }
 
 .custom-change:active,
