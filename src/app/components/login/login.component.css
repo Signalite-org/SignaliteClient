@@ -271,6 +271,10 @@ h1 {
     background: rgb(54, 69, 119);
 }
 
+.button-style:hover:not(:disabled) {
+    cursor: pointer;
+}
+
 .button-style:hover{
     background: rgb(54, 69, 119);
 }
