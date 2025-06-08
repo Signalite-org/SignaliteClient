@@ -19,8 +19,10 @@ export class CallManagerComponent implements OnInit, OnDestroy {
   isCallActive = false;
 
   private subscriptions: Subscription[] = [];
+  private audio = new Audio();
 
   constructor(private webRtcService: WebRtcService) {
+    this.audio.src = "assets/images/br_br_patapim.mp3"
     effect(() => {
       this.incomingCall = this.webRtcService.incomingCall();
     });
@@ -32,6 +34,12 @@ export class CallManagerComponent implements OnInit, OnDestroy {
       // Clear incoming call when call is established or ended
       if (state !== CallState.Incoming) {
         this.incomingCall = null;
+        this.audio.pause();
+        this.audio.currentTime = 0;
+      }
+
+      if (state === CallState.Incoming) {
+        this.audio.play()
       }
     });
   }
