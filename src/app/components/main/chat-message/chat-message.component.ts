@@ -47,6 +47,7 @@ export class ChatMessageComponent implements OnInit {
   attachmentSize = input(0);
 
   date = input('22/02/2023, 21:37');
+  dateSent = input<string>()
 
   showConfirmDialog: WritableSignal<boolean> =  signal(false);
   dialogText: string = "Delete this message?";
@@ -74,5 +75,21 @@ export class ChatMessageComponent implements OnInit {
       this.renderer.setStyle(host, 'align-self', 'flex-start');
       this.renderer.setStyle(message, 'grid-template-columns', 'max-content auto')
     }
+  }
+
+  formatDateTime(input: string): string {
+    const date = new Date(input);
+
+    if (isNaN(date.getTime())) return 'Invalid date';
+
+    // Format: May 1, 2025, 14:53
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
   }
 }

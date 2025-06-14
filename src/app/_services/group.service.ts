@@ -178,6 +178,7 @@ export class GroupService {
         id: messageId,
         content: content || '',
         lastModification: new Date().toISOString(),
+        dateSent: new Date().toISOString(),
         sender: {
           id: 0, // ID nie jest istotne w tym kontekście
           username: senderUsername,

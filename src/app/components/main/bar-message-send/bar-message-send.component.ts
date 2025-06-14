@@ -113,6 +113,7 @@ export class BarMessageSendComponent {
       id: messagePostResponse.messageId,
       content: content,
       lastModification: this.getFormattedCurrentDate(),
+      dateSent: this.getFormattedCurrentDate(),
       attachment: attachmentDTO,
       sender: currentUserBasicInfo
     }

@@ -30,7 +30,8 @@
 
         [isOwnMessage]="message.sender.id==currentUserId()"
         [message]='message.content ?? ""'
-        [date]="formatDateTime(message.lastModification)"
+        [date]="message.lastModification"
+        [dateSent]="message.dateSent!"
         [attachmentType]='message.attachment?.type ?? ""'
         [hasAttachment]='message.attachment != undefined'
         [attachmentUrl]="message.attachment?.url ?? null"
