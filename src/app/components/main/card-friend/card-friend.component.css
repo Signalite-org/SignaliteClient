@@ -68,6 +68,7 @@ img {
   height: 70%;
   aspect-ratio: 1/1;
   margin-right: 5%;
+  background-color: #36393f;
 }
 
 #userName:hover {
