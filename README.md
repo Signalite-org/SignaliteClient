@@ -112,6 +112,4 @@ ng serve
 
 This project is part of an academic project by [DarknesoPirate](https://github.com/DarknessoPirate), [filip_wojc](https://github.com/filip-wojc), [RobertPintera](https://github.com/RobertPintera), [HAScrashed](https://github.com/HAScrashed)
 
-## Additional info
-*”fixed browser exploding after running code written by crAsh (honorable mention)” - GitHub 2025*
 
