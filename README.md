@@ -1,7 +1,6 @@
 # SignaliteClient
 
-![Angular](https://img.shields.io/badge/Angular-19.2.0-red) ![TypeScript](https://img.shields.io/badge/Typescript-5.7.2-blue) ![SignalR](https://img.shields.io/badge/SignalR-Real--time-green)
-
+![Angular](https://img.shields.io/badge/Angular-19.2.0-red) ![TypeScript](https://img.shields.io/badge/Typescript-5.7.2-blue) ![SignalR](https://img.shields.io/badge/SignalR-Real--time-green) ![WebRTC](https://img.shields.io/badge/WebRTC-Peer--to--Peer-orange)
 
 A Communicator developed in Angular, enabling private and group conversations in real time.  Created to use with [SignaliteAPI](https://github.com/Signalite-org/SignaliteAPI)
 
@@ -62,6 +61,7 @@ A Communicator developed in Angular, enabling private and group conversations in
 - **Angular 19** - Modern TypeScript-based framework
 - **Typescript** - typed language that compiles to JavaScript
 - **CSS** -  Styling components
+- **WebRTC** - Real-time peer-to-peer communication for audio and video calls
 
 ### Dependencies
 
