@@ -65,10 +65,10 @@ A Communicator developed in Angular, enabling private and group conversations in
 
 ### Dependencies
 
-- **Microsoft SignalR** - Real-time WebSocket uses to communication
+- **Microsoft SignalR** - uses WebSockets for real-time events
 - **Angular Animations** - Smooth UI transition and effects
 - **RxJS** - Reactive programming for handling asynchronous data stream
-- **Angular Material** - mainly used for icons 
+- **Angular Material** - used mainly for material icons
 
 ### Environment Setup
 
@@ -76,8 +76,10 @@ A Communicator developed in Angular, enabling private and group conversations in
 ```bash
 git clone <repository-url>
 cd signaliteclient
-```
+npm install  (installs dependencies) 
 
+```
+**IMPORTANT:** fill the environment.development.ts or environment.ts files with the api ip address
 
 2. **Install [API](https://github.com/Signalite-org/SignaliteAPI)**
 
