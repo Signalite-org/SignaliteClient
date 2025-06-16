@@ -1,59 +1,115 @@
 # SignaliteClient
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.3.
+![Angular](https://img.shields.io/badge/Angular-19.2.0-red) ![TypeScript](https://img.shields.io/badge/Typescript-5.7.2-blue) ![SignalR](https://img.shields.io/badge/SignalR-Real--time-green)
 
-## Development server
 
-To start a local development server, run:
+A Communicator developed in Angular, enabling private and group conversations in real time.  Created to use with [SignaliteAPI](https://github.com/Signalite-org/SignaliteAPI)
+
+## Authors
+
+- [DarknesoPirate](https://github.com/DarknessoPirate)
+- [filip_wojc](https://github.com/filip-wojc)
+- [RobertPintera](https://github.com/RobertPintera)
+- [HAScrashed](https://github.com/HAScrashed)
+
+## Key Features
+
+- **Real-time Messaging** - It’s possible to send messages in real time
+- **WebRTC Voice/Video Calls** - Peer-to-peer audio and video communication
+- **Authentication** - Users can register or login to their accounts
+- **Group Managment** - It’s possible to create multi-user groups with specific names, group images; group owners are distinguished and have privileges to admin their groups
+- **Friend System** - Users can add friends, accepts or deny invitations
+- **Real-time Notifications** - Users receive live notifications about group modifications, friend requests, etc. 
+- **Profile Management** - Users can modify their profile pictures and background banners
+- **Presence tracking** - Logged-in users are displayed with filled green circle, offline users will appear with filled red circle
+- **Responsive layout** - Main page look has been coded to look well in a wide range of possible window sizes & aspect ratios; ranging from super ultra wide (32x9) to smartphone screen sizes
+- **Smooth pagination** - On-scroll message history loading
+- **Message history cache** - Current conversation caches loaded messages from browsing history; cache size can be easily modified inside component
+
+## Architecture
+```
+┌──────────────────────────────────────────┐     
+│                  API                     |
+│                Backend                   │     
+└──────────────────────────────────────────┘     
+                   ▲     
+                   │  REST / WebSocket (SignalR)     
+                   ▼     
+┌──────────────────────────────────────────┐    
+│             Angular services             │     
+│          Handling API requests           │         
+└──────────────────────────────────────────┘      
+                   ▲      
+                   │  business logic     
+                   ▼      
+┌──────────────────────────────────────────┐          
+│            Angular Components            │             
+│        Passing data from/to services     │                   
+│           Handling user’s inputs         │                  
+│             High-level UI logic          │                     
+└──────────────────────────────────────────┘                     
+                   ▲         
+                   │  template + inputs/outputs         
+                   ▼         
+┌──────────────────────────────────────────┐         
+│                 User                     │         
+│  Interaction with the graphic interface  │         
+└──────────────────────────────────────────┘         
+```
+## Tech Stack
+### Core Technologies
+
+- **Angular 19** - Modern TypeScript-based framework
+- **Typescript** - typed language that compiles to JavaScript
+- **CSS** -  Styling components
+
+### Dependencies
+
+- **Microsoft SignalR** - Real-time WebSocket uses to communication
+- **Angular Animations** - Smooth UI transition and effects
+- **RxJS** - Reactive programming for handling asynchronous data stream
+- **Angular Material** - mainly used for icons 
+
+### Environment Setup
+
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd signaliteclient
+```
+
+
+2. **Install [API](https://github.com/Signalite-org/SignaliteAPI)**
+
+3. **Start [API](https://github.com/Signalite-org/SignaliteAPI)**
+
+
+4. **Start web application**
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Preview of the web app
+### Login screen
+![](Preview/1.png)
+### Main screen
+![](Preview/2.png)
+### Friend request
+![](Preview/3.png)
+### Notifications
+![](Preview/4.png)
+### Customisation, User profile
+![](Preview/5.png)
+### Live calls
+![](Preview/6.png)
+### Floating widget
+![](Preview/7.png)
 
-## Code scaffolding
+## License
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+This project is part of an academic project by [DarknesoPirate](https://github.com/DarknessoPirate), [filip_wojc](https://github.com/filip-wojc), [RobertPintera](https://github.com/RobertPintera), [HAScrashed](https://github.com/HAScrashed)
 
-```bash
-ng generate component component-name
-```
+## Additional info
+*”fixed browser exploding after running code written by crAsh (honorable mention)” - GitHub 2025*
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
